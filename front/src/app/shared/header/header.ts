@@ -1,4 +1,5 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
+import { Theme } from '../theme/theme';
 
 @Component({
   imports: [],
@@ -10,4 +11,6 @@ export class Header {
   readonly title = input.required<string>();
   readonly userName = input.required<string>();
   readonly hasUnreadNotifications = input(false);
+
+  protected readonly theme = inject(Theme);
 }

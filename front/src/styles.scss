@@ -2,6 +2,29 @@
 :root {
   --header-height: 90px;
   --sidebar-width: 316px;
+
+  color-scheme: light;
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --text: #1f2a3d;
+  --text-muted: #5b6b82;
+  --border: #d8dee8;
+  --header-mid: #2a5bb8;
+  --header-bg: linear-gradient(90deg, #1b3f8f 0%, var(--header-mid) 55%, #3d72d4 100%);
+  --header-shadow: 0 2px 8px rgb(10 30 80 / 35%);
+}
+
+// data-theme is set on <html> by the Theme service (and early by the script in index.html).
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f1622;
+  --surface: #172131;
+  --text: #e3e9f3;
+  --text-muted: #8a9ab3;
+  --border: #2a3648;
+  --header-mid: #16357a;
+  --header-bg: linear-gradient(90deg, #0f2350 0%, var(--header-mid) 55%, #1f4a9e 100%);
+  --header-shadow: 0 2px 8px rgb(0 0 0 / 50%);
 }
 
 body {
@@ -14,5 +37,6 @@ body {
     'Helvetica Neue',
     Arial,
     sans-serif;
-  background: #eef1f6;
+  color: var(--text);
+  background: var(--bg);
 }
