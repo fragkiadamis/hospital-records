@@ -42,3 +42,6 @@
 # System files
 .DS_Store
 Thumbs.db
+
+# Local secrets for compose.yaml
+.env
