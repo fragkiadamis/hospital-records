@@ -1,0 +1,25 @@
+<header class="header">
+  <a class="brand" href="/">
+    <span class="brand-name">{{ title() }}</span>
+  </a>
+
+  <div class="bar">
+    <nav class="actions">
+      <button type="button" class="action">
+        <span class="bell">
+          <i class="ti ti-bell" aria-hidden="true"></i>
+          @if (hasUnreadNotifications()) {
+            <span class="badge" aria-label="Unread notifications"></span>
+          }
+        </span>
+        <span class="label">Notifications</span>
+      </button>
+
+      <button type="button" class="action" aria-haspopup="menu">
+        <span class="avatar" aria-hidden="true">{{ userName().charAt(0) }}</span>
+        <span class="label">{{ userName() }}</span>
+        <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+      </button>
+    </nav>
+  </div>
+</header>
