@@ -42,4 +42,13 @@ describe('Header', () => {
 
     expect(element.querySelector('.badge')).not.toBeNull();
   });
+
+  it('should toggle the theme', async () => {
+    const before = document.documentElement.dataset['theme'];
+
+    element.querySelector<HTMLButtonElement>('.theme-toggle')?.click();
+    await fixture.whenStable();
+
+    expect(document.documentElement.dataset['theme']).not.toBe(before);
+  });
 });

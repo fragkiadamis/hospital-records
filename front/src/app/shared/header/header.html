@@ -5,6 +5,16 @@
 
   <div class="bar">
     <nav class="actions">
+      @let dark = theme.mode() === 'dark';
+      <button
+        type="button"
+        class="action theme-toggle"
+        [attr.aria-label]="dark ? 'Switch to light mode' : 'Switch to dark mode'"
+        (click)="theme.toggle()"
+      >
+        <i class="ti" [class.ti-sun]="dark" [class.ti-moon]="!dark" aria-hidden="true"></i>
+      </button>
+
       <button type="button" class="action">
         <span class="bell">
           <i class="ti ti-bell" aria-hidden="true"></i>
