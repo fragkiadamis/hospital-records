@@ -1,0 +1,21 @@
+:host {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.system {
+  font-weight: 600;
+}
+
+.code {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}

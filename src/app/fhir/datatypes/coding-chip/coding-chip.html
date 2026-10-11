@@ -1,0 +1,5 @@
+<span class="system">{{ label() }}</span>
+<span class="code">{{ coding().code }}</span>
+@if (coding().display) {
+  <span class="sr-only">: {{ coding().display }}</span>
+}
