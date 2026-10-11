@@ -166,8 +166,7 @@
               "code": "C50.9",
               "display": "Malignant neoplasm of breast, unspecified"
             }
-          ],
-          "text": "Breast cancer"
+          ]
         },
         "subject": {
           "reference": "Patient/seed-patient-1",
@@ -235,8 +234,7 @@
               "code": "I10",
               "display": "Essential (primary) hypertension"
             }
-          ],
-          "text": "Essential (primary) hypertension"
+          ]
         },
         "subject": {
           "reference": "Patient/seed-patient-1",
@@ -295,8 +293,7 @@
               "code": "J18.9",
               "display": "Pneumonia, unspecified organism"
             }
-          ],
-          "text": "Pneumonia, unspecified organism"
+          ]
         },
         "subject": {
           "reference": "Patient/seed-patient-2",
@@ -365,8 +362,7 @@
               "code": "E11.9",
               "display": "Type 2 diabetes mellitus without complications"
             }
-          ],
-          "text": "Type 2 diabetes mellitus without complications"
+          ]
         },
         "subject": {
           "reference": "Patient/seed-patient-2",

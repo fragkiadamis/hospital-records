@@ -15,7 +15,10 @@ const stored: Condition = {
   verificationStatus: {
     coding: [{ system: CodeSystems.conditionVerification, code: 'provisional' }],
   },
-  code: { text: 'Type 2 diabetes' },
+  code: {
+    text: 'Type 2 diabetes',
+    coding: [{ system: CodeSystems.icd10, code: 'E11.9', display: 'Type 2 diabetes mellitus' }],
+  },
   note: [{ text: 'HbA1c pending' }],
 };
 
@@ -95,15 +98,15 @@ describe('ConditionEdit', () => {
 
     alert?.querySelector('button')?.click();
     TestBed.tick();
-    http
-      .expectOne('/fhir/Condition/seed-condition-4')
-      .flush({ ...stored, meta: { versionId: '4' }, code: { text: 'Diabetes mellitus type 2' } });
+    http.expectOne('/fhir/Condition/seed-condition-4').flush({
+      ...stored,
+      meta: { versionId: '4' },
+      code: { coding: [{ system: CodeSystems.icd10, code: 'E11.8' }] },
+    });
     await fixture.whenStable();
 
     expect(element.querySelector('[role="alert"]')).toBeNull();
-    expect(element.querySelector<HTMLInputElement>('[formControlName="text"]')!.value).toBe(
-      'Diabetes mellitus type 2',
-    );
+    expect(element.querySelector('app-coding-chip .code')?.textContent).toBe('E11.8');
   });
 
   it('refuses to edit a condition under a patient it does not belong to', async () => {

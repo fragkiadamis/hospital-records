@@ -1,24 +1,6 @@
 <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <fieldset>
-    <legend>Condition</legend>
-    <div class="row">
-      <label>
-        Name
-        <input
-          formControlName="text"
-          autocomplete="off"
-          placeholder="e.g. Breast cancer"
-          [attr.aria-invalid]="ruleError('identity', 'text')"
-        />
-      </label>
-    </div>
-    @if (ruleError('identity', 'text', 'icd10Code')) {
-      <p class="error" role="alert">Enter a name or an ICD-10 code.</p>
-    }
-  </fieldset>
-
-  <fieldset>
-    <legend>ICD-10 code</legend>
+    <legend>Diagnosis (ICD-10)</legend>
     @if (showsFields()) {
       <div class="row">
         <label>
@@ -55,6 +37,9 @@
           Enter the code by hand
         </button>
       }
+    }
+    @if (ruleError('codeRequired', 'icd10Code')) {
+      <p class="error" role="alert">Choose an ICD-10 code.</p>
     }
   </fieldset>
 

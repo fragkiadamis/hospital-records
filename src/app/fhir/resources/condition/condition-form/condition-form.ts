@@ -44,7 +44,8 @@ const ICD10_CODE = /^[A-Z]\d[0-9A-Z](\.[0-9A-Z]{1,4})?$/i;
 function conditionRules(group: AbstractControl): ValidationErrors | null {
   const v = group.value as ConditionFormValue;
   const errors: ValidationErrors = {};
-  if (!v.text.trim() && !v.icd10Code.trim()) errors['identity'] = true;
+  // The ICD-10 code is what identifies the condition; its name is the condition's name.
+  if (!v.icd10Code.trim()) errors['codeRequired'] = true;
   if (v.icd10Display.trim() && !v.icd10Code.trim()) errors['icd10CodeMissing'] = true;
   if (v.onsetDate && v.abatementDate && v.abatementDate < v.onsetDate) {
     errors['endBeforeOnset'] = true;
@@ -82,7 +83,6 @@ export class ConditionForm {
 
   protected readonly form = inject(NonNullableFormBuilder).group(
     {
-      text: [''],
       icd10Code: ['', Validators.pattern(ICD10_CODE)],
       icd10Display: [''],
       // A new condition starts as an active problem. Verification starts empty on purpose:
@@ -152,12 +152,10 @@ export class ConditionForm {
 
   /** A code picked in the search box (or cleared with its Change button). */
   protected pick(option: CodeOption | null): void {
-    const { icd10Code, icd10Display, text } = this.form.controls;
+    const { icd10Code, icd10Display } = this.form.controls;
     icd10Code.setValue(option?.code ?? '');
     icd10Display.setValue(option?.display ?? '');
     icd10Code.markAsTouched();
-    // The code's name is a good default for the condition's name.
-    if (option && !text.value.trim()) text.setValue(option.display);
   }
 
   /** Whether the code + name fields show instead of the search: chosen so, or the code is invalid. */

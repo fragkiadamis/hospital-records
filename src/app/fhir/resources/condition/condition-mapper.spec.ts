@@ -56,7 +56,6 @@ const form = (changes: Partial<ConditionFormValue> = {}): ConditionFormValue => 
 });
 
 const empty: ConditionFormValue = {
-  text: '',
   icd10Code: '',
   icd10Display: '',
   clinicalStatus: '',
@@ -69,7 +68,6 @@ const empty: ConditionFormValue = {
 describe('conditionToForm', () => {
   it('reads the fields the form edits', () => {
     expect(conditionToForm(stored)).toEqual({
-      text: 'Breast cancer',
       icd10Code: 'C50.9',
       icd10Display: 'Malignant neoplasm of breast, unspecified',
       clinicalStatus: 'active',
@@ -109,6 +107,16 @@ describe('formToCondition', () => {
       { system: CodeSystems.icd10, code: 'C50.4', display: undefined },
       stored.code!.coding![2],
     ]);
+  });
+
+  it('keeps a stored name while the code is the same, and drops it when the code changes', () => {
+    expect(
+      formToCondition(form({ verificationStatus: 'provisional' }), patient, stored).code?.text,
+    ).toBe('Breast cancer');
+    // "Breast cancer" might not describe C50.4; the ICD-10 name does.
+    expect(
+      formToCondition(form({ icd10Code: 'C50.4' }), patient, stored).code?.text,
+    ).toBeUndefined();
   });
 
   it('removes the ICD-10 coding when its code is cleared, keeping codings of other systems', () => {
@@ -159,7 +167,6 @@ describe('formToCondition', () => {
     const condition = formToCondition(
       {
         ...empty,
-        text: 'Pneumonia',
         icd10Code: 'J18.9',
         icd10Display: 'Pneumonia, unspecified',
         clinicalStatus: 'active',
@@ -174,7 +181,6 @@ describe('formToCondition', () => {
       subject: patient,
       code: {
         coding: [{ system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' }],
-        text: 'Pneumonia',
       },
       clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
       category: [

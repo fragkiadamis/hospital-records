@@ -36,7 +36,6 @@ export type ConditionCategory = keyof typeof CONDITION_CATEGORIES;
 
 /** What the condition form edits: flat fields, '' when empty. */
 export interface ConditionFormValue {
-  text: string; // the condition's name, as the user calls it
   icd10Code: string;
   icd10Display: string;
   clinicalStatus: ClinicalStatus | '';
@@ -90,7 +89,6 @@ export function conditionToForm(condition: Condition): ConditionFormValue {
   const icd10 = findCoding(condition.code, CodeSystems.icd10);
   const category = condition.category?.map(categoryCoding).find(Boolean);
   return {
-    text: condition.code?.text ?? '',
     icd10Code: icd10?.code ?? '',
     icd10Display: icd10?.display ?? '',
     clinicalStatus: clinicalStatusOf(condition),
@@ -140,7 +138,7 @@ export function isConditionOf(condition: Condition, patientId: string): boolean 
   return isReferenceTo(condition.subject, 'Patient', patientId);
 }
 
-/** "Breast cancer", from the code's text or a coding's display, else the resource reference. */
+/** The condition's name: the code's text if stored, else the ICD-10 name, else the reference. */
 export function conditionDisplayName(condition: Condition): string {
   return (
     formatCodeableConcept(condition.code, CodeSystems.icd10) || `Condition/${condition.id ?? 'new'}`
@@ -148,8 +146,10 @@ export function conditionDisplayName(condition: Condition): string {
 }
 
 /**
- * Condition.code with the form's text and ICD-10 coding. Codings of other systems, e.g. set by
- * another hospital system, stay as stored.
+ * Condition.code with the form's ICD-10 coding; its name is the condition's name. Codings of other
+ * systems, e.g. set by another hospital system, stay as stored. A stored `text` (a name given
+ * before, or by another system) stays while the ICD-10 code is the same, and is dropped when the
+ * code changes, since it would then describe the old code.
  */
 function editedCode(value: ConditionFormValue, current?: CodeableConcept) {
   const system = CodeSystems.icd10;
@@ -160,9 +160,9 @@ function editedCode(value: ConditionFormValue, current?: CodeableConcept) {
     ? { ...(old?.code === code ? old : {}), system, code, display: display || undefined }
     : undefined;
   const coding = replaceEntry(current?.coding, old, next);
-  const text = value.text.trim();
+  const text = (old?.code ?? '') === code ? current?.text : undefined;
   if (!coding?.length && !text) return undefined;
-  return { ...current, coding, text: text || undefined };
+  return { ...current, coding, text };
 }
 
 /** A status concept for `code`; the stored one is kept as is when its code didn't change. */

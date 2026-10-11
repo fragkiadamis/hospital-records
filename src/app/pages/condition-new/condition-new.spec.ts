@@ -24,9 +24,12 @@ describe('ConditionNew', () => {
 
   /** Names the condition and submits the form. */
   const submitForm = async () => {
-    const text = element.querySelector<HTMLInputElement>('[formControlName="text"]')!;
-    text.value = 'Asthma';
-    text.dispatchEvent(new Event('input'));
+    // Type the ICD-10 code by hand, so no terminology search is involved.
+    element.querySelector<HTMLButtonElement>('.link-button')!.click();
+    await fixture.whenStable();
+    const code = element.querySelector<HTMLInputElement>('[formControlName="icd10Code"]')!;
+    code.value = 'J45.9';
+    code.dispatchEvent(new Event('input'));
     element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await fixture.whenStable();
   };
@@ -61,7 +64,9 @@ describe('ConditionNew', () => {
       reference: 'Patient/seed-patient-3',
       display: 'Ilse Varga',
     });
-    expect(req.request.body.code).toEqual({ text: 'Asthma' });
+    expect(req.request.body.code).toEqual({
+      coding: [{ system: 'http://hl7.org/fhir/sid/icd-10', code: 'J45.9' }],
+    });
     req.flush({ ...req.request.body, id: 'new-condition' } satisfies Condition);
 
     expect(navigate).toHaveBeenCalledWith([
