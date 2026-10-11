@@ -80,26 +80,28 @@ podman compose down -v    # stop and wipe all data volumes
 All settings live in `.env` (git-ignored). `.env.example` lists and explains every key; any key
 left out falls back to the default shown there. The main ones:
 
-| Key                                | Used for                                                         |
-| ---------------------------------- | ---------------------------------------------------------------- |
-| `BIND_ADDRESS`                     | Host interface the published ports listen on                     |
-| `FHIR_HTTP_PORT`                   | HAPI's host port; also used by `ng serve` and `npm run seed`     |
-| `FHIR_DB_PASSWORD`                 | HAPI's Postgres password (required)                              |
-| `ORTHANC_USER`, `ORTHANC_PASSWORD` | Login for Orthanc's REST API and Explorer UI (password required) |
-| `ORTHANC_DB_PASSWORD`              | Orthanc's Postgres password (required)                           |
-| `ORTHANC_DICOM_AET`                | AE title other DICOM nodes send to                               |
-| `TERMINOLOGY_URL`                  | Terminology server for ICD-10 / ICD-11 search                    |
-| `*_IMAGE`                          | Container image versions                                         |
+| Key                                | Used for                                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| `BIND_ADDRESS`                     | Host interface the published ports listen on                                             |
+| `FHIR_HTTP_PORT`                   | HAPI's host port; also used by `ng serve` and `npm run seed`                             |
+| `FHIR_DB_PASSWORD`                 | HAPI's Postgres password (required)                                                      |
+| `ORTHANC_USER`, `ORTHANC_PASSWORD` | Login for Orthanc's REST API, Explorer UI and the `/dicom-web` proxy (password required) |
+| `ORTHANC_DB_PASSWORD`              | Orthanc's Postgres password (required)                                                   |
+| `ORTHANC_DICOM_AET`                | AE title other DICOM nodes send to                                                       |
+| `TERMINOLOGY_URL`                  | Terminology server for ICD-10 / ICD-11 search                                            |
+| `*_IMAGE`                          | Container image versions                                                                 |
 
 Database names, users and passwords only take effect when a volume is first created. After
 changing them, recreate the volumes with `podman compose down -v && podman compose up -d`.
 
 ### Dev server proxy
 
-`ng serve` proxies two paths (`proxy.conf.mjs`), resolving settings the same way compose does
+`ng serve` proxies three paths (`proxy.conf.mjs`), resolving settings the same way compose does
 (shell environment, then `.env`, then defaults):
 
 - `/fhir` goes to the HAPI container.
+- `/dicom-web` goes to Orthanc's DICOMweb API. The proxy adds the Orthanc login from
+  `ORTHANC_USER` and `ORTHANC_PASSWORD`, so the browser never holds the credentials.
 - `/tx` goes to the terminology server. By default this is HL7's public test server
   (`https://tx.fhir.org/r4`), which is fine for development only; set `TERMINOLOGY_URL` to use
   your own.
