@@ -98,6 +98,35 @@
           [value]="chosen().icd10"
           (picked)="pick('icd10', $event)"
         />
+        @if (!chosen().icd10 && icd10Suggestions.value()?.length) {
+          <div class="suggestions" aria-live="polite">
+            <p class="hint">
+              Suggested by SNOMED CT's official ICD-10 map. Check that its advice applies to this
+              patient before using one.
+            </p>
+            <ul>
+              @for (suggestion of icd10Suggestions.value(); track suggestion.code) {
+                <li>
+                  <span class="code">{{ suggestion.code }}</span>
+                  <span class="display">
+                    {{ suggestion.display }}
+                    @if (suggestion.advice) {
+                      <span class="advice">{{ suggestion.advice }}</span>
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    class="button"
+                    (click)="pick('icd10', suggestion)"
+                    [attr.aria-label]="'Use ICD-10 ' + suggestion.code"
+                  >
+                    Use
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
         @if (!chosen().icd10) {
           <button type="button" class="link-button" (click)="enterByHand('icd10', true)">
             Enter the code by hand

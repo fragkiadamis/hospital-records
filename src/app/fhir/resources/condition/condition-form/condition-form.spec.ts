@@ -209,6 +209,11 @@ describe('ConditionForm', () => {
     codeField('SNOMED CT')
       .querySelector('[role="option"]')!
       .dispatchEvent(new MouseEvent('mousedown'));
+    TestBed.tick();
+    // A chosen SNOMED code asks the ICD-10 map for suggestions; this server has none.
+    http
+      .expectOne((r) => r.url === '/tx/ConceptMap/$translate')
+      .flush({ resourceType: 'Parameters', parameter: [{ name: 'result', valueBoolean: false }] });
     await fixture.whenStable();
 
     expect(field('text').value).toBe('Pneumonia');
@@ -255,5 +260,55 @@ describe('ConditionForm', () => {
 
     expect(field('snomedCode').value).toBe('not-a-code');
     expect(errors()).toContain('A SNOMED CT code is 6 to 18 digits.');
+  });
+
+  it("offers the official map's ICD-10 codes for the chosen SNOMED concept, applied only on request", async () => {
+    fixture.componentRef.setInput('condition', {
+      resourceType: 'Condition',
+      subject,
+      clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
+      code: {
+        text: 'Pneumonia',
+        coding: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+      },
+    } satisfies Condition);
+    TestBed.tick();
+    const req = http.expectOne((r) => r.url === '/tx/ConceptMap/$translate');
+    expect(req.request.params.get('code')).toBe('233604007');
+    req.flush({
+      resourceType: 'Parameters',
+      parameter: [
+        { name: 'result', valueBoolean: true },
+        {
+          name: 'match',
+          part: [
+            { name: 'equivalence', valueCode: 'equivalent' },
+            {
+              name: 'concept',
+              valueCoding: {
+                system: CodeSystems.icd10,
+                code: 'J18.9',
+                display: 'Pneumonia, unspecified',
+              },
+            },
+          ],
+        },
+      ],
+    });
+    await fixture.whenStable();
+
+    const suggestions = codeField('ICD-10').querySelector('.suggestions');
+    expect(suggestions?.textContent).toContain('J18.9');
+    expect(field('icd10Code')).toBeNull(); // nothing filled in by itself
+
+    suggestions!.querySelector<HTMLButtonElement>('button')!.click();
+    await fixture.whenStable();
+    expect(codeField('ICD-10').querySelector('.suggestions')).toBeNull();
+
+    await submit();
+    expect(saved[0].code?.coding).toEqual([
+      { system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' },
+      { system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' },
+    ]);
   });
 });

@@ -15,14 +15,14 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import type { Condition, Reference } from 'fhir/r4';
 import { map } from 'rxjs';
 import { notInFuture, today } from '../../../../shared/forms/date-validators';
 import { CodeSystems } from '../../../code-systems';
 import { formatTimeChoice } from '../../../datatypes/time-choice-pipe';
 import { CodeSearch } from '../../../terminology/code-search/code-search';
-import { CodeOption, ValueSets } from '../../../terminology/terminology-client';
+import { CodeOption, TerminologyClient, ValueSets } from '../../../terminology/terminology-client';
 import {
   CLINICAL_STATUSES,
   CONDITION_CATEGORIES,
@@ -132,6 +132,22 @@ export class ConditionForm {
 
   /** Systems whose code is typed by hand (not found by the search, or the server is down). */
   protected readonly manual = signal<Record<CodeField, boolean>>({ snomed: false, icd10: false });
+
+  /**
+   * ICD-10 codes the official SNOMED CT → ICD-10 map gives for the chosen SNOMED concept, offered
+   * while no ICD-10 code is chosen. Never applied automatically: the map's rules and advice need
+   * a person's judgement. Empty when the terminology server has no such map.
+   */
+  protected readonly icd10Suggestions = rxResource({
+    params: () => {
+      const { snomed, icd10 } = this.chosen();
+      const ask = snomed && !icd10 && !this.manual().icd10 && SNOMED_CODE.test(snomed.code);
+      return ask ? snomed.code : undefined;
+    },
+    stream: ({ params: code }) => this.terminology.icd10ForSnomed(code),
+  });
+
+  private readonly terminology = inject(TerminologyClient);
 
   /** A stored onset / end the date field can't show (an age, a period, text): kept unless replaced. */
   protected readonly storedOnset = computed(() => this.storedNonDate('onset'));

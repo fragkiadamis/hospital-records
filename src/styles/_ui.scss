@@ -360,6 +360,53 @@
     margin-top: 16px;
   }
 
+  // Codes offered for a field, e.g. from a concept map, each with a button to use it.
+  .suggestions {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+
+    .hint {
+      margin: 0 0 8px;
+    }
+
+    ul {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .code {
+      min-width: 4.5em;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .display {
+      flex: 1;
+    }
+
+    .advice {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .button {
+      padding: 4px 12px;
+      font-size: 0.85rem;
+    }
+  }
+
   // A secondary action inside a field: "Enter the code by hand".
   .link-button {
     margin-top: 6px;

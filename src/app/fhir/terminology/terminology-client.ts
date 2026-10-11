@@ -1,6 +1,6 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
-import type { Parameters, ValueSet } from 'fhir/r4';
+import type { Parameters, ParametersParameter, ValueSet } from 'fhir/r4';
 import { catchError, forkJoin, map, Observable, of } from 'rxjs';
 import { CodeSystems } from '../code-systems';
 
@@ -13,6 +13,19 @@ export const TERMINOLOGY_BASE_URL = new InjectionToken<string>('TERMINOLOGY_BASE
   factory: () => '/tx',
 });
 
+/**
+ * SNOMED International's official SNOMED CT → ICD-10 map (the ICD-10 complex map reference set),
+ * by the URL SNOMED terminology servers such as Snowstorm give it. tx.fhir.org doesn't have it:
+ * there, translations come back empty and no suggestions are shown. null switches them off.
+ */
+export const SNOMED_TO_ICD10_MAP = new InjectionToken<string | null>('SNOMED_TO_ICD10_MAP', {
+  providedIn: 'root',
+  factory: () => 'http://snomed.info/sct?fhir_cm=447562003',
+});
+
+/** ConceptMap equivalences that say the target does not stand for the source. */
+const NO_MATCH = new Set(['unmatched', 'disjoint']);
+
 /** SNOMED CT concept ids: 6 to 18 digits. */
 const SNOMED_ID = /^\d{6,18}$/;
 
@@ -21,6 +34,14 @@ export interface CodeOption {
   system: string;
   code: string;
   display: string;
+}
+
+/** A target code a concept map gives for a source code, with the map's advice if any. */
+export interface MappedCode extends CodeOption {
+  /** How the target relates to the source, e.g. "equivalent", "narrower", "inexact". */
+  equivalence?: string;
+  /** The map's advice, e.g. which target applies to which patients. */
+  advice?: string;
 }
 
 /** The value sets the app searches, defined inline (tx.fhir.org has no stored ICD-10 value set). */
@@ -54,6 +75,7 @@ export const ValueSets = {
 export class TerminologyClient {
   private readonly http = inject(HttpClient);
   private readonly base = inject(TERMINOLOGY_BASE_URL);
+  private readonly snomedToIcd10 = inject(SNOMED_TO_ICD10_MAP);
 
   private readonly headers = new HttpHeaders({
     Accept: 'application/fhir+json',
@@ -73,6 +95,27 @@ export class TerminologyClient {
     return forkJoin([this.lookup(valueSet, CodeSystems.snomed, text.trim()), byName]).pipe(
       map(([exact, named]) => [...exact, ...named.filter((n) => n.code !== exact[0]?.code)]),
     );
+  }
+
+  /**
+   * The ICD-10 codes the official SNOMED CT → ICD-10 map gives for a concept (ConceptMap/
+   * $translate). These are suggestions for a person to confirm, not answers: the map is
+   * rule-based ("IF FEMALE…", "IF AGE…") and often gives several targets. Empty when the server
+   * has no such map, when it is switched off, or when the call fails.
+   */
+  icd10ForSnomed(code: string): Observable<MappedCode[]> {
+    if (!this.snomedToIcd10) return of([]);
+    const params = new HttpParams()
+      .set('url', this.snomedToIcd10)
+      .set('system', CodeSystems.snomed)
+      .set('code', code)
+      .set('targetsystem', CodeSystems.icd10);
+    return this.http
+      .get<Parameters>(`${this.base}/ConceptMap/$translate`, { headers: this.headers, params })
+      .pipe(
+        map((result) => mappedCodes(result)),
+        catchError(() => of([])),
+      );
   }
 
   /** ValueSet/$expand with a text filter. */
@@ -124,4 +167,25 @@ export class TerminologyClient {
         catchError(() => of([])),
       );
   }
+}
+
+/** The usable targets of a $translate result (FHIR R4 Parameters), without duplicates. */
+function mappedCodes(result: Parameters): MappedCode[] {
+  const part = (match: ParametersParameter, name: string) =>
+    match.part?.find((p) => p.name === name);
+  const found: MappedCode[] = [];
+  for (const match of result.parameter?.filter((p) => p.name === 'match') ?? []) {
+    const concept = part(match, 'concept')?.valueCoding;
+    const equivalence = part(match, 'equivalence')?.valueCode;
+    if (!concept?.code || (equivalence && NO_MATCH.has(equivalence))) continue;
+    if (found.some((f) => f.code === concept.code)) continue;
+    found.push({
+      system: concept.system ?? CodeSystems.icd10,
+      code: concept.code,
+      display: concept.display ?? concept.code,
+      equivalence,
+      advice: part(match, 'message')?.valueString,
+    });
+  }
+  return found;
 }
