@@ -5,7 +5,11 @@ import { FhirClient } from '../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../fhir/client/fhir-error';
 import { formatHumanName } from '../fhir/datatypes/human-name-pipe';
 import { parseReference } from '../fhir/datatypes/reference-pipe';
-import { imagingStudyFrom, patientFromStudy } from '../fhir/resources/imaging-study/dicom-mapper';
+import {
+  imagingStudyFrom,
+  patientFromStudy,
+  studyUidIdentifier,
+} from '../fhir/resources/imaging-study/dicom-mapper';
 import { studyInstanceUid } from '../fhir/resources/imaging-study/imaging-study-mapper';
 import { DICOM_PATIENT_ID_SYSTEM } from '../fhir/resources/patient/patient-mapper';
 import { DicomDataset, dicomText, Tag } from './dicom-json';
@@ -44,15 +48,17 @@ export interface PacsSyncReport {
 const FHIR_PAGE_SIZE = 200;
 
 /**
- * Brings FHIR in line with the PACS. For every DICOM study in Orthanc:
+ * Brings FHIR in line with the PACS. For each DICOM study, every one in Orthanc (`sync`) or only
+ * the given ones (`syncStudies`, e.g. those just uploaded):
  *
  *   - its Patient is found by DICOM Patient ID (never by MRN), or created from the study;
  *   - its ImagingStudy, found by Study Instance UID, is created, or updated from the PACS when
  *     the DICOM study changed. What the app added (reasons, notes) is kept.
  *
- * ImagingStudies come only from the PACS, so one whose DICOM study is not in Orthanc is reported
- * in `missingFromPacs` and left for a person to deal with. Running the sync again is safe:
- * creates are conditional, and updates are refused if the ImagingStudy changed meanwhile.
+ * ImagingStudies come only from the PACS, so after a full sync one whose DICOM study is not in
+ * Orthanc is reported in `missingFromPacs` and left for a person to deal with. Running either
+ * again is safe: creates are conditional, and updates are refused if the ImagingStudy changed
+ * meanwhile.
  */
 @Injectable({ providedIn: 'root' })
 export class PacsSync {
@@ -60,8 +66,9 @@ export class PacsSync {
   private readonly dicomweb = inject(DicomwebClient);
 
   /**
-   * Runs the sync, one DICOM study after the other. Rejects only when the PACS or FHIR can't be
-   * read at all; a study that fails is reported as `failed` and the others carry on.
+   * Syncs every DICOM study in the PACS, one after the other, and reports the ImagingStudies
+   * whose DICOM study is not in it. Rejects only when the PACS or FHIR can't be read at all; a
+   * study that fails is reported as `failed` and the others carry on.
    */
   async sync(onProgress?: (done: number, total: number) => void): Promise<PacsSyncReport> {
     const [dicomStudies, imagingStudies] = await Promise.all([
@@ -82,7 +89,8 @@ export class PacsSync {
     const studies: StudySyncResult[] = [];
     onProgress?.(0, dicomStudies.length);
     for (const dicomStudy of dicomStudies) {
-      studies.push(await this.syncStudy(dicomStudy, byUid, patients));
+      const uid = dicomText(dicomStudy, Tag.StudyInstanceUID);
+      studies.push(await this.syncStudy(dicomStudy, byUid.get(uid) ?? [], patients));
       onProgress?.(studies.length, dicomStudies.length);
     }
 
@@ -101,9 +109,55 @@ export class PacsSync {
     return { studies, missingFromPacs };
   }
 
+  /**
+   * Syncs only the DICOM studies with these Study Instance UIDs: each is read from the PACS and
+   * looked up in FHIR on its own, so the rest of the PACS is neither read nor touched. Never
+   * rejects: a study the PACS doesn't have, or that can't be read, is reported as `failed`.
+   * `missingFromPacs` is always empty, since that needs a full sync.
+   */
+  async syncStudies(
+    studyInstanceUids: readonly string[],
+    onProgress?: (done: number, total: number) => void,
+  ): Promise<PacsSyncReport> {
+    const uids = [...new Set(studyInstanceUids)];
+    const patients = new Map<string, Reference>();
+    const studies: StudySyncResult[] = [];
+    onProgress?.(0, uids.length);
+    for (const uid of uids) {
+      studies.push(await this.syncOne(uid, patients));
+      onProgress?.(studies.length, uids.length);
+    }
+    return { studies, missingFromPacs: [] };
+  }
+
+  /** Reads one DICOM study and its stored ImagingStudies, then syncs it. */
+  private async syncOne(uid: string, patients: Map<string, Reference>): Promise<StudySyncResult> {
+    let dicomStudy: DicomDataset | undefined;
+    try {
+      dicomStudy = await firstValueFrom(this.dicomweb.findStudy(uid));
+    } catch (err) {
+      return { studyInstanceUid: uid, outcome: 'failed', reason: dicomwebErrorMessage(err) };
+    }
+    if (!dicomStudy) {
+      return { studyInstanceUid: uid, outcome: 'failed', reason: 'The PACS does not have it.' };
+    }
+    try {
+      const stored = await firstValueFrom(
+        this.fhir.search('ImagingStudy', {
+          identifier: identifierSearchValue(studyUidIdentifier(uid)),
+          _count: 2,
+        }),
+      );
+      return await this.syncStudy(dicomStudy, stored, patients);
+    } catch (err) {
+      return { studyInstanceUid: uid, outcome: 'failed', reason: fhirErrorMessage(err) };
+    }
+  }
+
+  /** Syncs one DICOM study, given the ImagingStudies stored with its Study Instance UID. */
   private async syncStudy(
     dicomStudy: DicomDataset,
-    byUid: Map<string, ImagingStudy[]>,
+    stored: ImagingStudy[],
     patients: Map<string, Reference>,
   ): Promise<StudySyncResult> {
     const uid = dicomText(dicomStudy, Tag.StudyInstanceUID);
@@ -116,7 +170,6 @@ export class PacsSync {
 
     if (!uid) return result('skipped', { reason: 'The DICOM study has no Study Instance UID.' });
     if (!patientId) return result('skipped', { reason: 'The DICOM study has no Patient ID.' });
-    const stored = byUid.get(uid) ?? [];
     if (stored.length > 1) {
       return result('skipped', {
         reason: `${stored.length} ImagingStudies have this Study Instance UID.`,
@@ -260,9 +313,14 @@ export class PacsSync {
   }
 }
 
-/** The search that finds a resource by this identifier: "system|value". */
+/** An identifier as a token search value: "system|value". */
+function identifierSearchValue(identifier: Identifier): string {
+  return `${identifier.system}|${identifier.value}`;
+}
+
+/** The search that finds a resource by this identifier, for a conditional create. */
 function identifierSearch(identifier: Identifier): string {
-  return `identifier=${encodeURIComponent(`${identifier.system}|${identifier.value}`)}`;
+  return `identifier=${encodeURIComponent(identifierSearchValue(identifier))}`;
 }
 
 /** The patient's name for a reference's display; undefined for a patient without one. */

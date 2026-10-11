@@ -64,7 +64,9 @@ export class DicomwebClient {
 
   /** The study with this Study Instance UID, or undefined when the PACS doesn't have it. */
   findStudy(studyInstanceUid: string): Observable<DicomDataset | undefined> {
-    const params = new HttpParams().set('StudyInstanceUID', studyInstanceUid).set('limit', 1);
+    const params = withFields(STUDY_FIELDS)
+      .set('StudyInstanceUID', studyInstanceUid)
+      .set('limit', 1);
     return this.get(`${this.base}/studies`, params).pipe(map(([study]) => study));
   }
 

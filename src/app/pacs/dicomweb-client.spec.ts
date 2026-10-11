@@ -86,6 +86,10 @@ describe('DicomwebClient', () => {
     const req = http.expectOne((r) => r.url === '/dicom-web/studies');
     expect(req.request.params.get('StudyInstanceUID')).toBe('1.2.3');
     expect(req.request.params.get('limit')).toBe('1');
+    // The same fields as the study list, since the FHIR mapping reads them.
+    expect(req.request.params.getAll('includefield')).toEqual(
+      expect.arrayContaining([Tag.StudyDescription, Tag.PatientSex, Tag.TimezoneOffsetFromUTC]),
+    );
     req.flush([study('1.2.3')]);
     expect(await found).toEqual(study('1.2.3'));
 
