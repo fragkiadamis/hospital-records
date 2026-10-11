@@ -1,18 +1,27 @@
-<section class="panel" [class.warning]="hasWarnings()" aria-labelledby="sync-heading">
+@let importing = context() === 'import';
+<section
+  class="panel"
+  [class.warning]="hasWarnings()"
+  [attr.aria-labelledby]="context() + '-report-heading'"
+>
   <header>
-    <h2 id="sync-heading">
-      <app-icon [name]="hasWarnings() ? 'alert-triangle' : 'refresh'" />
-      PACS sync
+    <h2 [id]="context() + '-report-heading'">
+      <app-icon [name]="hasWarnings() ? 'alert-triangle' : importing ? 'upload' : 'refresh'" />
+      {{ importing ? 'DICOM import' : 'PACS sync' }}
     </h2>
     <button type="button" class="close" (click)="dismissed.emit()">
       <app-icon name="x" />
-      <span class="sr-only">Close the sync report</span>
+      <span class="sr-only">Close the {{ importing ? 'import' : 'sync' }} report</span>
     </button>
   </header>
 
   <p class="summary">
     @if (total()) {
-      {{ total() }} DICOM {{ total() === 1 ? 'study' : 'studies' }} in the PACS:
+      @if (importing) {
+        {{ total() }} uploaded DICOM {{ total() === 1 ? 'study' : 'studies' }}:
+      } @else {
+        {{ total() }} DICOM {{ total() === 1 ? 'study' : 'studies' }} in the PACS:
+      }
       @for (c of counts(); track c.outcome; let last = $last) {
         <span [class]="c.outcome">{{ c.count }} {{ c.label }}</span
         >{{ last ? '.' : ', ' }}
@@ -20,6 +29,8 @@
       @if (newPatients()) {
         {{ newPatients() }} new {{ newPatients() === 1 ? 'patient' : 'patients' }}.
       }
+    } @else if (importing) {
+      No DICOM study was stored, so there was nothing to link.
     } @else {
       The PACS has no DICOM studies.
     }

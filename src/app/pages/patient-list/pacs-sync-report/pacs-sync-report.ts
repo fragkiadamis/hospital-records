@@ -28,6 +28,8 @@ const OUTCOMES: readonly { outcome: SyncOutcome; label: string }[] = [
 })
 export class PacsSyncReport {
   readonly report = input.required<Report>();
+  /** What produced the report: a full PACS sync, or the sync after a DICOM import. */
+  readonly context = input<'sync' | 'import'>('sync');
   readonly dismissed = output<void>();
 
   protected readonly total = computed(() => this.report().studies.length);

@@ -1,0 +1,127 @@
+@if (open()) {
+  <section class="panel" aria-labelledby="import-heading">
+    <header>
+      <h2 id="import-heading"><app-icon name="upload" /> Import DICOM</h2>
+      <button type="button" class="close" [disabled]="busy()" (click)="close()">
+        <app-icon name="x" />
+        <span class="sr-only">Close the import</span>
+      </button>
+    </header>
+
+    @switch (step()) {
+      @case ('pick') {
+        <div
+          class="drop"
+          [class.dragging]="dragging()"
+          (dragover)="dragOver($event)"
+          (dragleave)="dragging.set(false)"
+          (drop)="drop($event)"
+        >
+          <p>Drop DICOM files or folders here, or</p>
+          <div class="choose">
+            <label class="button">
+              Choose files
+              <input #files type="file" multiple class="sr-only" (change)="choose(files)" />
+            </label>
+            <label class="button">
+              Choose a folder
+              <input
+                #folder
+                type="file"
+                webkitdirectory
+                class="sr-only"
+                (change)="choose(folder)"
+              />
+            </label>
+          </div>
+          <p class="hint">
+            Each study goes to the patient with its DICOM Patient ID, or to a new patient.
+          </p>
+        </div>
+      }
+      @case ('checking') {
+        <p class="state" aria-live="polite">Checking the files…</p>
+      }
+      @case ('ready') {
+        @let p = picked();
+        @if (error()) {
+          <p class="error" role="alert">The import stopped: {{ error() }}</p>
+        }
+        @if (p.dicom.length) {
+          <p>
+            <strong>{{ p.dicom.length | number }}</strong>
+            DICOM {{ p.dicom.length === 1 ? 'file' : 'files' }} ({{ megabytes() | number: '1.0-1' }}
+            MB) ready to upload.
+          </p>
+        } @else {
+          <p class="error">None of these files is DICOM, so there is nothing to upload.</p>
+        }
+        @if (p.skipped.length) {
+          <details>
+            <summary>
+              {{ p.skipped.length | number }} {{ p.skipped.length === 1 ? 'file' : 'files' }}
+              skipped: not DICOM
+            </summary>
+            <ul class="files">
+              @for (name of p.skipped; track $index) {
+                <li>{{ name }}</li>
+              }
+            </ul>
+          </details>
+        }
+        <div class="actions">
+          <button type="button" class="button" (click)="reset()">Choose other files</button>
+          <button
+            type="button"
+            class="button primary"
+            [disabled]="!p.dicom.length"
+            (click)="start()"
+          >
+            <app-icon name="upload" />
+            Upload {{ p.dicom.length | number }} {{ p.dicom.length === 1 ? 'file' : 'files' }}
+          </button>
+        </div>
+      }
+      @case ('uploading') {
+        <p class="state" aria-live="polite">
+          Uploading {{ progress().done | number }} of {{ progress().total | number }} files…
+        </p>
+        <progress [value]="progress().done" [max]="progress().total"></progress>
+      }
+      @case ('linking') {
+        <p class="state" aria-live="polite">
+          Creating the records: {{ progress().done }} of {{ progress().total }}
+          {{ progress().total === 1 ? 'study' : 'studies' }}…
+        </p>
+        <progress [value]="progress().done" [max]="progress().total"></progress>
+      }
+      @case ('done') {
+        @let u = upload()!;
+        <p class="summary">
+          {{ u.stored | number }} of {{ u.files | number }}
+          {{ u.files === 1 ? 'file' : 'files' }} stored in the PACS.
+        </p>
+        @if (u.failed.length) {
+          <details open>
+            <summary class="error">
+              {{ u.failed.length | number }} {{ u.failed.length === 1 ? 'file' : 'files' }} not
+              stored
+            </summary>
+            <ul class="files">
+              @for (f of u.failed; track $index) {
+                <li>
+                  <span class="name">{{ f.name }}</span> <span class="reason">{{ f.reason }}</span>
+                </li>
+              }
+            </ul>
+          </details>
+        }
+        <app-pacs-sync-report context="import" [report]="sync()!" (dismissed)="close()" />
+        <div class="actions">
+          <button type="button" class="button" (click)="reset()">Import more</button>
+          <button type="button" class="button primary" (click)="close()">Done</button>
+        </div>
+      }
+    }
+  </section>
+}

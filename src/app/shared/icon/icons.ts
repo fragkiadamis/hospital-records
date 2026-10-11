@@ -22,6 +22,7 @@ import search from '@tabler/icons/outline/search.svg';
 import stethoscope from '@tabler/icons/outline/stethoscope.svg';
 import sun from '@tabler/icons/outline/sun.svg';
 import trash from '@tabler/icons/outline/trash.svg';
+import upload from '@tabler/icons/outline/upload.svg';
 import user from '@tabler/icons/outline/user.svg';
 import world from '@tabler/icons/outline/world.svg';
 import x from '@tabler/icons/outline/x.svg';
@@ -48,6 +49,7 @@ export const ICONS = {
   stethoscope,
   sun,
   trash,
+  upload,
   user,
   world,
   x,

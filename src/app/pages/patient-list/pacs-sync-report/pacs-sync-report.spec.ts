@@ -92,4 +92,15 @@ describe('PacsSyncReport', () => {
 
     expect(closed).toBe(true);
   });
+
+  it('describes the studies of an import as uploaded', async () => {
+    fixture.componentRef.setInput('context', 'import');
+    await render({
+      studies: [{ studyInstanceUid: '1', outcome: 'created', imagingStudyId: 'a' }],
+      missingFromPacs: [],
+    });
+
+    expect(text('h2')).toBe('DICOM import');
+    expect(text('.summary')).toBe('1 uploaded DICOM study: 1 created.');
+  });
 });

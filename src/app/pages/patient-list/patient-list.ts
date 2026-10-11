@@ -12,6 +12,7 @@ import {
 import { PatientSummary } from '../../fhir/resources/patient/patient-summary/patient-summary';
 import { PacsSync, PacsSyncReport as SyncReport } from '../../pacs/pacs-sync';
 import { Icon } from '../../shared/icon/icon';
+import { DicomImport } from './dicom-import/dicom-import';
 import { PacsSyncReport } from './pacs-sync-report/pacs-sync-report';
 
 /** How many patients one search shows. Paging comes later. */
@@ -21,7 +22,7 @@ const PAGE_SIZE = 50;
 type SearchBy = string;
 
 @Component({
-  imports: [Icon, PacsSyncReport, PatientSummary, RouterLink],
+  imports: [DicomImport, Icon, PacsSyncReport, PatientSummary, RouterLink],
   selector: 'app-patient-list',
   styleUrl: './patient-list.scss',
   templateUrl: './patient-list.html',
@@ -89,6 +90,9 @@ export class PatientList {
   protected readonly syncProgress = signal<{ done: number; total: number } | undefined>(undefined);
   protected readonly syncReport = signal<SyncReport | undefined>(undefined);
   protected readonly syncError = signal('');
+
+  /** Whether the DICOM import panel is open; it is two-way bound to the panel's `open`. */
+  protected readonly importing = signal(false);
 
   /** Creates the Patients and ImagingStudies of the DICOM studies in the PACS that FHIR lacks. */
   protected async syncWithPacs(): Promise<void> {

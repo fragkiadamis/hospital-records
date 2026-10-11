@@ -175,6 +175,20 @@ describe('PatientList', () => {
     expect(element.querySelector('[role="alert"]')).toBeNull();
   });
 
+  it('opens the DICOM import from the header', async () => {
+    await respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
+    const importButton = [
+      ...element.querySelectorAll<HTMLButtonElement>('.page-header button'),
+    ].find((b) => b.textContent?.includes('Import DICOM'))!;
+    expect(element.querySelector('#import-heading')).toBeNull();
+
+    importButton.click();
+    await fixture.whenStable();
+
+    expect(element.querySelector('#import-heading')?.textContent).toContain('Import DICOM');
+    expect(importButton.disabled).toBe(true);
+  });
+
   describe('Sync with PACS', () => {
     const syncButton = () =>
       [...element.querySelectorAll<HTMLButtonElement>('.page-header button')].find((b) =>

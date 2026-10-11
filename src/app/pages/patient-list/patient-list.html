@@ -37,11 +37,18 @@
       }
     </button>
 
+    <button type="button" class="button" [disabled]="importing()" (click)="importing.set(true)">
+      <app-icon name="upload" />
+      Import DICOM
+    </button>
+
     <a class="button primary" routerLink="/patients/new">
       <app-icon name="plus" />
       New patient
     </a>
   </header>
+
+  <app-dicom-import [(open)]="importing" (imported)="patients.reload()" />
 
   @if (syncError()) {
     <div class="alert" role="alert">
