@@ -1,0 +1,120 @@
+@let c = condition();
+@let onset = c | timeChoice: 'onset';
+@let ended = c | timeChoice: 'abatement';
+
+<header class="heading">
+  <span class="avatar" aria-hidden="true"><i class="ti ti-stethoscope"></i></span>
+  <div>
+    <h2 [class.void]="voided()">{{ name() }}</h2>
+    <p class="sub">{{ c.subject | reference }}</p>
+  </div>
+</header>
+
+<div class="sections">
+  <section>
+    <h3>Status</h3>
+    <dl>
+      <dt>Clinical status</dt>
+      <dd>{{ clinicalStatus() || 'Not recorded' }}</dd>
+      <dt>Verification</dt>
+      <dd [class.void]="voided()">{{ verificationStatus() || 'Not recorded' }}</dd>
+      @if (c.category?.length) {
+        <dt>Category</dt>
+        <dd>{{ c.category | codeableConcept }}</dd>
+      }
+      @if (c.severity) {
+        <dt>Severity</dt>
+        <dd>{{ c.severity | codeableConcept }}</dd>
+      }
+      @if (c.bodySite?.length) {
+        <dt>Body site</dt>
+        <dd>{{ c.bodySite | codeableConcept }}</dd>
+      }
+    </dl>
+  </section>
+
+  @if (codings().length) {
+    <section>
+      <h3>Codes</h3>
+      <ul>
+        @for (coding of codings(); track $index) {
+          <li>
+            <app-coding-chip [coding]="coding" />
+            <span>{{ coding.display }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (onset || ended || c.recordedDate || c.recorder || c.asserter) {
+    <section>
+      <h3>Timeline</h3>
+      <dl>
+        @if (onset) {
+          <dt>Onset</dt>
+          <dd>{{ onset }}</dd>
+        }
+        @if (ended) {
+          <dt>Ended</dt>
+          <dd>{{ ended }}</dd>
+        }
+        @if (c.recordedDate) {
+          <dt>Recorded</dt>
+          <dd>{{ c.recordedDate | fhirDate }}</dd>
+        }
+        @if (c.recorder) {
+          <dt>Recorded by</dt>
+          <dd>{{ c.recorder | reference }}</dd>
+        }
+        @if (c.asserter) {
+          <dt>Asserted by</dt>
+          <dd>{{ c.asserter | reference }}</dd>
+        }
+      </dl>
+    </section>
+  }
+
+  @if (evidenceDetails().length || evidenceCodes().length) {
+    <section>
+      <h3>Evidence</h3>
+      <ul>
+        @for (detail of evidenceDetails(); track $index) {
+          <li>
+            <i class="ti ti-photo-scan" aria-hidden="true"></i>
+            <span>{{ detail | reference }}</span>
+          </li>
+        }
+        @for (code of evidenceCodes(); track $index) {
+          <li>
+            <i class="ti ti-list-details" aria-hidden="true"></i>
+            <span>{{ code | codeableConcept }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (c.note?.length) {
+    <section class="notes">
+      <h3>Notes</h3>
+      <ul>
+        @for (note of c.note; track $index) {
+          <li>
+            <p>{{ note.text }}</p>
+            @if (note.authorReference || note.authorString || note.time) {
+              <span class="meta">
+                {{ note.authorString ?? (note.authorReference | reference) }}
+                {{ note.time | fhirDate }}
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+
+@if (c.meta?.lastUpdated; as updated) {
+  <p class="updated">Record last updated {{ updated | fhirDate }}</p>
+}

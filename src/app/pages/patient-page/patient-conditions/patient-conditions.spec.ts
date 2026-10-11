@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import type { Bundle, Condition } from 'fhir/r4';
 import { CodeSystems } from '../../../fhir/code-systems';
 import { PatientConditions } from './patient-conditions';
@@ -52,7 +53,7 @@ describe('PatientConditions', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PatientConditions],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PatientConditions);
@@ -82,6 +83,9 @@ describe('PatientConditions', () => {
       'error',
     ]);
     expect(element.querySelector('.count')?.textContent).toBe('6');
+    expect(element.querySelector('li a')?.getAttribute('href')).toBe(
+      '/patients/seed-patient-2/conditions/active-new',
+    );
   });
 
   it('says when the patient has no conditions', async () => {

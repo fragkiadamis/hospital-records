@@ -1,0 +1,29 @@
+<section class="page">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/patients', id()]">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Back to patient
+    </a>
+  </nav>
+
+  <div aria-live="polite" [attr.aria-busy]="condition.isLoading()">
+    @if (condition.error()) {
+      <div class="alert" role="alert">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="button" (click)="condition.reload()">Try again</button>
+      </div>
+    } @else if (condition.hasValue()) {
+      @if (belongsToPatient()) {
+        <app-condition-detail [condition]="condition.value()" />
+      } @else {
+        <div class="alert" role="alert">
+          <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+          <span>This condition does not belong to this patient.</span>
+        </div>
+      }
+    } @else {
+      <div class="card"><p class="state">Loading condition…</p></div>
+    }
+  </div>
+</section>

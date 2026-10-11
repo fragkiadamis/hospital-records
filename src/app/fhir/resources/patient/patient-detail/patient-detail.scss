@@ -49,63 +49,6 @@
   font-size: 0.85em;
 }
 
-.sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-section {
-  padding: 16px 20px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-
-  h3 {
-    margin: 0 0 12px;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-}
-
-dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px 16px;
-  margin: 0;
-}
-
-dt {
-  color: var(--text-muted);
-  overflow-wrap: anywhere;
-}
-
-dd {
-  margin: 0;
-}
-
-ul {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .ti {
-    color: var(--text-muted);
-    font-size: 18px;
-  }
-}
-
 .use {
   color: var(--text-muted);
   font-size: 0.85em;

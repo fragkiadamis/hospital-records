@@ -17,7 +17,12 @@
       @if (sorted().length) {
         <ul>
           @for (condition of sorted(); track condition.id) {
-            <li><app-condition-summary [condition]="condition" /></li>
+            <li>
+              <a [routerLink]="['/patients', patientId(), 'conditions', condition.id]">
+                <app-condition-summary [condition]="condition" />
+                <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+              </a>
+            </li>
           }
         </ul>
       } @else {
