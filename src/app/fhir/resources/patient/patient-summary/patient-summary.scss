@@ -1,0 +1,54 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.icon {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.details {
+  color: var(--text-muted);
+  white-space: nowrap;
+
+  // "Male · 3 Nov 1955", with the dot only between the parts that are present.
+  > span + span::before {
+    content: '·';
+    margin: 0 6px;
+  }
+}
+
+.mrn {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  abbr {
+    text-decoration: none;
+    font-weight: 600;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

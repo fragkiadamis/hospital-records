@@ -1,0 +1,19 @@
+@let p = patient();
+@let mrn = p.identifier | identifier: mrnSystem;
+
+<i class="ti ti-user icon" aria-hidden="true"></i>
+
+<span class="name">{{ name() }}</span>
+
+<span class="details">
+  @if (p.gender) {
+    <span>{{ p.gender | titlecase }}</span>
+  }
+  @if (p.birthDate) {
+    <span><span class="sr-only">Born </span>{{ p.birthDate | fhirDate }}</span>
+  }
+</span>
+
+@if (mrn) {
+  <span class="mrn"><abbr title="Medical record number">MRN</abbr> {{ mrn }}</span>
+}
