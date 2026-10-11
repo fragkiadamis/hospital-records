@@ -1,6 +1,7 @@
 import type { CodeableConcept, Coding, Condition, Reference } from 'fhir/r4';
 import { CodeSystems } from '../../code-systems';
 import { findCoding, formatCodeableConcept } from '../../datatypes/codeable-concept-pipe';
+import { parseReference } from '../../datatypes/reference-pipe';
 import { replaceEntry } from '../replace-entry';
 
 /** HL7 condition-clinical codes, with the labels the app shows for them. */
@@ -134,6 +135,15 @@ export function formToCondition(
     ...timeChoice('onset', value.onsetDate, existing),
     ...timeChoice('abatement', value.abatementDate, existing),
   };
+}
+
+/**
+ * Whether the condition's subject is the given patient. Pages under /patients/:id check it, so
+ * an edited URL can't show one patient's condition under another patient's name.
+ */
+export function isConditionOf(condition: Condition, patientId: string): boolean {
+  const subject = parseReference(condition.subject);
+  return subject?.type === 'Patient' && subject.id === patientId;
 }
 
 /** "Breast cancer", from the code's text or a coding's display, else the resource reference. */

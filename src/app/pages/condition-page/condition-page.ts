@@ -4,9 +4,11 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
-import { parseReference } from '../../fhir/datatypes/reference-pipe';
 import { ConditionDetail } from '../../fhir/resources/condition/condition-detail/condition-detail';
-import { conditionDisplayName } from '../../fhir/resources/condition/condition-mapper';
+import {
+  conditionDisplayName,
+  isConditionOf,
+} from '../../fhir/resources/condition/condition-mapper';
 
 @Component({
   imports: [ConditionDetail, RouterLink],
@@ -28,11 +30,9 @@ export class ConditionPage {
   protected readonly errorMessage = computed(() => fhirErrorMessage(this.condition.error()));
 
   /** False when the URL pairs the condition with a patient it doesn't belong to. */
-  protected readonly belongsToPatient = computed(() => {
-    if (!this.condition.hasValue()) return false;
-    const subject = parseReference(this.condition.value().subject);
-    return subject?.type === 'Patient' && subject.id === this.id();
-  });
+  protected readonly belongsToPatient = computed(
+    () => this.condition.hasValue() && isConditionOf(this.condition.value(), this.id()),
+  );
 
   constructor() {
     const title = inject(Title);

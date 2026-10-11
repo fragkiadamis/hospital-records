@@ -34,4 +34,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/condition-page/condition-page').then((m) => m.ConditionPage),
   },
+  {
+    path: 'patients/:id/conditions/:conditionId/edit',
+    title: 'Edit condition · Artemis',
+    loadComponent: () =>
+      import('./pages/condition-edit/condition-edit').then((m) => m.ConditionEdit),
+  },
 ];

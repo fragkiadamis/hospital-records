@@ -1,0 +1,51 @@
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/patients', id(), 'conditions', conditionId()]">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Back to condition
+    </a>
+  </nav>
+
+  <h1>Edit condition</h1>
+
+  @if (conflict()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>
+        Someone else changed this condition after you opened it, so your changes were not saved.
+        Load their version and make your changes again.
+      </span>
+      <button type="button" class="button" (click)="reload()">Load latest version</button>
+    </div>
+  } @else if (saveError()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>The condition was not saved: {{ saveError() }}</span>
+    </div>
+  }
+
+  @if (condition.error()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>{{ loadError() }}</span>
+      <button type="button" class="button" (click)="condition.reload()">Try again</button>
+    </div>
+  } @else if (condition.hasValue()) {
+    @if (belongsToPatient()) {
+      <app-condition-form
+        [condition]="condition.value()"
+        [subject]="condition.value().subject"
+        [saving]="saving()"
+        (save)="update($event)"
+        (cancelled)="openCondition()"
+      />
+    } @else {
+      <div class="alert" role="alert">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>This condition does not belong to this patient.</span>
+      </div>
+    }
+  } @else {
+    <div class="card"><p class="state">Loading condition…</p></div>
+  }
+</section>

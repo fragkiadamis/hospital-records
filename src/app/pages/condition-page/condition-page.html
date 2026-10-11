@@ -4,6 +4,12 @@
       <i class="ti ti-arrow-left" aria-hidden="true"></i>
       Back to patient
     </a>
+    @if (belongsToPatient()) {
+      <a class="button" [routerLink]="['/patients', id(), 'conditions', conditionId(), 'edit']">
+        <i class="ti ti-pencil" aria-hidden="true"></i>
+        Edit
+      </a>
+    }
   </nav>
 
   <div aria-live="polite" [attr.aria-busy]="condition.isLoading()">

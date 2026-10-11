@@ -6,6 +6,7 @@ import {
   ConditionFormValue,
   conditionToForm,
   formToCondition,
+  isConditionOf,
 } from './condition-mapper';
 
 const patient = { reference: 'Patient/seed-patient-1', display: 'Daphne Kostaki' };
@@ -205,5 +206,18 @@ describe('conditionDisplayName', () => {
     expect(conditionDisplayName({ resourceType: 'Condition', id: 'c9', subject: patient })).toBe(
       'Condition/c9',
     );
+  });
+});
+
+describe('isConditionOf', () => {
+  it("checks the condition's subject against the patient id", () => {
+    expect(isConditionOf(stored, 'seed-patient-1')).toBe(true);
+    expect(isConditionOf(stored, 'seed-patient-2')).toBe(false);
+    expect(
+      isConditionOf(
+        { ...stored, subject: { reference: 'Group/seed-patient-1' } },
+        'seed-patient-1',
+      ),
+    ).toBe(false);
   });
 });

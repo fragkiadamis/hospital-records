@@ -45,12 +45,16 @@ describe('ConditionPage', () => {
     expect(element.querySelector('app-condition-detail h2')?.textContent).toBe('Pneumonia');
     expect(element.querySelector('a.back')?.getAttribute('href')).toBe('/patients/seed-patient-2');
     expect(TestBed.inject(Title).getTitle()).toBe('Pneumonia · Artemis');
+    expect(element.querySelector('a[href$="/edit"]')?.getAttribute('href')).toBe(
+      '/patients/seed-patient-2/conditions/seed-condition-3/edit',
+    );
   });
 
   it('refuses to show a condition under a patient it does not belong to', async () => {
     await open('seed-patient-1', pneumonia);
 
     expect(element.querySelector('app-condition-detail')).toBeNull();
+    expect(element.querySelector('a[href$="/edit"]')).toBeNull();
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'This condition does not belong to this patient.',
     );
