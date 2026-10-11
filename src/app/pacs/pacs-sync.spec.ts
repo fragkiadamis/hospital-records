@@ -308,6 +308,8 @@ describe('PacsSync', () => {
   it('rejects when the PACS cannot be read', async () => {
     pacs.unreachable = true;
 
-    await expect(sync.sync()).rejects.toMatchObject({ status: 0 });
+    await expect(sync.sync()).rejects.toThrow(
+      'Cannot reach the PACS. Is the compose stack running?',
+    );
   });
 });

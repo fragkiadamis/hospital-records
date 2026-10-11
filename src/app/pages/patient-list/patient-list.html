@@ -14,11 +14,35 @@
       />
     </label>
 
+    <button type="button" class="button" [disabled]="syncProgress()" (click)="syncWithPacs()">
+      <app-icon name="refresh" [class.spinning]="syncProgress()" />
+      @if (syncProgress(); as progress) {
+        @if (progress.total) {
+          Syncing {{ progress.done }} of {{ progress.total }}…
+        } @else {
+          Reading the PACS…
+        }
+      } @else {
+        Sync with PACS
+      }
+    </button>
+
     <a class="button primary" routerLink="/patients/new">
       <app-icon name="plus" />
       New patient
     </a>
   </header>
+
+  @if (syncError()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>The PACS sync failed: {{ syncError() }}</span>
+      <button type="button" class="button" (click)="syncWithPacs()">Try again</button>
+    </div>
+  }
+  @if (syncReport(); as report) {
+    <app-pacs-sync-report [report]="report" (dismissed)="syncReport.set(undefined)" />
+  }
 
   @if (patients.error()) {
     <div class="alert" role="alert">

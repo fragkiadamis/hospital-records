@@ -17,12 +17,14 @@ import phone from '@tabler/icons/outline/phone.svg';
 import photoScan from '@tabler/icons/outline/photo-scan.svg';
 import plus from '@tabler/icons/outline/plus.svg';
 import printer from '@tabler/icons/outline/printer.svg';
+import refresh from '@tabler/icons/outline/refresh.svg';
 import search from '@tabler/icons/outline/search.svg';
 import stethoscope from '@tabler/icons/outline/stethoscope.svg';
 import sun from '@tabler/icons/outline/sun.svg';
 import trash from '@tabler/icons/outline/trash.svg';
 import user from '@tabler/icons/outline/user.svg';
 import world from '@tabler/icons/outline/world.svg';
+import x from '@tabler/icons/outline/x.svg';
 
 export const ICONS = {
   'address-book': addressBook,
@@ -41,12 +43,14 @@ export const ICONS = {
   'photo-scan': photoScan,
   plus,
   printer,
+  refresh,
   search,
   stethoscope,
   sun,
   trash,
   user,
   world,
+  x,
 } as const;
 
 /** The icons <app-icon> knows; a name not listed here is a compile error. */

@@ -1,9 +1,9 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { DicomDataset, Tag } from './dicom-json';
-import { DicomwebClient } from './dicomweb-client';
+import { DicomwebClient, dicomwebErrorMessage } from './dicomweb-client';
 
 const study = (uid: string): DicomDataset => ({
   [Tag.StudyInstanceUID]: { vr: 'UI', Value: [uid] },
@@ -101,5 +101,25 @@ describe('DicomwebClient', () => {
       .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     await expect(result).rejects.toMatchObject({ status: 401 });
+  });
+});
+
+describe('dicomwebErrorMessage', () => {
+  const error = (status: number) => new HttpErrorResponse({ status });
+
+  it('says when the PACS is down, also behind the proxy', () => {
+    for (const status of [0, 502, 504]) {
+      expect(dicomwebErrorMessage(error(status))).toBe(
+        'Cannot reach the PACS. Is the compose stack running?',
+      );
+    }
+  });
+
+  it('points at the Orthanc login when it is refused', () => {
+    expect(dicomwebErrorMessage(error(401))).toContain('ORTHANC_PASSWORD');
+  });
+
+  it('gives the status otherwise', () => {
+    expect(dicomwebErrorMessage(error(500))).toBe('The PACS answered HTTP 500');
   });
 });

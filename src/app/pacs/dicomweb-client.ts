@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { EMPTY, expand, map, Observable, reduce } from 'rxjs';
 import { DicomDataset, Tag } from './dicom-json';
@@ -76,4 +76,19 @@ export class DicomwebClient {
 
 function withFields(tags: readonly string[]): HttpParams {
   return tags.reduce((params, tag) => params.append('includefield', tag), new HttpParams());
+}
+
+/**
+ * Turns a DICOMweb error into display text. Through the dev proxy (and nginx), a PACS that is
+ * down answers 502/504 rather than failing the connection.
+ */
+export function dicomwebErrorMessage(err: unknown): string {
+  if (!(err instanceof HttpErrorResponse)) return err instanceof Error ? err.message : String(err);
+  if (err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504) {
+    return 'Cannot reach the PACS. Is the compose stack running?';
+  }
+  if (err.status === 401 || err.status === 403) {
+    return `The PACS refused the login (HTTP ${err.status}). Check ORTHANC_USER and ORTHANC_PASSWORD in .env.`;
+  }
+  return `The PACS answered HTTP ${err.status}`;
 }

@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Bundle, OperationOutcome, Patient } from 'fhir/r4';
 import { provideRouter } from '@angular/router';
+import { PacsSync, PacsSyncReport } from '../../pacs/pacs-sync';
 import { PatientList } from './patient-list';
 
 describe('PatientList', () => {
@@ -19,10 +20,27 @@ describe('PatientList', () => {
     return req.request;
   };
 
+  /** Stands in for PacsSync: each sync() waits until the test settles it. */
+  class FakePacsSync {
+    progress!: (done: number, total: number) => void;
+    settle!: { resolve: (report: PacsSyncReport) => void; reject: (err: unknown) => void };
+
+    sync(onProgress: (done: number, total: number) => void): Promise<PacsSyncReport> {
+      this.progress = onProgress;
+      return new Promise((resolve, reject) => (this.settle = { resolve, reject }));
+    }
+  }
+  const pacsSync = new FakePacsSync();
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PatientList],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: PacsSync, useValue: pacsSync },
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PatientList);
@@ -73,5 +91,74 @@ describe('PatientList', () => {
     alert?.querySelector('button')?.click();
     await respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
     expect(element.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  describe('Sync with PACS', () => {
+    const syncButton = () =>
+      [...element.querySelectorAll<HTMLButtonElement>('.page-header button')].find((b) =>
+        /PACS|Sync/.test(b.textContent ?? ''),
+      )!;
+
+    beforeEach(() => respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle));
+
+    it('shows progress while it runs, then the report, and reloads the list', async () => {
+      expect(syncButton().textContent).toContain('Sync with PACS');
+
+      syncButton().click();
+      await fixture.whenStable();
+      expect(syncButton().disabled).toBe(true);
+      expect(syncButton().textContent).toContain('Reading the PACS…');
+
+      pacsSync.progress(1, 2);
+      await fixture.whenStable();
+      expect(syncButton().textContent).toContain('Syncing 1 of 2…');
+
+      pacsSync.settle.resolve({
+        studies: [
+          {
+            studyInstanceUid: '1.1',
+            outcome: 'created',
+            imagingStudyId: 's1',
+            patientCreated: true,
+          },
+          { studyInstanceUid: '1.2', outcome: 'unchanged', imagingStudyId: 's2' },
+        ],
+        missingFromPacs: [],
+      });
+      await fixture.whenStable();
+      // A study was created, so there may be new patients to list.
+      await respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
+
+      expect(syncButton().disabled).toBe(false);
+      expect(syncButton().textContent).toContain('Sync with PACS');
+      expect(element.querySelector('app-pacs-sync-report')?.textContent).toContain('1 created');
+    });
+
+    it('does not reload the list when nothing was created', async () => {
+      syncButton().click();
+      pacsSync.settle.resolve({
+        studies: [{ studyInstanceUid: '1.1', outcome: 'unchanged', imagingStudyId: 's1' }],
+        missingFromPacs: [],
+      });
+      await fixture.whenStable();
+
+      http.expectNone((r) => r.url === '/fhir/Patient');
+      expect(element.querySelector('app-pacs-sync-report')).not.toBeNull();
+    });
+
+    it('shows why the sync failed and can try again', async () => {
+      syncButton().click();
+      pacsSync.settle.reject(new Error('Cannot reach the PACS. Is the compose stack running?'));
+      await fixture.whenStable();
+
+      const alert = element.querySelector('[role="alert"]');
+      expect(alert?.textContent).toContain('The PACS sync failed: Cannot reach the PACS.');
+      expect(syncButton().disabled).toBe(false);
+
+      alert?.querySelector('button')?.click();
+      await fixture.whenStable();
+      expect(element.querySelector('[role="alert"]')).toBeNull();
+      expect(syncButton().disabled).toBe(true);
+    });
   });
 });

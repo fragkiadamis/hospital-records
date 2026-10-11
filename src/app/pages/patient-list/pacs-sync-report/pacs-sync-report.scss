@@ -1,0 +1,101 @@
+:host {
+  display: block;
+}
+
+.panel {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--surface);
+
+  &.warning {
+    border-color: var(--danger);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  h3 {
+    margin: 16px 0 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-muted);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+  }
+}
+
+.summary {
+  margin: 8px 0 0;
+}
+
+.skipped,
+.failed {
+  color: var(--danger);
+}
+
+.hint {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+}
+
+.details {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+  }
+}
+
+.badge {
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.uid {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.reason {
+  color: var(--text-muted);
+}

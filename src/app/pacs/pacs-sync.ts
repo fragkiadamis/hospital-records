@@ -8,7 +8,7 @@ import { imagingStudyFrom, patientFromStudy } from '../fhir/resources/imaging-st
 import { studyInstanceUid } from '../fhir/resources/imaging-study/imaging-study-mapper';
 import { DICOM_PATIENT_ID_SYSTEM } from '../fhir/resources/patient/patient-mapper';
 import { DicomDataset, dicomText, Tag } from './dicom-json';
-import { DicomwebClient } from './dicomweb-client';
+import { DicomwebClient, dicomwebErrorMessage } from './dicomweb-client';
 
 /** What the sync did with one DICOM study. */
 export type SyncOutcome = 'created' | 'updated' | 'unchanged' | 'skipped' | 'failed';
@@ -62,7 +62,9 @@ export class PacsSync {
    */
   async sync(onProgress?: (done: number, total: number) => void): Promise<PacsSyncReport> {
     const [dicomStudies, imagingStudies] = await Promise.all([
-      firstValueFrom(this.dicomweb.allStudies()),
+      firstValueFrom(this.dicomweb.allStudies()).catch((err: unknown) => {
+        throw new Error(dicomwebErrorMessage(err), { cause: err });
+      }),
       this.allImagingStudies(),
     ]);
 
