@@ -33,6 +33,12 @@ export const Tag = {
   NumberOfStudyRelatedSeries: '00201206',
   NumberOfStudyRelatedInstances: '00201208',
   NumberOfSeriesRelatedInstances: '00201209',
+  // STOW-RS responses (PS3.18 Table 10.5.3-1)
+  ReferencedSOPInstanceUID: '00081155',
+  RetrieveURL: '00081190',
+  FailureReason: '00081197',
+  FailedSOPSequence: '00081198',
+  ReferencedSOPSequence: '00081199',
 } as const;
 
 /** All values of a tag (DICOM attributes can be multi-valued); [] when absent. */

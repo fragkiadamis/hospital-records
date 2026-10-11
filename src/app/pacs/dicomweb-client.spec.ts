@@ -112,6 +112,81 @@ describe('DicomwebClient', () => {
     expect(await result).toHaveLength(1);
   });
 
+  describe('store (STOW-RS)', () => {
+    const referenced = (study: string, instance: string) => ({
+      [Tag.ReferencedSOPInstanceUID]: { vr: 'UI', Value: [instance] },
+      [Tag.RetrieveURL]: {
+        vr: 'UR',
+        Value: [`http://pacs/dicom-web/studies/${study}/series/9/instances/${instance}`],
+      },
+    });
+
+    it('posts the files as multipart/related DICOM parts, unchanged', async () => {
+      const files = [new Blob(['first']), new Blob(['second'])];
+      const result = firstValueFrom(client.store(files));
+
+      const req = http.expectOne('/dicom-web/studies');
+      expect(req.request.method).toBe('POST');
+      const contentType = req.request.headers.get('Content-Type')!;
+      expect(contentType).toMatch(/^multipart\/related; type="application\/dicom"; boundary=/);
+      const boundary = contentType.split('boundary=')[1];
+      expect(await (req.request.body as Blob).text()).toBe(
+        `--${boundary}\r\nContent-Type: application/dicom\r\n\r\nfirst\r\n` +
+          `--${boundary}\r\nContent-Type: application/dicom\r\n\r\nsecond\r\n` +
+          `--${boundary}--\r\n`,
+      );
+      req.flush({
+        [Tag.ReferencedSOPSequence]: {
+          vr: 'SQ',
+          Value: [referenced('1.2', '1.2.1'), referenced('1.2', '1.2.2')],
+        },
+      });
+
+      expect(await result).toEqual({
+        stored: [
+          { sopInstanceUid: '1.2.1', studyInstanceUid: '1.2' },
+          { sopInstanceUid: '1.2.2', studyInstanceUid: '1.2' },
+        ],
+        failed: [],
+      });
+    });
+
+    it('reports what a partly refused request stored and refused, instead of failing', async () => {
+      const result = firstValueFrom(client.store([new Blob(['a']), new Blob(['b'])]));
+
+      http.expectOne('/dicom-web/studies').flush(
+        {
+          [Tag.ReferencedSOPSequence]: { vr: 'SQ', Value: [referenced('1.2', '1.2.1')] },
+          [Tag.FailedSOPSequence]: {
+            vr: 'SQ',
+            Value: [
+              {
+                [Tag.ReferencedSOPInstanceUID]: { vr: 'UI', Value: ['1.2.2'] },
+                [Tag.FailureReason]: { vr: 'US', Value: [0xc000] },
+              },
+            ],
+          },
+        },
+        { status: 400, statusText: 'Bad Request' },
+      );
+
+      expect(await result).toEqual({
+        stored: [{ sopInstanceUid: '1.2.1', studyInstanceUid: '1.2' }],
+        failed: [{ sopInstanceUid: '1.2.2', reason: 'The PACS could not understand it' }],
+      });
+    });
+
+    it('passes on errors that are not STOW-RS answers', async () => {
+      const result = firstValueFrom(client.store([new Blob(['a'])]));
+
+      http
+        .expectOne('/dicom-web/studies')
+        .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+      await expect(result).rejects.toMatchObject({ status: 401 });
+    });
+  });
+
   it('passes PACS errors on to the caller', async () => {
     const result = firstValueFrom(client.searchSeries('1.2'));
 
