@@ -44,7 +44,7 @@
       </div>
     } @else if (condition.hasValue()) {
       @if (belongsToPatient()) {
-        <app-condition-detail [condition]="condition.value()" />
+        <app-condition-detail [condition]="condition.value()" [patientId]="id()" />
       } @else {
         <div class="alert" role="alert">
           <app-icon name="alert-triangle" />

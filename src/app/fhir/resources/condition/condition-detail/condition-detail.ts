@@ -1,9 +1,11 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { Condition } from 'fhir/r4';
 import { CodeableConceptPipe } from '../../../datatypes/codeable-concept-pipe';
 import { CodingChip } from '../../../datatypes/coding-chip/coding-chip';
 import { FhirDatePipe } from '../../../datatypes/fhir-date-pipe';
 import { ReferencePipe } from '../../../datatypes/reference-pipe';
+import { referenceLink } from '../../resource-links';
 import { TimeChoicePipe } from '../../../datatypes/time-choice-pipe';
 import {
   CLINICAL_STATUSES,
@@ -17,13 +19,23 @@ import { Icon } from '../../../../shared/icon/icon';
 
 /** Everything on a Condition record, read-only. */
 @Component({
-  imports: [CodeableConceptPipe, CodingChip, FhirDatePipe, Icon, ReferencePipe, TimeChoicePipe],
+  imports: [
+    CodeableConceptPipe,
+    CodingChip,
+    FhirDatePipe,
+    Icon,
+    ReferencePipe,
+    RouterLink,
+    TimeChoicePipe,
+  ],
   selector: 'app-condition-detail',
   styleUrl: './condition-detail.scss',
   templateUrl: './condition-detail.html',
 })
 export class ConditionDetail {
   readonly condition = input.required<Condition>();
+  /** The patient the page shows; when set, evidence studies link to their pages. */
+  readonly patientId = input<string>();
 
   protected readonly name = computed(() => conditionDisplayName(this.condition()));
   protected readonly voided = computed(() => isVoid(this.condition()));
@@ -44,7 +56,9 @@ export class ConditionDetail {
 
   /** Resources given as evidence, e.g. the ImagingStudy that showed the condition. */
   protected readonly evidenceDetails = computed(() =>
-    (this.condition().evidence ?? []).flatMap((evidence) => evidence.detail ?? []),
+    (this.condition().evidence ?? [])
+      .flatMap((evidence) => evidence.detail ?? [])
+      .map((detail) => referenceLink(detail, this.patientId())),
   );
 
   /** Signs or symptoms given as evidence. */

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import type { ImagingStudy, ImagingStudySeries } from 'fhir/r4';
 import { CodeSystems } from '../../../code-systems';
 import { ImagingStudyDetail } from './imaging-study-detail';
@@ -57,7 +58,10 @@ describe('ImagingStudyDetail', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ImagingStudyDetail] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ImagingStudyDetail],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(ImagingStudyDetail);
     element = fixture.nativeElement;
   });
@@ -105,5 +109,14 @@ describe('ImagingStudyDetail', () => {
     expect(texts('h3')).toEqual(['Study']);
     expect(element.querySelector('h2.void')).not.toBeNull();
     expect(facts('Study')).toEqual({ Status: 'Entered in error', Series: '0' });
+  });
+
+  it("links reason conditions to their pages when it knows the page's patient", async () => {
+    fixture.componentRef.setInput('patientId', 'seed-patient-1');
+    await render(mri);
+
+    const link = element.querySelector('section:has([data-icon="stethoscope"]) a');
+    expect(link?.textContent).toBe('Breast cancer');
+    expect(link?.getAttribute('href')).toBe('/patients/seed-patient-1/conditions/seed-condition-1');
   });
 });

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import type { Condition } from 'fhir/r4';
 import { CodeSystems } from '../../../code-systems';
 import { ConditionDetail } from './condition-detail';
@@ -62,7 +63,10 @@ describe('ConditionDetail', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ConditionDetail] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ConditionDetail],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(ConditionDetail);
     element = fixture.nativeElement;
   });
@@ -118,5 +122,20 @@ describe('ConditionDetail', () => {
 
     expect(element.querySelector('h2.void')).not.toBeNull();
     expect(facts('Status')['Verification']).toBe('Entered in error');
+  });
+
+  it("links evidence studies to their pages when it knows the page's patient", async () => {
+    await render({
+      ...breastCancer,
+      evidence: [{ detail: [{ reference: 'ImagingStudy/seed-study-1' }] }],
+    });
+    expect(element.querySelector('section a')).toBeNull(); // no patient given: plain text
+
+    fixture.componentRef.setInput('patientId', 'seed-patient-1');
+    await fixture.whenStable();
+
+    const link = element.querySelector('section:has([data-icon="photo-scan"]) a');
+    expect(link?.textContent).toBe('Imaging study seed-study-1');
+    expect(link?.getAttribute('href')).toBe('/patients/seed-patient-1/studies/seed-study-1');
   });
 });

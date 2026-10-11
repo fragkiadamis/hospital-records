@@ -15,7 +15,7 @@
       </div>
     } @else if (study.hasValue()) {
       @if (belongsToPatient()) {
-        <app-imaging-study-detail [study]="study.value()" />
+        <app-imaging-study-detail [study]="study.value()" [patientId]="id()" />
       } @else {
         <div class="alert" role="alert">
           <app-icon name="alert-triangle" />

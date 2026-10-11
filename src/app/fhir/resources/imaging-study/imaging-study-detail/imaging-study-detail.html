@@ -71,10 +71,14 @@
     <section>
       <h3>Reason</h3>
       <ul>
-        @for (reason of s.reasonReference; track $index) {
+        @for (reason of reasons(); track $index) {
           <li>
             <app-icon name="stethoscope" />
-            <span>{{ reason | reference }}</span>
+            @if (reason.link) {
+              <a [routerLink]="reason.link">{{ reason.text }}</a>
+            } @else {
+              <span>{{ reason.text }}</span>
+            }
           </li>
         }
         @for (reason of s.reasonCode; track $index) {

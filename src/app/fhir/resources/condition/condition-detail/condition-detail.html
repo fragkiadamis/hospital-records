@@ -82,7 +82,11 @@
         @for (detail of evidenceDetails(); track $index) {
           <li>
             <app-icon name="photo-scan" />
-            <span>{{ detail | reference }}</span>
+            @if (detail.link) {
+              <a [routerLink]="detail.link">{{ detail.text }}</a>
+            } @else {
+              <span>{{ detail.text }}</span>
+            }
           </li>
         }
         @for (code of evidenceCodes(); track $index) {
