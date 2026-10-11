@@ -118,3 +118,8 @@ export function isStudyOf(study: ImagingStudy, patientId: string): boolean {
 export function byStartedDesc(a: ImagingStudy, b: ImagingStudy): number {
   return (b.started ?? '').localeCompare(a.started ?? '');
 }
+
+/** For lists: valid studies newest first, then cancelled / entered-in-error ones. */
+export function byStudyOrder(a: ImagingStudy, b: ImagingStudy): number {
+  return Number(isVoidStudy(a)) - Number(isVoidStudy(b)) || byStartedDesc(a, b);
+}

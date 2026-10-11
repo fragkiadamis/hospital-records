@@ -3,6 +3,7 @@ import { CodeSystems } from '../../code-systems';
 import {
   accessionNumber,
   byStartedDesc,
+  byStudyOrder,
   imagingStudyDisplayName,
   instanceCount,
   isStudyOf,
@@ -150,5 +151,16 @@ describe('isVoidStudy', () => {
     expect(isVoidStudy({ ...mri, status: 'entered-in-error' })).toBe(true);
     expect(isVoidStudy(mri)).toBe(false);
     expect(isVoidStudy({ ...mri, status: 'registered' })).toBe(false);
+  });
+});
+
+describe('byStudyOrder', () => {
+  it('puts void studies last, newest first within each group', () => {
+    const studies: ImagingStudy[] = [
+      { ...mri, id: 'old', started: '2020-01-01' },
+      { ...mri, id: 'error', started: '2026-05-01', status: 'entered-in-error' },
+      { ...mri, id: 'new', started: '2026-02-20' },
+    ];
+    expect(studies.sort(byStudyOrder).map((s) => s.id)).toEqual(['new', 'old', 'error']);
   });
 });

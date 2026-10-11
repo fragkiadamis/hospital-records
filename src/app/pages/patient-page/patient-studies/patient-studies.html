@@ -1,0 +1,32 @@
+<section class="card list-card" aria-labelledby="studies-heading">
+  <header>
+    <h2 id="studies-heading">Imaging studies</h2>
+    @if (studies.hasValue()) {
+      <span class="count">{{ sorted().length }}</span>
+    }
+  </header>
+
+  <div aria-live="polite" [attr.aria-busy]="studies.isLoading()">
+    @if (studies.error()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>Imaging studies could not be loaded: {{ errorMessage() }}</span>
+        <button type="button" class="button" (click)="studies.reload()">Try again</button>
+      </div>
+    } @else if (studies.hasValue()) {
+      @if (sorted().length) {
+        <ul class="rows">
+          @for (study of sorted(); track study.id) {
+            <li>
+              <div class="row"><app-imaging-study-summary [study]="study" /></div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="state">No imaging studies.</p>
+      }
+    } @else {
+      <p class="state">Loading imaging studies…</p>
+    }
+  </div>
+</section>

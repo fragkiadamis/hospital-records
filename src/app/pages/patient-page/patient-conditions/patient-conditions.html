@@ -1,4 +1,4 @@
-<section class="card" aria-labelledby="conditions-heading">
+<section class="card list-card" aria-labelledby="conditions-heading">
   <header>
     <h2 id="conditions-heading">Conditions</h2>
     @if (conditions.hasValue()) {
@@ -19,7 +19,7 @@
       </div>
     } @else if (conditions.hasValue()) {
       @if (sorted().length) {
-        <ul>
+        <ul class="rows">
           @for (condition of sorted(); track condition.id) {
             <li>
               <a [routerLink]="['/patients', patientId(), 'conditions', condition.id]">

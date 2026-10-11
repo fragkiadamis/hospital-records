@@ -8,10 +8,11 @@ import { DeletePanel } from '../../fhir/delete-panel/delete-panel';
 import { PatientDetail } from '../../fhir/resources/patient/patient-detail/patient-detail';
 import { patientDisplayName } from '../../fhir/resources/patient/patient-mapper';
 import { PatientConditions } from './patient-conditions/patient-conditions';
+import { PatientStudies } from './patient-studies/patient-studies';
 import { Icon } from '../../shared/icon/icon';
 
 @Component({
-  imports: [DeletePanel, Icon, PatientConditions, PatientDetail, RouterLink],
+  imports: [DeletePanel, Icon, PatientConditions, PatientDetail, PatientStudies, RouterLink],
   selector: 'app-patient-page',
   styleUrl: './patient-page.scss',
   templateUrl: './patient-page.html',

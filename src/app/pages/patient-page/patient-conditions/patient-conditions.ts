@@ -14,7 +14,7 @@ const MAX_CONDITIONS = 200;
 @Component({
   imports: [ConditionSummary, Icon, RouterLink],
   selector: 'app-patient-conditions',
-  styleUrl: './patient-conditions.scss',
+  styles: ':host { display: block; }',
   templateUrl: './patient-conditions.html',
 })
 export class PatientConditions {

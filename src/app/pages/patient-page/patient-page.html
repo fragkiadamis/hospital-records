@@ -43,7 +43,8 @@
       </div>
     } @else if (patient.hasValue()) {
       <app-patient-detail [patient]="patient.value()" />
-      <app-patient-conditions class="conditions" [patientId]="id()" />
+      <app-patient-conditions class="card-gap" [patientId]="id()" />
+      <app-patient-studies class="card-gap" [patientId]="id()" />
     } @else {
       <div class="card"><p class="state">Loading patient…</p></div>
     }
