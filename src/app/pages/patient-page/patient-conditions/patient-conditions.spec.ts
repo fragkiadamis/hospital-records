@@ -86,6 +86,9 @@ describe('PatientConditions', () => {
     expect(element.querySelector('li a')?.getAttribute('href')).toBe(
       '/patients/seed-patient-2/conditions/active-new',
     );
+    expect(element.querySelector('a.add')?.getAttribute('href')).toBe(
+      '/patients/seed-patient-2/conditions/new',
+    );
   });
 
   it('says when the patient has no conditions', async () => {

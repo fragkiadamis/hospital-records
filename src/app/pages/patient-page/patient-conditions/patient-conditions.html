@@ -4,6 +4,10 @@
     @if (conditions.hasValue()) {
       <span class="count">{{ sorted().length }}</span>
     }
+    <a class="button add" [routerLink]="['/patients', patientId(), 'conditions', 'new']">
+      <i class="ti ti-plus" aria-hidden="true"></i>
+      Add condition
+    </a>
   </header>
 
   <div aria-live="polite" [attr.aria-busy]="conditions.isLoading()">

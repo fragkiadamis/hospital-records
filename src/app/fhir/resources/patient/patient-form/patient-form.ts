@@ -7,18 +7,8 @@ import {
   Validators,
 } from '@angular/forms';
 import type { Patient } from 'fhir/r4';
+import { notInFuture, today } from '../../../../shared/forms/date-validators';
 import { formToPatient, PatientFormValue, patientToForm } from '../patient-mapper';
-
-/** Today as YYYY-MM-DD in the user's time zone, the format of <input type="date">. */
-function today(): string {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-}
-
-/** A birth date can't be in the future. */
-function notInFuture(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value && control.value > today() ? { future: true } : null;
-}
 
 /** A patient needs at least a given or a family name. */
 function nameRequired(group: AbstractControl): ValidationErrors | null {
@@ -33,7 +23,6 @@ function nameRequired(group: AbstractControl): ValidationErrors | null {
 @Component({
   imports: [ReactiveFormsModule],
   selector: 'app-patient-form',
-  styleUrl: './patient-form.scss',
   templateUrl: './patient-form.html',
 })
 export class PatientForm {

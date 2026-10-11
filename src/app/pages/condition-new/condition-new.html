@@ -1,0 +1,39 @@
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/patients', id()]">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Back to patient
+    </a>
+  </nav>
+
+  <h1>
+    New condition
+    @if (patientName()) {
+      <span class="for">for {{ patientName() }}</span>
+    }
+  </h1>
+
+  @if (saveError()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>The condition was not saved: {{ saveError() }}</span>
+    </div>
+  }
+
+  @if (patient.error()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>{{ loadError() }}</span>
+      <button type="button" class="button" (click)="patient.reload()">Try again</button>
+    </div>
+  } @else if (patient.hasValue()) {
+    <app-condition-form
+      [subject]="subject()"
+      [saving]="saving()"
+      (save)="create($event)"
+      (cancelled)="cancel()"
+    />
+  } @else {
+    <div class="card"><p class="state">Loading patient…</p></div>
+  }
+</section>

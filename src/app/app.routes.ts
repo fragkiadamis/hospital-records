@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/patient-edit/patient-edit').then((m) => m.PatientEdit),
   },
   {
+    path: 'patients/:id/conditions/new', // before :conditionId, which would take "new" as an id
+    title: 'New condition · Artemis',
+    loadComponent: () => import('./pages/condition-new/condition-new').then((m) => m.ConditionNew),
+  },
+  {
     path: 'patients/:id/conditions/:conditionId',
     title: 'Condition · Artemis', // replaced by the condition's name once loaded
     loadComponent: () =>

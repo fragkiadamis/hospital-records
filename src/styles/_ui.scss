@@ -14,6 +14,12 @@
     margin: 0 0 20px;
     font-size: 1.5rem;
     font-weight: 600;
+
+    // "New condition <span class="for">for Ilse Varga</span>"
+    .for {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
   }
 }
 
@@ -177,6 +183,91 @@
       color: var(--text-muted);
       font-size: 18px;
     }
+  }
+}
+
+// Forms: <form class="form"> of <fieldset><legend> with <div class="row"> of <label>s, then .actions.
+.form {
+  display: grid;
+  gap: 16px;
+
+  fieldset {
+    margin: 0;
+    padding: 16px 20px 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
+  legend {
+    padding: 0 6px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+
+    & + .row {
+      margin-top: 16px;
+    }
+  }
+
+  label {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    font-size: 0.9rem;
+  }
+
+  abbr {
+    text-decoration: none;
+  }
+
+  input,
+  select {
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: inherit;
+    background: var(--bg);
+    font: inherit;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+  }
+
+  // Under a field: <span class="error" role="alert">; under a fieldset: <p class="error">.
+  .error {
+    margin: 12px 0 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+  }
+
+  label .error {
+    margin: 0;
+  }
+
+  .hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
   }
 }
 

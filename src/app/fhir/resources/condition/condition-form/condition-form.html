@@ -1,0 +1,162 @@
+<form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <fieldset>
+    <legend>Condition</legend>
+    <div class="row">
+      <label>
+        Name
+        <input
+          formControlName="text"
+          autocomplete="off"
+          placeholder="e.g. Breast cancer"
+          [attr.aria-invalid]="ruleError('identity', 'text')"
+        />
+      </label>
+    </div>
+    @if (ruleError('identity', 'text', 'snomedCode', 'icd10Code')) {
+      <p class="error" role="alert">Enter a name or at least one code.</p>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Codes</legend>
+    <div class="row">
+      <label>
+        SNOMED CT code
+        <input
+          formControlName="snomedCode"
+          inputmode="numeric"
+          autocomplete="off"
+          [attr.aria-invalid]="fieldError('snomedCode', 'pattern')"
+        />
+        @if (fieldError('snomedCode', 'pattern')) {
+          <span class="error" role="alert">A SNOMED CT code is 6 to 18 digits.</span>
+        }
+      </label>
+      <label>
+        SNOMED CT name
+        <input formControlName="snomedDisplay" autocomplete="off" />
+        @if (ruleError('snomedCodeMissing', 'snomedDisplay')) {
+          <span class="error" role="alert">Enter the code for this name.</span>
+        }
+      </label>
+    </div>
+    <div class="row">
+      <label>
+        ICD-10 code
+        <input
+          formControlName="icd10Code"
+          autocomplete="off"
+          placeholder="e.g. C50.9"
+          [attr.aria-invalid]="fieldError('icd10Code', 'pattern')"
+        />
+        @if (fieldError('icd10Code', 'pattern')) {
+          <span class="error" role="alert">An ICD-10 code looks like C50.9.</span>
+        }
+      </label>
+      <label>
+        ICD-10 name
+        <input formControlName="icd10Display" autocomplete="off" />
+        @if (ruleError('icd10CodeMissing', 'icd10Display')) {
+          <span class="error" role="alert">Enter the code for this name.</span>
+        }
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Status</legend>
+    <div class="row">
+      <label>
+        Clinical status
+        <select formControlName="clinicalStatus">
+          <option value="">Not recorded</option>
+          @for (status of clinicalStatuses; track status[0]) {
+            <option [value]="status[0]">{{ status[1] }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Verification
+        <select formControlName="verificationStatus">
+          <option value="">Not recorded</option>
+          @for (status of verificationStatuses; track status[0]) {
+            <option [value]="status[0]">{{ status[1] }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Category
+        <select formControlName="category">
+          <option value="">Not recorded</option>
+          @for (category of categories; track category[0]) {
+            <option [value]="category[0]">{{ category[1] }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    @if (ruleError('con4', 'clinicalStatus', 'abatementDate')) {
+      <p class="error" role="alert">
+        A condition with an end date can't be active, a recurrence or a relapse. Choose inactive,
+        remission or resolved, or remove the end date.
+      </p>
+    }
+    @if (ruleError('con5', 'clinicalStatus', 'verificationStatus')) {
+      <p class="error" role="alert">
+        A condition entered in error has no clinical status; set it to "Not recorded".
+      </p>
+    }
+    @if (ruleError('con3', 'clinicalStatus', 'category')) {
+      <p class="error" role="alert">Problem list items need a clinical status.</p>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Dates</legend>
+    <div class="row">
+      <label>
+        Onset
+        <input
+          type="date"
+          formControlName="onsetDate"
+          [max]="today"
+          [attr.aria-invalid]="fieldError('onsetDate', 'future')"
+        />
+        @if (fieldError('onsetDate', 'future')) {
+          <span class="error" role="alert">The onset can't be in the future.</span>
+        }
+        @if (storedOnset(); as stored) {
+          <span class="hint">Stored as "{{ stored }}"; kept unless you enter a date.</span>
+        }
+      </label>
+      <label>
+        Ended
+        <input
+          type="date"
+          formControlName="abatementDate"
+          [max]="today"
+          [attr.aria-invalid]="
+            fieldError('abatementDate', 'future') || ruleError('endBeforeOnset', 'abatementDate')
+          "
+        />
+        @if (fieldError('abatementDate', 'future')) {
+          <span class="error" role="alert">The end can't be in the future.</span>
+        }
+        @if (ruleError('endBeforeOnset', 'onsetDate', 'abatementDate')) {
+          <span class="error" role="alert">The end can't be before the onset.</span>
+        }
+        @if (storedEnd(); as stored) {
+          <span class="hint">Stored as "{{ stored }}"; kept unless you enter a date.</span>
+        }
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="actions">
+    <button type="button" class="button" [disabled]="saving()" (click)="cancelled.emit()">
+      Cancel
+    </button>
+    <button type="submit" class="button primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save condition' }}
+    </button>
+  </div>
+</form>

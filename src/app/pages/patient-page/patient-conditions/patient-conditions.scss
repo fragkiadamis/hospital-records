@@ -16,6 +16,12 @@ header {
   }
 }
 
+.add {
+  margin-left: auto;
+  padding: 5px 12px;
+  font-size: 0.9rem;
+}
+
 .count {
   padding: 0 8px;
   border-radius: 999px;
@@ -35,7 +41,7 @@ li + li {
   border-top: 1px solid var(--border);
 }
 
-a {
+li > a {
   display: flex;
   align-items: center;
   gap: 12px;
