@@ -63,6 +63,7 @@ const empty: ConditionFormValue = {
   category: '',
   onsetDate: '',
   abatementDate: '',
+  details: '',
 };
 
 describe('conditionToForm', () => {
@@ -75,6 +76,7 @@ describe('conditionToForm', () => {
       category: 'problem-list-item',
       onsetDate: '2025-02-14',
       abatementDate: '',
+      details: 'Seen in MRI',
     });
   });
 
@@ -124,6 +126,28 @@ describe('formToCondition', () => {
 
     // The local code and ICD-11 aren't edited by the form.
     expect(condition.code?.coding?.map((c) => c.system)).toEqual([LOCAL, CodeSystems.icd11]);
+  });
+
+  it('edits the first note as the details, keeping the other notes', () => {
+    const notes: Condition = {
+      ...stored,
+      note: [
+        { text: 'Seen in MRI', authorString: 'Dr. B', time: '2025-02-15' },
+        { text: 'Added by the RIS' },
+      ],
+    };
+
+    // Unchanged: kept exactly, with its author and time.
+    expect(formToCondition(form(), patient, notes).note).toEqual(notes.note);
+    // Changed: the new text replaces the first note only.
+    expect(formToCondition(form({ details: 'Seen in MRI, 2 cm' }), patient, notes).note).toEqual([
+      { text: 'Seen in MRI, 2 cm', authorString: 'Dr. B', time: '2025-02-15' },
+      { text: 'Added by the RIS' },
+    ]);
+    // Cleared: only the first note goes.
+    expect(formToCondition(form({ details: ' ' }), patient, notes).note).toEqual([
+      { text: 'Added by the RIS' },
+    ]);
   });
 
   it('replaces a status only when its code changes', () => {

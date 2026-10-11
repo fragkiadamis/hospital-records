@@ -92,6 +92,7 @@ export class ConditionForm {
       category: ['problem-list-item' as ConditionFormValue['category']],
       onsetDate: ['', notInFuture],
       abatementDate: ['', notInFuture],
+      details: [''],
     },
     { validators: conditionRules },
   );

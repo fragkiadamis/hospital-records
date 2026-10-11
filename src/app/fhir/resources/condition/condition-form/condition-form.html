@@ -131,6 +131,18 @@
     </div>
   </fieldset>
 
+  <fieldset>
+    <legend>Details</legend>
+    <label>
+      <span class="sr-only">Details</span>
+      <textarea
+        formControlName="details"
+        rows="3"
+        placeholder="What the ICD-10 code doesn't say, e.g. displaced fracture of the fifth metatarsal, right foot"
+      ></textarea>
+    </label>
+  </fieldset>
+
   <div class="actions">
     <button type="button" class="button" [disabled]="saving()" (click)="cancelled.emit()">
       Cancel

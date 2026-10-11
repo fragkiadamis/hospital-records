@@ -72,6 +72,7 @@ describe('ConditionForm', () => {
     await withCode('j18.9');
     set('verificationStatus', 'confirmed');
     set('onsetDate', '2026-01-08');
+    set('details', 'Right lower lobe, community-acquired');
     await submit();
 
     expect(errors()).toEqual([]);
@@ -82,6 +83,7 @@ describe('ConditionForm', () => {
       clinicalStatus: { coding: [{ code: 'active' }] },
       verificationStatus: { coding: [{ code: 'confirmed' }] },
       onsetDateTime: '2026-01-08',
+      note: [{ text: 'Right lower lobe, community-acquired' }],
     });
     expect(saved[0].code?.text).toBeUndefined(); // the code's name is the condition's name
   });

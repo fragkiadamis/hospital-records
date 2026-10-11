@@ -314,8 +314,13 @@
     text-decoration: none;
   }
 
+  textarea {
+    resize: vertical;
+  }
+
   input,
-  select {
+  select,
+  textarea {
     padding: 9px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;

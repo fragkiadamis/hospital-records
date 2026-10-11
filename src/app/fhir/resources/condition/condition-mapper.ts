@@ -1,4 +1,4 @@
-import type { CodeableConcept, Coding, Condition, Reference } from 'fhir/r4';
+import type { Annotation, CodeableConcept, Coding, Condition, Reference } from 'fhir/r4';
 import { CodeSystems } from '../../code-systems';
 import { findCoding, formatCodeableConcept } from '../../datatypes/codeable-concept-pipe';
 import { isReferenceTo } from '../../datatypes/reference-pipe';
@@ -43,6 +43,7 @@ export interface ConditionFormValue {
   category: ConditionCategory | '';
   onsetDate: string; // YYYY-MM-DD
   abatementDate: string; // YYYY-MM-DD
+  details: string; // free text the ICD-10 code can't say, kept as the condition's first note
 }
 
 /** The code of a status or category concept from the given HL7 code system, or ''. */
@@ -96,6 +97,7 @@ export function conditionToForm(condition: Condition): ConditionFormValue {
     category: (category?.code as ConditionCategory | undefined) ?? '',
     onsetDate: condition.onsetDateTime ?? '',
     abatementDate: condition.abatementDateTime ?? '',
+    details: condition.note?.[0]?.text ?? '',
   };
 }
 
@@ -125,6 +127,7 @@ export function formToCondition(
       existing?.verificationStatus,
     ),
     category: editedCategories(value.category, existing?.category),
+    note: editedNotes(value.details, existing?.note),
     ...timeChoice('onset', value.onsetDate, existing),
     ...timeChoice('abatement', value.abatementDate, existing),
   };
@@ -163,6 +166,17 @@ function editedCode(value: ConditionFormValue, current?: CodeableConcept) {
   const text = (old?.code ?? '') === code ? current?.text : undefined;
   if (!coding?.length && !text) return undefined;
   return { ...current, coding, text };
+}
+
+/**
+ * Condition.note with the form's details as the first note. Other notes (e.g. added by another
+ * system) stay; a note whose text didn't change is kept exactly as stored (author, time).
+ */
+function editedNotes(details: string, current?: Annotation[]) {
+  const first = current?.[0];
+  const text = details.trim();
+  const next = !text ? undefined : first?.text === text ? first : { ...first, text };
+  return replaceEntry(current, first, next);
 }
 
 /** A status concept for `code`; the stored one is kept as is when its code didn't change. */
