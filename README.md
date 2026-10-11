@@ -39,7 +39,7 @@ silently overwriting it.
 npm ci                    # install dependencies
 cp .env.example .env      # then fill in the three passwords, which have no defaults
 podman compose up -d      # start HAPI-FHIR, Orthanc and their Postgres databases
-npm run seed              # load sample patients, conditions and imaging studies into HAPI
+npm run seed              # load sample patients and conditions into HAPI
 npm run seed:orthanc      # send the sample DICOM studies to Orthanc (DICOM C-STORE)
 npm start                 # dev server at http://localhost:4200
 ```
