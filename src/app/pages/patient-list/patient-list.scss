@@ -12,11 +12,9 @@
 
 .search {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  width: min(360px, 100%);
+  align-items: stretch;
+  width: min(440px, 100%);
   margin-left: auto;
-  padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -24,6 +22,44 @@
   &:focus-within {
     border-color: var(--accent);
     outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  select {
+    height: 100%;
+    padding: 0 8px 0 12px;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 8px 0 0 8px;
+    outline: 0;
+    // Solid theme colours, not `none`: the browser draws the open list with the select's own
+    // background, and a transparent one leaves light text on its default light list in dark mode.
+    color: var(--text);
+    background: var(--surface);
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+  }
+
+  option {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .by {
+    display: flex;
+  }
+
+  .term {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 12px;
   }
 
   app-icon {

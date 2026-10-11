@@ -2,17 +2,27 @@
   <header class="page-header">
     <h1>Patients</h1>
 
-    <label class="search">
-      <app-icon name="search" />
-      <span class="sr-only">Search patients by name, or by full MRN or DICOM Patient ID</span>
-      <input
-        #search
-        type="search"
-        placeholder="Search by name or ID"
-        [value]="query()"
-        (input)="query.set(search.value)"
-      />
-    </label>
+    <div class="search" role="search">
+      <label class="by">
+        <span class="sr-only">Search in</span>
+        <select #by [value]="searchBy()" (change)="searchBy.set(by.value)">
+          @for (option of searchOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="term">
+        <app-icon name="search" />
+        <span class="sr-only">{{ placeholder() }}</span>
+        <input
+          #search
+          type="search"
+          [placeholder]="placeholder()"
+          [value]="query()"
+          (input)="query.set(search.value)"
+        />
+      </label>
+    </div>
 
     <button type="button" class="button" [disabled]="syncProgress()" (click)="syncWithPacs()">
       <app-icon name="refresh" [class.spinning]="syncProgress()" />

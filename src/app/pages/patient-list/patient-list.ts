@@ -4,6 +4,11 @@ import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, forkJoin, map } from 'rxjs';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
+import {
+  ANY_IDENTIFIER_SEARCH_PARAM,
+  PATIENT_IDENTIFIER_TYPES,
+  patientIdentifierType,
+} from '../../fhir/resources/patient/patient-identifiers';
 import { PatientSummary } from '../../fhir/resources/patient/patient-summary/patient-summary';
 import { PacsSync, PacsSyncReport as SyncReport } from '../../pacs/pacs-sync';
 import { Icon } from '../../shared/icon/icon';
@@ -11,6 +16,9 @@ import { PacsSyncReport } from './pacs-sync-report/pacs-sync-report';
 
 /** How many patients one search shows. Paging comes later. */
 const PAGE_SIZE = 50;
+
+/** What the patient search looks in: 'all', 'name', or the key of a patient identifier type. */
+type SearchBy = string;
 
 @Component({
   imports: [Icon, PacsSyncReport, PatientSummary, RouterLink],
@@ -31,22 +39,43 @@ export class PatientList {
     { initialValue: '' },
   );
 
+  /** What the search looks in: everything, names only, or one kind of identifier (its key). */
+  protected readonly searchBy = signal<SearchBy>('all');
+
+  protected readonly searchOptions: readonly { value: SearchBy; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'name', label: 'Name' },
+    ...PATIENT_IDENTIFIER_TYPES.map((t) => ({ value: t.key, label: t.label })),
+  ];
+
+  protected readonly placeholder = computed(() => {
+    const by = this.searchBy();
+    if (by === 'all') return 'Search by name or ID';
+    return `Search by ${by === 'name' ? 'name' : patientIdentifierType(by).label}`;
+  });
+
+  // Names and identifiers both match from the start, ignoring case: identifiers through the
+  // string search parameters `npm run seed` installs (see patient-identifiers.json).
   protected readonly patients = rxResource({
-    params: () => this.searchTerm().trim(),
-    stream: ({ params: term }) => {
-      const byName = this.fhir.search('Patient', {
-        name: term || undefined, // HAPI matches the start of any name part, ignoring case
-        _sort: 'family,given',
-        _count: PAGE_SIZE,
-      });
-      if (!term) return byName;
-      // Also an exact identifier (MRN, DICOM Patient ID, …), which finds patients without a
-      // name. FHIR token search matches whole values only, and HAPI's is case-sensitive.
-      const byIdentifier = this.fhir.search('Patient', { identifier: term, _count: PAGE_SIZE });
-      return forkJoin([byIdentifier, byName]).pipe(
-        map(([exact, named]) => [
-          ...exact,
-          ...named.filter((p) => !exact.some((e) => e.id === p.id)),
+    params: () => {
+      const term = this.searchTerm().trim();
+      // Without a term the choice doesn't matter: don't reload the list when it changes.
+      return term ? { term, by: this.searchBy() } : { term, by: 'all' };
+    },
+    stream: ({ params: { term, by } }) => {
+      const search = (param?: string) =>
+        this.fhir.search('Patient', {
+          ...(param && term ? { [param]: term } : {}),
+          _sort: 'family,given',
+          _count: PAGE_SIZE,
+        });
+      if (!term) return search();
+      if (by === 'name') return search('name');
+      if (by !== 'all') return search(patientIdentifierType(by).searchParam);
+      return forkJoin([search('name'), search(ANY_IDENTIFIER_SEARCH_PARAM)]).pipe(
+        map(([byName, byIdentifier]) => [
+          ...byName,
+          ...byIdentifier.filter((p) => !byName.some((n) => n.id === p.id)),
         ]),
       );
     },

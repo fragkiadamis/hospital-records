@@ -1,0 +1,17 @@
+{
+  "anyIdentifierSearchParam": "identifier-value",
+  "types": [
+    {
+      "key": "mrn",
+      "system": "urn:hospital-records:mrn",
+      "label": "MRN",
+      "searchParam": "mrn"
+    },
+    {
+      "key": "dicomPatientId",
+      "system": "urn:hospital-records:dicom-patient-id",
+      "label": "DICOM Patient ID",
+      "searchParam": "dicom-patient-id"
+    }
+  ]
+}

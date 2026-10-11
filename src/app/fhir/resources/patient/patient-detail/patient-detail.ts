@@ -5,14 +5,10 @@ import { AddressPipe } from '../../../datatypes/address-pipe';
 import { FhirDatePipe } from '../../../datatypes/fhir-date-pipe';
 import { formatHumanName } from '../../../datatypes/human-name-pipe';
 import { identifierLabel } from '../../../datatypes/identifier-pipe';
-import { DICOM_PATIENT_ID_SYSTEM, MRN_SYSTEM, patientDisplayName } from '../patient-mapper';
+import { PATIENT_IDENTIFIER_LABELS } from '../patient-identifiers';
+import { patientDisplayName } from '../patient-mapper';
 import { Icon } from '../../../../shared/icon/icon';
 import { IconName } from '../../../../shared/icon/icons';
-
-const KNOWN_IDENTIFIER_SYSTEMS = {
-  [MRN_SYSTEM]: 'MRN',
-  [DICOM_PATIENT_ID_SYSTEM]: 'DICOM Patient ID',
-};
 
 const CONTACT_ICONS: Partial<Record<NonNullable<ContactPoint['system']>, IconName>> = {
   phone: 'phone',
@@ -36,7 +32,7 @@ export class PatientDetail {
 
   protected readonly identifiers = computed(() =>
     (this.patient().identifier ?? []).map((identifier) => ({
-      label: identifierLabel(identifier, KNOWN_IDENTIFIER_SYSTEMS),
+      label: identifierLabel(identifier, PATIENT_IDENTIFIER_LABELS),
       value: identifier.value ?? '',
     })),
   );

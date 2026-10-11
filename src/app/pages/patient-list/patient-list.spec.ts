@@ -71,47 +71,85 @@ describe('PatientList', () => {
     expect(element.querySelector('.footer')?.textContent).toContain('2 patients');
   });
 
-  it('searches by name and by exact identifier, listing identifier matches first', async () => {
-    await respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
-    const search = element.querySelector<HTMLInputElement>('input[type="search"]')!;
-    search.value = 'LIDC-IDRI-0580';
-    search.dispatchEvent(new Event('input'));
-    await new Promise((resolve) => setTimeout(resolve, 350)); // the search waits for typing to pause
-    TestBed.tick();
-
+  describe('search', () => {
+    const bundle = (...patients: Patient[]): Bundle<Patient> => ({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: patients.map((resource) => ({ resource })),
+    });
+    const named: Patient = { resourceType: 'Patient', id: 'p1', name: [{ family: 'Lidcombe' }] };
     const unnamed: Patient = {
       resourceType: 'Patient',
       id: 'p9',
       identifier: [dicomPatientIdentifier('LIDC-IDRI-0580')],
     };
-    const byIdentifier = http.expectOne(
-      (r) => r.url === '/fhir/Patient' && r.params.get('identifier') === 'LIDC-IDRI-0580',
-    );
-    const byName = http.expectOne(
-      (r) => r.url === '/fhir/Patient' && r.params.get('name') === 'LIDC-IDRI-0580',
-    );
-    byIdentifier.flush({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [{ resource: unnamed }],
-    } satisfies Bundle<Patient>);
-    byName.flush({
-      resourceType: 'Bundle',
-      type: 'searchset',
-      entry: [
-        { resource: { resourceType: 'Patient', id: 'p1', name: [{ family: 'LIDC-IDRI-0580' }] } },
-        { resource: unnamed }, // found both ways: listed once
-      ],
-    } satisfies Bundle<Patient>);
-    await fixture.whenStable();
 
-    const names = [...element.querySelectorAll('app-patient-summary .name')].map(
-      (n) => n.textContent,
-    );
-    // The unnamed patient goes by its DICOM Patient ID.
-    expect(names).toEqual(['LIDC-IDRI-0580', 'LIDC-IDRI-0580']);
-    const links = [...element.querySelectorAll('.list a')].map((a) => a.getAttribute('href'));
-    expect(links).toEqual(['/patients/p9', '/patients/p1']);
+    /** Types `term`, waits for the search to start, and returns the requests it sent. */
+    const type = async (term: string) => {
+      const search = element.querySelector<HTMLInputElement>('input[type="search"]')!;
+      search.value = term;
+      search.dispatchEvent(new Event('input'));
+      await new Promise((resolve) => setTimeout(resolve, 350)); // waits for typing to pause
+      TestBed.tick();
+      return http.match((r) => r.url === '/fhir/Patient');
+    };
+    const searchIn = async (value: string) => {
+      const select = element.querySelector<HTMLSelectElement>('select')!;
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+    };
+    const listed = () =>
+      [...element.querySelectorAll('.list a')].map((a) => a.getAttribute('href'));
+
+    beforeEach(() => respond(bundle()));
+
+    it('offers All, Name and every kind of patient identifier', () => {
+      const options = [...element.querySelectorAll('select option')].map((o) => o.textContent);
+      expect(options).toEqual(['All', 'Name', 'MRN', 'DICOM Patient ID']);
+    });
+
+    it('searches names and any identifier by default, listing each patient once', async () => {
+      const requests = await type('lidc');
+
+      expect(
+        requests.map((r) => [...r.request.params.keys()].find((k) => !k.startsWith('_'))),
+      ).toEqual(['name', 'identifier-value']);
+      requests[0].flush(bundle(named));
+      requests[1].flush(bundle(unnamed, named)); // p1 is found both ways
+      await fixture.whenStable();
+
+      expect(listed()).toEqual(['/patients/p1', '/patients/p9']);
+      // The unnamed patient goes by its DICOM Patient ID.
+      expect(element.querySelectorAll('app-patient-summary .name')[1].textContent).toBe(
+        'LIDC-IDRI-0580',
+      );
+    });
+
+    it('searches one kind of identifier when chosen', async () => {
+      await searchIn('mrn');
+      expect(element.querySelector('input')?.getAttribute('placeholder')).toBe('Search by MRN');
+
+      const requests = await type('seed');
+
+      expect(requests).toHaveLength(1);
+      expect(requests[0].request.params.get('mrn')).toBe('seed');
+      expect(requests[0].request.params.has('name')).toBe(false);
+      requests[0].flush(bundle(named));
+      await fixture.whenStable();
+      expect(listed()).toEqual(['/patients/p1']);
+    });
+
+    it('searches names only when chosen', async () => {
+      await searchIn('name');
+
+      const requests = await type('kost');
+
+      expect(requests).toHaveLength(1);
+      expect(requests[0].request.params.get('name')).toBe('kost');
+      requests[0].flush(bundle());
+      await fixture.whenStable();
+    });
   });
 
   it('says so when there are no patients', async () => {

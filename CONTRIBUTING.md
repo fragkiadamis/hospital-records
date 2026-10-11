@@ -94,6 +94,13 @@ Each resource lives in `src/app/fhir/resources/<resource>/` and follows the same
 - Add the resource to the seed data (`scripts/seed/`). Except ImagingStudy: those come only from the
   PACS, through the sync, so put DICOM in `scripts/seed/dicom/` instead.
 
+### A new kind of patient identifier
+
+Add an entry to `src/app/fhir/resources/patient/patient-identifiers.json` (key, system, label and
+search parameter code), then run `npm run seed`. That one entry gives the patient detail its label,
+lets a patient without a name go by it, adds it to the search's "Search in" choices, and installs
+its search parameter on HAPI.
+
 ## Tests
 
 - Specs sit next to the code they test (`*.spec.ts`) and run on Vitest with Angular `TestBed`.

@@ -12,10 +12,11 @@ Hospital Records is a medical imaging (DICOM) records platform, at an early stag
 
 The frontend works on these FHIR R4 resources:
 
-- **Patients**: list with search by name or by full identifier (MRN, DICOM Patient ID), detail
-  page, create, edit, and delete (refused while other records still reference the patient).
-  Patients created by the PACS sync are identified by their DICOM Patient ID, kept apart from the
-  MRN; one without a name is shown by its MRN or DICOM Patient ID.
+- **Patients**: list with search, detail page, create, edit, and delete (refused while other
+  records still reference the patient). The search looks in names and identifiers (MRN, DICOM
+  Patient ID), or in just one of them, matching from the start and ignoring case. Patients created
+  by the PACS sync are identified by their DICOM Patient ID, kept apart from the MRN; one without a
+  name is shown by its MRN or DICOM Patient ID.
 - **Conditions**: shown on the patient page, with detail, create, edit and delete (refused while an
   imaging study names the condition as its reason). Conditions are coded in WHO ICD-10 and/or
   ICD-11, searched through a FHIR terminology server, and the form suggests the matching code in the
@@ -53,6 +54,12 @@ of the sample DICOM studies.
 HAPI takes a minute or so to start the first time; `npm run seed` fails with a clear message
 until it is reachable. The seed uses fixed ids, so running it again resets the sample records
 instead of duplicating them.
+
+`npm run seed` also installs the custom search parameters the patient search needs: FHIR's own
+`identifier` search only matches whole values, so each kind of patient identifier gets a string
+search parameter that matches like a name. HAPI reindexes existing patients in the background, so
+identifier search can take a minute to find them after the first seed. Any other HAPI the app uses
+needs these search parameters too.
 
 `npm run seed:orthanc` sends every `*.dcm` under `scripts/seed/dicom/` to Orthanc's DICOM port
 with DCMTK's `dcmsend`. That folder is git-ignored (the samples are about 1.2 GB), so put the

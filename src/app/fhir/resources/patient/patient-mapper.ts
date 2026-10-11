@@ -3,16 +3,17 @@ import { CodeSystems } from '../../code-systems';
 import { formatHumanName, preferredName } from '../../datatypes/human-name-pipe';
 import { identifierValue } from '../../datatypes/identifier-pipe';
 import { replaceEntry } from '../replace-entry';
+import { PATIENT_IDENTIFIER_TYPES, patientIdentifierType } from './patient-identifiers';
 
 /** Identifier system of Hospital Records medical record numbers. A placeholder until the hospital's own URI is known. */
-export const MRN_SYSTEM = 'urn:hospital-records:mrn';
+export const MRN_SYSTEM = patientIdentifierType('mrn').system;
 
 /**
  * Identifier system of the DICOM Patient ID (0010,0020) the PACS files a patient's studies under.
  * Kept apart from the MRN: the two often differ (outside studies, modalities assigning their own
  * ids), so patients are matched to PACS studies by this identifier only, never by MRN.
  */
-export const DICOM_PATIENT_ID_SYSTEM = 'urn:hospital-records:dicom-patient-id';
+export const DICOM_PATIENT_ID_SYSTEM = patientIdentifierType('dicomPatientId').system;
 
 /** A patient's DICOM Patient ID as a FHIR Identifier, typed PI (patient internal identifier). */
 export function dicomPatientIdentifier(patientId: string): Identifier {
@@ -102,15 +103,14 @@ export function formToPatient(value: PatientFormValue, existing?: Patient): Pati
 
 /**
  * "Daphne Kostaki". A patient without a name (anonymised DICOM often has none) goes by an id a
- * person can recognise: the MRN, else the DICOM Patient ID, else the resource reference.
+ * person can recognise, in the order of PATIENT_IDENTIFIER_TYPES (the MRN, then the DICOM
+ * Patient ID, …), else by the resource reference.
  */
 export function patientDisplayName(patient: Patient): string {
-  return (
-    formatHumanName(patient.name) ||
-    identifierValue(patient.identifier, MRN_SYSTEM) ||
-    identifierValue(patient.identifier, DICOM_PATIENT_ID_SYSTEM) ||
-    `Patient/${patient.id ?? 'new'}`
-  );
+  const identifier = PATIENT_IDENTIFIER_TYPES.map((t) =>
+    identifierValue(patient.identifier, t.system),
+  ).find(Boolean);
+  return formatHumanName(patient.name) || identifier || `Patient/${patient.id ?? 'new'}`;
 }
 
 /**
