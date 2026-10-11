@@ -12,9 +12,10 @@ Hospital Records is a medical imaging (DICOM) records platform, at an early stag
 
 The frontend works on these FHIR R4 resources:
 
-- **Patients**: list with name search, detail page, create, edit, and delete (refused while other
-  records still reference the patient). Patients created by the PACS sync are identified by their
-  DICOM Patient ID, kept apart from the MRN.
+- **Patients**: list with search by name or by full identifier (MRN, DICOM Patient ID), detail
+  page, create, edit, and delete (refused while other records still reference the patient).
+  Patients created by the PACS sync are identified by their DICOM Patient ID, kept apart from the
+  MRN; one without a name is shown by its MRN or DICOM Patient ID.
 - **Conditions**: shown on the patient page, with detail, create, edit and delete (refused while an
   imaging study names the condition as its reason). Conditions are coded in WHO ICD-10 and/or
   ICD-11, searched through a FHIR terminology server, and the form suggests the matching code in the

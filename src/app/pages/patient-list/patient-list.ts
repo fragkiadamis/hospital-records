@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, map } from 'rxjs';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
 import { PatientSummary } from '../../fhir/resources/patient/patient-summary/patient-summary';
@@ -33,12 +33,23 @@ export class PatientList {
 
   protected readonly patients = rxResource({
     params: () => this.searchTerm().trim(),
-    stream: ({ params: name }) =>
-      this.fhir.search('Patient', {
-        name: name || undefined, // HAPI matches the start of any name part, ignoring case
+    stream: ({ params: term }) => {
+      const byName = this.fhir.search('Patient', {
+        name: term || undefined, // HAPI matches the start of any name part, ignoring case
         _sort: 'family,given',
         _count: PAGE_SIZE,
-      }),
+      });
+      if (!term) return byName;
+      // Also an exact identifier (MRN, DICOM Patient ID, …), which finds patients without a
+      // name. FHIR token search matches whole values only, and HAPI's is case-sensitive.
+      const byIdentifier = this.fhir.search('Patient', { identifier: term, _count: PAGE_SIZE });
+      return forkJoin([byIdentifier, byName]).pipe(
+        map(([exact, named]) => [
+          ...exact,
+          ...named.filter((p) => !exact.some((e) => e.id === p.id)),
+        ]),
+      );
+    },
   });
 
   protected readonly errorMessage = computed(() => fhirErrorMessage(this.patients.error()));

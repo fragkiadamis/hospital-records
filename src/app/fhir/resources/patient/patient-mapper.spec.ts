@@ -1,4 +1,4 @@
-import type { Patient } from 'fhir/r4';
+import type { Identifier, Patient } from 'fhir/r4';
 import {
   DICOM_PATIENT_ID_SYSTEM,
   dicomPatientIdentifier,
@@ -178,9 +178,22 @@ describe('formToPatient', () => {
 });
 
 describe('patientDisplayName', () => {
-  it('shows the preferred name, or the reference when there is no name', () => {
+  it('shows the preferred name', () => {
     expect(patientDisplayName(stored)).toBe('Nikos Petros Andreou');
-    expect(patientDisplayName({ resourceType: 'Patient', id: 'p9' })).toBe('Patient/p9');
+  });
+
+  it('falls back to the MRN, then the DICOM Patient ID, then the reference', () => {
+    const dicomId = dicomPatientIdentifier('LIDC-IDRI-0580');
+    const mrn = { system: MRN_SYSTEM, value: 'MRN-7' };
+    const unnamed = (...identifier: Identifier[]): Patient => ({
+      resourceType: 'Patient',
+      id: 'p9',
+      identifier,
+    });
+
+    expect(patientDisplayName(unnamed(dicomId, mrn))).toBe('MRN-7');
+    expect(patientDisplayName(unnamed(dicomId))).toBe('LIDC-IDRI-0580');
+    expect(patientDisplayName(unnamed())).toBe('Patient/p9');
   });
 });
 

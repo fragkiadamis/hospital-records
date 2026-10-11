@@ -4,11 +4,11 @@
 
     <label class="search">
       <app-icon name="search" />
-      <span class="sr-only">Search patients by name</span>
+      <span class="sr-only">Search patients by name, or by full MRN or DICOM Patient ID</span>
       <input
         #search
         type="search"
-        placeholder="Search by name"
+        placeholder="Search by name or ID"
         [value]="query()"
         (input)="query.set(search.value)"
       />

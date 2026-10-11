@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Bundle, OperationOutcome, Patient } from 'fhir/r4';
 import { provideRouter } from '@angular/router';
+import { dicomPatientIdentifier } from '../../fhir/resources/patient/patient-mapper';
 import { PacsSync, PacsSyncReport } from '../../pacs/pacs-sync';
 import { PatientList } from './patient-list';
 
@@ -68,6 +69,49 @@ describe('PatientList', () => {
     const links = [...element.querySelectorAll('.list a')].map((a) => a.getAttribute('href'));
     expect(links).toEqual(['/patients/p2', '/patients/p1']);
     expect(element.querySelector('.footer')?.textContent).toContain('2 patients');
+  });
+
+  it('searches by name and by exact identifier, listing identifier matches first', async () => {
+    await respond({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
+    const search = element.querySelector<HTMLInputElement>('input[type="search"]')!;
+    search.value = 'LIDC-IDRI-0580';
+    search.dispatchEvent(new Event('input'));
+    await new Promise((resolve) => setTimeout(resolve, 350)); // the search waits for typing to pause
+    TestBed.tick();
+
+    const unnamed: Patient = {
+      resourceType: 'Patient',
+      id: 'p9',
+      identifier: [dicomPatientIdentifier('LIDC-IDRI-0580')],
+    };
+    const byIdentifier = http.expectOne(
+      (r) => r.url === '/fhir/Patient' && r.params.get('identifier') === 'LIDC-IDRI-0580',
+    );
+    const byName = http.expectOne(
+      (r) => r.url === '/fhir/Patient' && r.params.get('name') === 'LIDC-IDRI-0580',
+    );
+    byIdentifier.flush({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [{ resource: unnamed }],
+    } satisfies Bundle<Patient>);
+    byName.flush({
+      resourceType: 'Bundle',
+      type: 'searchset',
+      entry: [
+        { resource: { resourceType: 'Patient', id: 'p1', name: [{ family: 'LIDC-IDRI-0580' }] } },
+        { resource: unnamed }, // found both ways: listed once
+      ],
+    } satisfies Bundle<Patient>);
+    await fixture.whenStable();
+
+    const names = [...element.querySelectorAll('app-patient-summary .name')].map(
+      (n) => n.textContent,
+    );
+    // The unnamed patient goes by its DICOM Patient ID.
+    expect(names).toEqual(['LIDC-IDRI-0580', 'LIDC-IDRI-0580']);
+    const links = [...element.querySelectorAll('.list a')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/patients/p9', '/patients/p1']);
   });
 
   it('says so when there are no patients', async () => {

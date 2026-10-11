@@ -100,9 +100,17 @@ export function formToPatient(value: PatientFormValue, existing?: Patient): Pati
   };
 }
 
-/** "Daphne Kostaki", or the resource reference when the patient has no name. */
+/**
+ * "Daphne Kostaki". A patient without a name (anonymised DICOM often has none) goes by an id a
+ * person can recognise: the MRN, else the DICOM Patient ID, else the resource reference.
+ */
 export function patientDisplayName(patient: Patient): string {
-  return formatHumanName(patient.name) || `Patient/${patient.id ?? 'new'}`;
+  return (
+    formatHumanName(patient.name) ||
+    identifierValue(patient.identifier, MRN_SYSTEM) ||
+    identifierValue(patient.identifier, DICOM_PATIENT_ID_SYSTEM) ||
+    `Patient/${patient.id ?? 'new'}`
+  );
 }
 
 /**
