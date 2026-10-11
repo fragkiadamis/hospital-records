@@ -4,13 +4,15 @@
 #   podman compose logs -f      # follow logs
 #   podman compose down         # stop (add -v to also wipe the data volumes)
 #
-# Passwords have no defaults: copy .env.example to .env (git-ignored) and fill them in.
-# The Postgres images only apply POSTGRES_* on first start; after changing them, recreate the volume.
+# Settings come from .env (git-ignored): copy .env.example to .env and fill in the passwords,
+# which have no defaults. Everything else falls back to the defaults written here.
+# The Postgres images only apply their database name, user and password on first start; after
+# changing those, recreate the volume (podman compose down -v).
 
-name: artemis
+name: artemis # override with COMPOSE_PROJECT_NAME
 
 x-postgres: &postgres
-  image: docker.io/library/postgres:18-alpine
+  image: ${POSTGRES_IMAGE:-docker.io/library/postgres:18-alpine}
   healthcheck:
     # Over TCP: during first-run init Postgres listens only on its socket.
     test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
@@ -23,62 +25,62 @@ services:
   fhir-db:
     <<: *postgres
     environment:
-      POSTGRES_DB: hapi
+      POSTGRES_DB: ${FHIR_DB_NAME:-hapi}
       POSTGRES_USER: ${FHIR_DB_USER:-hapi}
-      POSTGRES_PASSWORD: ${FHIR_DB_PASSWORD:?}
+      POSTGRES_PASSWORD: ${FHIR_DB_PASSWORD:?set FHIR_DB_PASSWORD in .env}
     volumes:
       - fhir-db-data:/var/lib/postgresql
 
   hapi-fhir:
-    image: docker.io/hapiproject/hapi:v8.12.0-2
+    image: ${HAPI_IMAGE:-docker.io/hapiproject/hapi:v8.12.0-2}
     depends_on:
       fhir-db:
         condition: service_healthy
     environment:
-      spring.datasource.url: jdbc:postgresql://fhir-db:5432/hapi
+      spring.datasource.url: jdbc:postgresql://fhir-db:5432/${FHIR_DB_NAME:-hapi}
       spring.datasource.username: ${FHIR_DB_USER:-hapi}
-      spring.datasource.password: ${FHIR_DB_PASSWORD:?}
+      spring.datasource.password: ${FHIR_DB_PASSWORD:?set FHIR_DB_PASSWORD in .env}
       spring.datasource.driverClassName: org.postgresql.Driver
       spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
-      hapi.fhir.fhir_version: R4
+      hapi.fhir.fhir_version: ${FHIR_VERSION:-R4}
     ports:
-      - '127.0.0.1:${FHIR_HTTP_PORT:-8080}:8080' # FHIR REST API at /fhir
+      - '${BIND_ADDRESS:-127.0.0.1}:${FHIR_HTTP_PORT:-8080}:8080' # FHIR REST API at /fhir
     restart: unless-stopped
 
   orthanc-db:
     <<: *postgres
     environment:
-      POSTGRES_DB: orthanc
+      POSTGRES_DB: ${ORTHANC_DB_NAME:-orthanc}
       POSTGRES_USER: ${ORTHANC_DB_USER:-orthanc}
-      POSTGRES_PASSWORD: ${ORTHANC_DB_PASSWORD:?}
+      POSTGRES_PASSWORD: ${ORTHANC_DB_PASSWORD:?set ORTHANC_DB_PASSWORD in .env}
     volumes:
       - orthanc-db-data:/var/lib/postgresql
 
   orthanc:
-    image: docker.io/orthancteam/orthanc:26.9.1
+    image: ${ORTHANC_IMAGE:-docker.io/orthancteam/orthanc:26.9.1}
     depends_on:
       orthanc-db:
         condition: service_healthy
     environment:
-      ORTHANC__NAME: Artemis
-      ORTHANC__DICOM_AET: ARTEMIS
+      ORTHANC__NAME: ${ORTHANC_NAME:-Artemis}
+      ORTHANC__DICOM_AET: ${ORTHANC_DICOM_AET:-ARTEMIS}
       ORTHANC__AUTHENTICATION_ENABLED: 'true'
-      ORTHANC__REGISTERED_USERS: '{"${ORTHANC_USER:-orthanc}": "${ORTHANC_PASSWORD:?}"}'
+      ORTHANC__REGISTERED_USERS: '{"${ORTHANC_USER:-orthanc}": "${ORTHANC_PASSWORD:?set ORTHANC_PASSWORD in .env}"}'
       # Index in Postgres; DICOM files stay on the orthanc-data volume.
       ORTHANC__POSTGRESQL__HOST: orthanc-db
       ORTHANC__POSTGRESQL__PORT: '5432'
-      ORTHANC__POSTGRESQL__DATABASE: orthanc
+      ORTHANC__POSTGRESQL__DATABASE: ${ORTHANC_DB_NAME:-orthanc}
       ORTHANC__POSTGRESQL__USERNAME: ${ORTHANC_DB_USER:-orthanc}
-      ORTHANC__POSTGRESQL__PASSWORD: ${ORTHANC_DB_PASSWORD:?}
+      ORTHANC__POSTGRESQL__PASSWORD: ${ORTHANC_DB_PASSWORD:?set ORTHANC_DB_PASSWORD in .env}
       ORTHANC__POSTGRESQL__ENABLE_INDEX: 'true'
       ORTHANC__POSTGRESQL__ENABLE_STORAGE: 'false'
       DICOM_WEB_PLUGIN_ENABLED: 'true' # WADO-RS / QIDO-RS / STOW-RS at /dicom-web
-      VERBOSE_ENABLED: 'true'
+      VERBOSE_ENABLED: ${ORTHANC_VERBOSE:-true}
     volumes:
       - orthanc-data:/var/lib/orthanc/db
     ports:
-      - '127.0.0.1:${ORTHANC_HTTP_PORT:-8042}:8042' # REST API + Explorer UI
-      - '127.0.0.1:${ORTHANC_DICOM_PORT:-4242}:4242' # DICOM (C-STORE / C-FIND / C-MOVE)
+      - '${BIND_ADDRESS:-127.0.0.1}:${ORTHANC_HTTP_PORT:-8042}:8042' # REST API + Explorer UI
+      - '${BIND_ADDRESS:-127.0.0.1}:${ORTHANC_DICOM_PORT:-4242}:4242' # DICOM (C-STORE / C-FIND / C-MOVE)
     restart: unless-stopped
 
 volumes:

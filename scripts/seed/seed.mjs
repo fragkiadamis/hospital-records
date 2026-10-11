@@ -5,8 +5,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
 const dotenv = existsSync('.env') ? parseEnv(readFileSync('.env', 'utf8')) : {};
-const fhirPort = process.env.FHIR_HTTP_PORT || dotenv.FHIR_HTTP_PORT || '8080';
-const base = `http://localhost:${fhirPort}/fhir`;
+const setting = (name, fallback) => process.env[name] || dotenv[name] || fallback;
+const fhirPort = setting('FHIR_HTTP_PORT', '8080');
+// Where the compose stack publishes its ports: localhost unless bound to one specific address.
+const bind = setting('BIND_ADDRESS', '127.0.0.1');
+const host = ['127.0.0.1', '0.0.0.0', '::', ''].includes(bind) ? 'localhost' : bind;
+const base = `http://${host}:${fhirPort}/fhir`;
 
 const bundle = readFileSync(new URL('./seed-bundle.json', import.meta.url), 'utf8');
 

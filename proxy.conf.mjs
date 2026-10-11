@@ -10,10 +10,13 @@ const dotenv = existsSync('.env') ? parseEnv(readFileSync('.env', 'utf8')) : {};
 const setting = (name, fallback) => process.env[name] || dotenv[name] || fallback;
 
 const terminology = new URL(setting('TERMINOLOGY_URL', 'https://tx.fhir.org/r4'));
+// Where the compose stack publishes its ports: localhost unless bound to one specific address.
+const bind = setting('BIND_ADDRESS', '127.0.0.1');
+const stackHost = ['127.0.0.1', '0.0.0.0', '::', ''].includes(bind) ? 'localhost' : bind;
 
 export default {
   '/fhir': {
-    target: `http://localhost:${setting('FHIR_HTTP_PORT', '8080')}`,
+    target: `http://${stackHost}:${setting('FHIR_HTTP_PORT', '8080')}`,
     secure: false,
     changeOrigin: true,
     logLevel: 'debug',
