@@ -8,9 +8,13 @@ export const CodeSystems = {
   loinc: 'http://loinc.org',
   /** DICOM controlled terminology, e.g. modalities (CT, MR, …). */
   dicom: 'http://dicom.nema.org/resources/ontology/DCM',
+  /** Identifier system for DICOM UIDs, e.g. a Study Instance UID as "urn:oid:2.25.…". */
+  dicomUid: 'urn:dicom:uid',
   conditionClinical: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
   conditionVerification: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
   conditionCategory: 'http://terminology.hl7.org/CodeSystem/condition-category',
+  /** HL7 v2 table 0203 identifier types, e.g. ACSN (accession number), MR (medical record). */
+  identifierType: 'http://terminology.hl7.org/CodeSystem/v2-0203',
 } as const;
 
 /** Short names to show next to a code. Systems not listed here are shown as "Code". */

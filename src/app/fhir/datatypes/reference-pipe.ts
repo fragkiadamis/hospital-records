@@ -15,6 +15,16 @@ export function parseReference(
   return match ? { type: match[1], id: match[2] } : undefined;
 }
 
+/** Whether the reference points to the resource `type`/`id` (relative, absolute or versioned). */
+export function isReferenceTo(
+  reference: Reference | undefined | null,
+  type: string,
+  id: string | undefined,
+): boolean {
+  const parsed = parseReference(reference);
+  return !!id && parsed?.type === type && parsed.id === id;
+}
+
 /** What to call the referenced resource: its `display`, else "Patient/123", else the identifier. */
 export function formatReference(reference: Reference | undefined | null): string {
   if (!reference) return '';

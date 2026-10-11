@@ -1,4 +1,4 @@
-import { formatReference, parseReference, ReferencePipe } from './reference-pipe';
+import { formatReference, isReferenceTo, parseReference, ReferencePipe } from './reference-pipe';
 
 describe('parseReference', () => {
   it('reads type and id from relative and absolute references', () => {
@@ -26,6 +26,18 @@ describe('parseReference', () => {
     ).toBeUndefined();
     expect(parseReference({ identifier: { value: 'SEED-0001' } })).toBeUndefined();
     expect(parseReference(undefined)).toBeUndefined();
+  });
+});
+
+describe('isReferenceTo', () => {
+  it('matches type and id in any reference form', () => {
+    expect(isReferenceTo({ reference: 'Patient/p1' }, 'Patient', 'p1')).toBe(true);
+    expect(
+      isReferenceTo({ reference: 'http://x/fhir/Patient/p1/_history/2' }, 'Patient', 'p1'),
+    ).toBe(true);
+    expect(isReferenceTo({ reference: 'Patient/p1' }, 'Patient', 'p2')).toBe(false);
+    expect(isReferenceTo({ reference: 'Group/p1' }, 'Patient', 'p1')).toBe(false);
+    expect(isReferenceTo({ reference: 'Patient/p1' }, 'Patient', undefined)).toBe(false);
   });
 });
 

@@ -2,7 +2,7 @@ import type { Condition } from 'fhir/r4';
 import { map, Observable } from 'rxjs';
 import { FhirClient } from '../../client/fhir-client';
 import { LinkedCount } from '../../delete-panel/delete-panel';
-import { parseReference } from '../../datatypes/reference-pipe';
+import { isReferenceTo } from '../../datatypes/reference-pipe';
 
 /**
  * ImagingStudies that name the condition as their reason (ImagingStudy.reasonReference).
@@ -20,10 +20,7 @@ export function studiesWithReason(
   return fhir.search('ImagingStudy', { subject: condition.subject.reference, _count: 500 }).pipe(
     map((studies) => {
       const count = studies.filter((study) =>
-        study.reasonReference?.some((reason) => {
-          const ref = parseReference(reason);
-          return ref?.type === 'Condition' && ref.id === conditionId;
-        }),
+        study.reasonReference?.some((reason) => isReferenceTo(reason, 'Condition', conditionId)),
       ).length;
       return count ? [{ type: 'ImagingStudy', count }] : [];
     }),
