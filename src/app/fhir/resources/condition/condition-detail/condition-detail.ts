@@ -13,10 +13,11 @@ import {
   VERIFICATION_STATUSES,
   verificationStatusOf,
 } from '../condition-mapper';
+import { Icon } from '../../../../shared/icon/icon';
 
 /** Everything on a Condition record, read-only. */
 @Component({
-  imports: [CodeableConceptPipe, CodingChip, FhirDatePipe, ReferencePipe, TimeChoicePipe],
+  imports: [CodeableConceptPipe, CodingChip, FhirDatePipe, Icon, ReferencePipe, TimeChoicePipe],
   selector: 'app-condition-detail',
   styleUrl: './condition-detail.scss',
   templateUrl: './condition-detail.html',

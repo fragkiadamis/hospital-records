@@ -91,7 +91,7 @@ describe('ConditionDetail', () => {
       Ended: '1 Mar 2026',
       Recorded: '15 Feb 2025',
     });
-    expect(texts('section:has(.ti-photo-scan) li')).toEqual(['MRI breast']);
+    expect(texts('section:has([data-icon="photo-scan"]) li')).toEqual(['MRI breast']);
     expect(texts('.notes p')).toEqual(['Seen on MRI.']);
     expect(texts('.notes .meta')).toEqual(['Dr. Andreou 15 Feb 2025']);
   });

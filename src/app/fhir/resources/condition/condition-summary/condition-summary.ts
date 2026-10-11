@@ -12,13 +12,14 @@ import {
   VERIFICATION_STATUSES,
   verificationStatusOf,
 } from '../condition-mapper';
+import { Icon } from '../../../../shared/icon/icon';
 
 /**
  * One-line condition: name, clinical status, doubtful verification, onset/end and codes.
  * Display only; wrap it in a link where it should be clickable.
  */
 @Component({
-  imports: [CodingChip, TimeChoicePipe],
+  imports: [CodingChip, Icon, TimeChoicePipe],
   selector: 'app-condition-summary',
   styleUrl: './condition-summary.scss',
   templateUrl: './condition-summary.html',

@@ -30,10 +30,10 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css",
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"],
+            "loader": {
+              ".svg": "text"
+            }
           },
           "configurations": {
             "production": {

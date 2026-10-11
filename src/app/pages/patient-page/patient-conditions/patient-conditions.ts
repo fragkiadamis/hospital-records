@@ -5,13 +5,14 @@ import { FhirClient } from '../../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../../fhir/client/fhir-error';
 import { byRelevance } from '../../../fhir/resources/condition/condition-mapper';
 import { ConditionSummary } from '../../../fhir/resources/condition/condition-summary/condition-summary';
+import { Icon } from '../../../shared/icon/icon';
 
 /** More than any patient is expected to have; paging comes if that turns out wrong. */
 const MAX_CONDITIONS = 200;
 
 /** The "Conditions" card of the patient page: every Condition whose subject is the patient. */
 @Component({
-  imports: [ConditionSummary, RouterLink],
+  imports: [ConditionSummary, Icon, RouterLink],
   selector: 'app-patient-conditions',
   styleUrl: './patient-conditions.scss',
   templateUrl: './patient-conditions.html',

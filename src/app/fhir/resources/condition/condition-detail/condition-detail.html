@@ -3,7 +3,7 @@
 @let ended = c | timeChoice: 'abatement';
 
 <header class="heading">
-  <span class="avatar" aria-hidden="true"><i class="ti ti-stethoscope"></i></span>
+  <span class="avatar" aria-hidden="true"><app-icon name="stethoscope" /></span>
   <div>
     <h2 [class.void]="voided()">{{ name() }}</h2>
     <p class="sub">{{ c.subject | reference }}</p>
@@ -81,13 +81,13 @@
       <ul>
         @for (detail of evidenceDetails(); track $index) {
           <li>
-            <i class="ti ti-photo-scan" aria-hidden="true"></i>
+            <app-icon name="photo-scan" />
             <span>{{ detail | reference }}</span>
           </li>
         }
         @for (code of evidenceCodes(); track $index) {
           <li>
-            <i class="ti ti-list-details" aria-hidden="true"></i>
+            <app-icon name="list-details" />
             <span>{{ code | codeableConcept }}</span>
           </li>
         }

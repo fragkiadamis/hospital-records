@@ -5,7 +5,7 @@
       <span class="count">{{ sorted().length }}</span>
     }
     <a class="button add" [routerLink]="['/patients', patientId(), 'conditions', 'new']">
-      <i class="ti ti-plus" aria-hidden="true"></i>
+      <app-icon name="plus" />
       Add condition
     </a>
   </header>
@@ -13,7 +13,7 @@
   <div aria-live="polite" [attr.aria-busy]="conditions.isLoading()">
     @if (conditions.error()) {
       <div class="alert" role="alert">
-        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <app-icon name="alert-triangle" />
         <span>Conditions could not be loaded: {{ errorMessage() }}</span>
         <button type="button" class="button" (click)="conditions.reload()">Try again</button>
       </div>
@@ -24,7 +24,7 @@
             <li>
               <a [routerLink]="['/patients', patientId(), 'conditions', condition.id]">
                 <app-condition-summary [condition]="condition" />
-                <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+                <app-icon name="chevron-right" class="chevron" />
               </a>
             </li>
           }

@@ -11,9 +11,10 @@ import {
   conditionDisplayName,
   isConditionOf,
 } from '../../fhir/resources/condition/condition-mapper';
+import { Icon } from '../../shared/icon/icon';
 
 @Component({
-  imports: [ConditionDetail, DeletePanel, RouterLink],
+  imports: [ConditionDetail, DeletePanel, Icon, RouterLink],
   selector: 'app-condition-page',
   templateUrl: './condition-page.html',
 })

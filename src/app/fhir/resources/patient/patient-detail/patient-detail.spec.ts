@@ -47,8 +47,11 @@ describe('PatientDetail', () => {
     expect(texts('dt')).toEqual(['MRN', 'urn:other:hospital']);
     expect(texts('dd')).toEqual(['SEED-0002', 'X-77']);
     expect(section('Contact')?.querySelectorAll('li')).toHaveLength(2);
-    expect(section('Contact')?.querySelector('.ti-phone')).not.toBeNull();
-    expect(texts('section:has(.ti-map-pin) li > span')).toEqual(['Ermou 12, Athens', 'home']);
+    expect(section('Contact')?.querySelector('[data-icon="phone"]')).not.toBeNull();
+    expect(texts('section:has([data-icon="map-pin"]) li > span')).toEqual([
+      'Ermou 12, Athens',
+      'home',
+    ]);
   });
 
   it('hides sections the record has no data for', async () => {

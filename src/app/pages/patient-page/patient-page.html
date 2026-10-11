@@ -1,13 +1,13 @@
 <section class="page">
   <nav class="toolbar">
     <a class="back" routerLink="/patients">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      <app-icon name="arrow-left" />
       Patients
     </a>
     @if (patient.hasValue()) {
       <div class="actions">
         <a class="button" [routerLink]="['/patients', id(), 'edit']">
-          <i class="ti ti-pencil" aria-hidden="true"></i>
+          <app-icon name="pencil" />
           Edit
         </a>
         <button
@@ -16,7 +16,7 @@
           [disabled]="deleting()"
           (click)="deleting.set(true)"
         >
-          <i class="ti ti-trash" aria-hidden="true"></i>
+          <app-icon name="trash" />
           Delete
         </button>
       </div>
@@ -37,7 +37,7 @@
   <div aria-live="polite" [attr.aria-busy]="patient.isLoading()">
     @if (patient.error()) {
       <div class="alert" role="alert">
-        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <app-icon name="alert-triangle" />
         <span>{{ errorMessage() }}</span>
         <button type="button" class="button" (click)="patient.reload()">Try again</button>
       </div>

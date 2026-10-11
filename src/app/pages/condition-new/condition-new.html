@@ -1,7 +1,7 @@
 <section class="page narrow">
   <nav class="toolbar">
     <a class="back" [routerLink]="['/patients', id()]">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      <app-icon name="arrow-left" />
       Back to patient
     </a>
   </nav>
@@ -15,14 +15,14 @@
 
   @if (saveError()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>The condition was not saved: {{ saveError() }}</span>
     </div>
   }
 
   @if (patient.error()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>{{ loadError() }}</span>
       <button type="button" class="button" (click)="patient.reload()">Try again</button>
     </div>

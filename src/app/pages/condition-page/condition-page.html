@@ -1,13 +1,13 @@
 <section class="page">
   <nav class="toolbar">
     <a class="back" [routerLink]="['/patients', id()]">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      <app-icon name="arrow-left" />
       Back to patient
     </a>
     @if (belongsToPatient()) {
       <div class="actions">
         <a class="button" [routerLink]="['/patients', id(), 'conditions', conditionId(), 'edit']">
-          <i class="ti ti-pencil" aria-hidden="true"></i>
+          <app-icon name="pencil" />
           Edit
         </a>
         <button
@@ -16,7 +16,7 @@
           [disabled]="deleting()"
           (click)="deleting.set(true)"
         >
-          <i class="ti ti-trash" aria-hidden="true"></i>
+          <app-icon name="trash" />
           Delete
         </button>
       </div>
@@ -38,7 +38,7 @@
   <div aria-live="polite" [attr.aria-busy]="condition.isLoading()">
     @if (condition.error()) {
       <div class="alert" role="alert">
-        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <app-icon name="alert-triangle" />
         <span>{{ errorMessage() }}</span>
         <button type="button" class="button" (click)="condition.reload()">Try again</button>
       </div>
@@ -47,7 +47,7 @@
         <app-condition-detail [condition]="condition.value()" />
       } @else {
         <div class="alert" role="alert">
-          <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+          <app-icon name="alert-triangle" />
           <span>This condition does not belong to this patient.</span>
         </div>
       }

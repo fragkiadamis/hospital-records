@@ -6,9 +6,10 @@ import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage, isVersionConflict } from '../../fhir/client/fhir-error';
 import { ConditionForm } from '../../fhir/resources/condition/condition-form/condition-form';
 import { isConditionOf } from '../../fhir/resources/condition/condition-mapper';
+import { Icon } from '../../shared/icon/icon';
 
 @Component({
-  imports: [ConditionForm, RouterLink],
+  imports: [ConditionForm, Icon, RouterLink],
   selector: 'app-condition-edit',
   templateUrl: './condition-edit.html',
 })

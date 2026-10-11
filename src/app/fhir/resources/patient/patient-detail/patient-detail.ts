@@ -6,20 +6,22 @@ import { FhirDatePipe } from '../../../datatypes/fhir-date-pipe';
 import { formatHumanName } from '../../../datatypes/human-name-pipe';
 import { identifierLabel } from '../../../datatypes/identifier-pipe';
 import { MRN_SYSTEM, patientDisplayName } from '../patient-mapper';
+import { Icon } from '../../../../shared/icon/icon';
+import { IconName } from '../../../../shared/icon/icons';
 
 const KNOWN_IDENTIFIER_SYSTEMS = { [MRN_SYSTEM]: 'MRN' };
 
-const CONTACT_ICONS: Partial<Record<NonNullable<ContactPoint['system']>, string>> = {
-  phone: 'ti-phone',
-  email: 'ti-mail',
-  fax: 'ti-printer',
-  sms: 'ti-message',
-  url: 'ti-world',
+const CONTACT_ICONS: Partial<Record<NonNullable<ContactPoint['system']>, IconName>> = {
+  phone: 'phone',
+  email: 'mail',
+  fax: 'printer',
+  sms: 'message',
+  url: 'world',
 };
 
 /** Everything on a Patient record, read-only. Shows all entries, not only those the form edits. */
 @Component({
-  imports: [AddressPipe, FhirDatePipe, TitleCasePipe],
+  imports: [AddressPipe, FhirDatePipe, Icon, TitleCasePipe],
   selector: 'app-patient-detail',
   styleUrl: './patient-detail.scss',
   templateUrl: './patient-detail.html',
@@ -47,7 +49,7 @@ export class PatientDetail {
   protected readonly contacts = computed(() =>
     (this.patient().telecom ?? []).map((contact) => ({
       ...contact,
-      icon: (contact.system && CONTACT_ICONS[contact.system]) || 'ti-address-book',
+      icon: (contact.system && CONTACT_ICONS[contact.system]) || ('address-book' as IconName),
     })),
   );
 

@@ -3,7 +3,7 @@
     <h1>Patients</h1>
 
     <label class="search">
-      <i class="ti ti-search" aria-hidden="true"></i>
+      <app-icon name="search" />
       <span class="sr-only">Search patients by name</span>
       <input
         #search
@@ -15,14 +15,14 @@
     </label>
 
     <a class="button primary" routerLink="/patients/new">
-      <i class="ti ti-plus" aria-hidden="true"></i>
+      <app-icon name="plus" />
       New patient
     </a>
   </header>
 
   @if (patients.error()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>{{ errorMessage() }}</span>
       <button type="button" class="button" (click)="patients.reload()">Try again</button>
     </div>
@@ -36,7 +36,7 @@
               <li>
                 <a [routerLink]="['/patients', patient.id]">
                   <app-patient-summary [patient]="patient" />
-                  <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+                  <app-icon name="chevron-right" class="chevron" />
                 </a>
               </li>
             }

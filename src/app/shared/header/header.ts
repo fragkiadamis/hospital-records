@@ -1,8 +1,9 @@
 import { Component, inject, input } from '@angular/core';
 import { Theme } from '../theme/theme';
+import { Icon } from '../icon/icon';
 
 @Component({
-  imports: [],
+  imports: [Icon],
   selector: 'app-header',
   styleUrl: './header.scss',
   templateUrl: './header.html',

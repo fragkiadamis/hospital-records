@@ -1,7 +1,7 @@
 @let p = patient();
 
 <header class="heading">
-  <span class="avatar" aria-hidden="true"><i class="ti ti-user"></i></span>
+  <span class="avatar" aria-hidden="true"><app-icon name="user" /></span>
   <div>
     <h2>{{ name() }}</h2>
     <p class="sub">
@@ -40,7 +40,7 @@
       <ul>
         @for (contact of contacts(); track $index) {
           <li>
-            <i class="ti {{ contact.icon }}" aria-hidden="true"></i>
+            <app-icon [name]="contact.icon" />
             <span>{{ contact.value }}</span>
             @if (contact.use) {
               <span class="use">{{ contact.use }}</span>
@@ -57,7 +57,7 @@
       <ul>
         @for (address of p.address; track $index) {
           <li>
-            <i class="ti ti-map-pin" aria-hidden="true"></i>
+            <app-icon name="map-pin" />
             <span>{{ address | address }}</span>
             @if (address.use) {
               <span class="use">{{ address.use }}</span>

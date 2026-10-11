@@ -1,7 +1,7 @@
 <section class="page narrow">
   <nav class="toolbar">
     <a class="back" [routerLink]="['/patients', id(), 'conditions', conditionId()]">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      <app-icon name="arrow-left" />
       Back to condition
     </a>
   </nav>
@@ -10,7 +10,7 @@
 
   @if (conflict()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>
         Someone else changed this condition after you opened it, so your changes were not saved.
         Load their version and make your changes again.
@@ -19,14 +19,14 @@
     </div>
   } @else if (saveError()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>The condition was not saved: {{ saveError() }}</span>
     </div>
   }
 
   @if (condition.error()) {
     <div class="alert" role="alert">
-      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <app-icon name="alert-triangle" />
       <span>{{ loadError() }}</span>
       <button type="button" class="button" (click)="condition.reload()">Try again</button>
     </div>
@@ -41,7 +41,7 @@
       />
     } @else {
       <div class="alert" role="alert">
-        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <app-icon name="alert-triangle" />
         <span>This condition does not belong to this patient.</span>
       </div>
     }

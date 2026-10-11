@@ -5,12 +5,13 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
 import { PatientSummary } from '../../fhir/resources/patient/patient-summary/patient-summary';
+import { Icon } from '../../shared/icon/icon';
 
 /** How many patients one search shows. Paging comes later. */
 const PAGE_SIZE = 50;
 
 @Component({
-  imports: [PatientSummary, RouterLink],
+  imports: [Icon, PatientSummary, RouterLink],
   selector: 'app-patient-list',
   styleUrl: './patient-list.scss',
   templateUrl: './patient-list.html',

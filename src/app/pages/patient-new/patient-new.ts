@@ -4,9 +4,10 @@ import type { Patient } from 'fhir/r4';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
 import { PatientForm } from '../../fhir/resources/patient/patient-form/patient-form';
+import { Icon } from '../../shared/icon/icon';
 
 @Component({
-  imports: [PatientForm, RouterLink],
+  imports: [Icon, PatientForm, RouterLink],
   selector: 'app-patient-new',
   templateUrl: './patient-new.html',
 })

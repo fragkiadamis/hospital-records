@@ -6,9 +6,10 @@ import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
 import { ConditionForm } from '../../fhir/resources/condition/condition-form/condition-form';
 import { patientDisplayName } from '../../fhir/resources/patient/patient-mapper';
+import { Icon } from '../../shared/icon/icon';
 
 @Component({
-  imports: [ConditionForm, RouterLink],
+  imports: [ConditionForm, Icon, RouterLink],
   selector: 'app-condition-new',
   templateUrl: './condition-new.html',
 })
