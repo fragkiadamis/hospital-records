@@ -1,3 +1,13 @@
+## [0.3.0](https://github.com/fragkiadamis/hospital-records/compare/v0.2.0...v0.3.0) (2026-10-11)
+
+### Features
+
+* Add free-text details to conditions, stored as the condition's first note ([1d3cdd2](https://github.com/fragkiadamis/hospital-records/commit/1d3cdd2b7bcfb9b731478004b0c502ce79eaabe9))
+* Add terminology client and code search component ([313e82e](https://github.com/fragkiadamis/hospital-records/commit/313e82e68a24b1991469459686adfe2af452a0cc))
+* Code conditions in ICD-11 too, with WHO's official ICD-10 ↔ ICD-11 mapping ([f0fef56](https://github.com/fragkiadamis/hospital-records/commit/f0fef56f2a66f61bfba7b47c06f1815b1914ca6c))
+* Search SNOMED CT and ICD-10 codes in the condition form ([fdd4c3e](https://github.com/fragkiadamis/hospital-records/commit/fdd4c3e8d9bdd429a4c1044fc33b25841732bd7b))
+* Suggest ICD-10 codes from SNOMED CT's official ICD-10 map ([4103dec](https://github.com/fragkiadamis/hospital-records/commit/4103dec3d58ab16d3ee2bc357a6853498df7892e))
+
 ## [0.2.0](https://github.com/fragkiadamis/hospital-records/compare/v0.1.0...v0.2.0) (2026-10-11)
 
 ### Features
