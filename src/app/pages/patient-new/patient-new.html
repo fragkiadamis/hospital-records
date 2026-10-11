@@ -1,0 +1,17 @@
+<section class="page">
+  <a class="back" routerLink="/patients">
+    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+    Patients
+  </a>
+
+  <h1>New patient</h1>
+
+  @if (error()) {
+    <div class="error" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>The patient was not saved: {{ error() }}</span>
+    </div>
+  }
+
+  <app-patient-form [saving]="saving()" (save)="create($event)" (cancelled)="cancel()" />
+</section>

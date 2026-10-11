@@ -1,0 +1,81 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <fieldset>
+    <legend>Name</legend>
+    <div class="row">
+      <label>
+        Given names
+        <input formControlName="given" autocomplete="off" [attr.aria-invalid]="showNameError" />
+      </label>
+      <label>
+        Family name
+        <input formControlName="family" autocomplete="off" [attr.aria-invalid]="showNameError" />
+      </label>
+    </div>
+    @if (showNameError) {
+      <p class="error" role="alert">Enter a given or a family name.</p>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Details</legend>
+    <div class="row">
+      <label>
+        Sex
+        <select formControlName="gender">
+          <option value="">Not recorded</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="other">Other</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </label>
+      <label>
+        Birth date
+        <input
+          type="date"
+          formControlName="birthDate"
+          [max]="today"
+          [attr.aria-invalid]="showError('birthDate', 'future')"
+        />
+        @if (showError('birthDate', 'future')) {
+          <span class="error" role="alert">The birth date can't be in the future.</span>
+        }
+      </label>
+      <label>
+        <span><abbr title="Medical record number">MRN</abbr></span>
+        <input formControlName="mrn" autocomplete="off" />
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Contact</legend>
+    <div class="row">
+      <label>
+        Phone
+        <input type="tel" formControlName="phone" autocomplete="off" />
+      </label>
+      <label>
+        Email
+        <input
+          type="email"
+          formControlName="email"
+          autocomplete="off"
+          [attr.aria-invalid]="showError('email', 'email')"
+        />
+        @if (showError('email', 'email')) {
+          <span class="error" role="alert">Enter a valid email address.</span>
+        }
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="actions">
+    <button type="button" class="secondary" [disabled]="saving()" (click)="cancelled.emit()">
+      Cancel
+    </button>
+    <button type="submit" class="primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save patient' }}
+    </button>
+  </div>
+</form>

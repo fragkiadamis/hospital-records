@@ -8,7 +8,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 20px;
 
@@ -24,6 +23,7 @@
   align-items: center;
   gap: 8px;
   width: min(360px, 100%);
+  margin-left: auto;
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -48,6 +48,23 @@
     color: inherit;
     background: none;
     font: inherit;
+  }
+}
+
+.new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--header-mid);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--header-mid);
+    outline-offset: 2px;
   }
 }
 

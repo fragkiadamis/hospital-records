@@ -9,6 +9,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/patient-list/patient-list').then((m) => m.PatientList),
   },
   {
+    path: 'patients/new', // before patients/:id, which would otherwise take "new" as an id
+    title: 'New patient · Artemis',
+    loadComponent: () => import('./pages/patient-new/patient-new').then((m) => m.PatientNew),
+  },
+  {
     path: 'patients/:id',
     title: 'Patient · Artemis', // replaced by the patient's name once loaded
     loadComponent: () => import('./pages/patient-page/patient-page').then((m) => m.PatientPage),

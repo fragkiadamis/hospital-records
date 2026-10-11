@@ -13,6 +13,11 @@
         (input)="query.set(search.value)"
       />
     </label>
+
+    <a class="new" routerLink="/patients/new">
+      <i class="ti ti-plus" aria-hidden="true"></i>
+      New patient
+    </a>
   </header>
 
   <div class="card" aria-live="polite" [attr.aria-busy]="patients.isLoading()">
