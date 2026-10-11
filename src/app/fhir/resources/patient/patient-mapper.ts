@@ -1,6 +1,7 @@
 import type { ContactPoint, HumanName, Identifier, Patient } from 'fhir/r4';
 import { formatHumanName, preferredName } from '../../datatypes/human-name-pipe';
 import { identifierValue } from '../../datatypes/identifier-pipe';
+import { replaceEntry } from '../replace-entry';
 
 /** Identifier system of Artemis medical record numbers. A placeholder until the hospital's own URI is known. */
 export const MRN_SYSTEM = 'urn:artemis:mrn';
@@ -101,19 +102,4 @@ function editedName(value: PatientFormValue, current?: HumanName): HumanName | u
     family: family || undefined,
     given: given.length ? given : undefined,
   };
-}
-
-/**
- * Puts `next` where `current` was (or removes `current` when `next` is undefined), keeping every
- * other entry and its order. A new entry is appended. Returns undefined rather than an empty list,
- * because FHIR does not allow empty arrays.
- */
-function replaceEntry<T>(list: T[] | undefined, current: T | undefined, next: T | undefined) {
-  const entries = list ?? [];
-  const result = current
-    ? entries.flatMap((entry) => (entry === current ? (next ? [next] : []) : [entry]))
-    : next
-      ? [...entries, next]
-      : entries;
-  return result.length ? result : undefined;
 }
