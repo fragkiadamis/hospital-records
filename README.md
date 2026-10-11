@@ -13,16 +13,18 @@ Hospital Records is a medical imaging (DICOM) records platform, at an early stag
 The frontend works on these FHIR R4 resources:
 
 - **Patients**: list with name search, detail page, create, edit, and delete (refused while other
-  records still reference the patient).
+  records still reference the patient). Patients created by the PACS sync are identified by their
+  DICOM Patient ID, kept apart from the MRN.
 - **Conditions**: shown on the patient page, with detail, create, edit and delete (refused while an
   imaging study names the condition as its reason). Conditions are coded in WHO ICD-10 and/or
   ICD-11, searched through a FHIR terminology server, and the form suggests the matching code in the
   other classification from WHO's official ICD-10 / ICD-11 mapping. Free-text details are stored as
   the condition's first note.
-- **Imaging studies**: shown on the patient page, with a detail page and series table. Studies are
-  read-only in the UI, since they describe DICOM data and are meant to be created from it. The
-  one thing the UI edits is a study's reasons, which link it to conditions; the link is saved on both
-  sides in a single transaction.
+- **Imaging studies**: shown on the patient page, with a detail page and series table. They come
+  only from the PACS: the [PACS sync](#pacs-sync) creates them from the DICOM studies in Orthanc,
+  and there is no ImagingStudy without a DICOM study behind it. The one thing the UI edits is a
+  study's reasons, which link it to conditions; the link is saved on both sides in a single
+  transaction.
 
 Edits use optimistic locking, so saving over a newer version of a record is refused instead of
 silently overwriting it.
@@ -44,6 +46,9 @@ npm run seed:orthanc      # send the sample DICOM studies to Orthanc (DICOM C-ST
 npm start                 # dev server at http://localhost:4200
 ```
 
+Then open the patient list and click **Sync with PACS** to create the patients and imaging studies
+of the sample DICOM studies.
+
 HAPI takes a minute or so to start the first time; `npm run seed` fails with a clear message
 until it is reachable. The seed uses fixed ids, so running it again resets the sample records
 instead of duplicating them.
@@ -52,6 +57,29 @@ instead of duplicating them.
 with DCMTK's `dcmsend`. That folder is git-ignored (the samples are about 1.2 GB), so put the
 series there first, one folder each. Orthanc ignores instances it already has, so it can be run
 again safely.
+
+## PACS sync
+
+The **Sync with PACS** button on the patient list brings FHIR in line with Orthanc. It reads the
+PACS through its DICOMweb API (`/dicom-web`, see [Dev server proxy](#dev-server-proxy)) and, for
+every DICOM study:
+
+1. finds the Patient by **DICOM Patient ID** (`urn:hospital-records:dicom-patient-id`), or creates
+   one from the study. Patients are never matched by MRN: the two often differ, so a patient
+   created by hand is not linked to their PACS studies automatically;
+2. creates the study's **ImagingStudy**, matched by its Study Instance UID, in the same
+   transaction; or, when it exists, updates it from the PACS. Everything that comes from DICOM is
+   replaced, and what was added in the app (reasons, notes) is kept.
+
+Running it again is safe: creates are conditional, so nothing is duplicated, and an ImagingStudy
+that is unchanged is not written. Afterwards a report lists:
+
+- what was created, updated or left unchanged, and how many patients are new;
+- DICOM studies that were **skipped** (no Patient ID, or an ImagingStudy for the same UID already
+  belongs to another patient) or **failed**, with the reason;
+- ImagingStudies that are **not in the PACS**. These are only reported, never changed or deleted.
+
+The sync runs in the browser and only when someone clicks the button.
 
 ## Local stack
 
@@ -148,16 +176,17 @@ src/app/
     datatypes/       pipes and components for FHIR datatypes (names, dates, codes, references)
     terminology/     terminology client and code search
     resources/       one folder per resource (patient, condition, imaging-study):
-                     mapper, summary, detail and form components
+                     mapper, summary, detail and form components; imaging-study also
+                     holds the DICOM → FHIR mapper
     delete-panel/    shared delete panel; refuses while other records still link here
+  pacs/              DICOMweb (QIDO-RS) client and the PACS → FHIR sync
   pages/             routed screens; they fetch data and compose resource components
   shared/            app layout: header, icons, theme, form helpers
 public/terminology/  generated ICD-10 / ICD-11 mapping tables
 scripts/
-  seed/              seed bundle and loader for HAPI
+  seed/              seed bundle and loader for HAPI (seed.mjs), and the DICOM sender for
+                     Orthanc (seed-orthanc.mjs)
+    dicom/           sample DICOM series, one folder each (git-ignored)
   icd-maps/          converter for WHO's mapping tables
 compose.yaml         local development stack
 ```
-
-[ROADMAP.md](ROADMAP.md) describes how each FHIR resource is built, the rules the code follows,
-and what has been done so far.

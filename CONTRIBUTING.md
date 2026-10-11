@@ -23,7 +23,7 @@ cp .env.example .env      # fill in the passwords
 podman compose up -d      # HAPI-FHIR, Orthanc and their databases
 npm run seed              # sample data
 npm run seed:orthanc      # sample DICOM studies (needs DCMTK and scripts/seed/dicom/)
-npm start                 # http://localhost:4200
+npm start                 # http://localhost:4200, then click "Sync with PACS" on the patient list
 ```
 
 ## Branches
@@ -91,7 +91,8 @@ Each resource lives in `src/app/fhir/resources/<resource>/` and follows the same
 - Types come from `@types/fhir` (`import type { Patient } from 'fhir/r4'`); the server runs R4.
 - Edits send `If-Match`, so saving over a newer version is refused instead of overwriting it.
 - Deleting must be refused while other resources still reference the record.
-- Add the resource to the seed data (`scripts/seed/`).
+- Add the resource to the seed data (`scripts/seed/`). Except ImagingStudy: those come only from the
+  PACS, through the sync, so put DICOM in `scripts/seed/dicom/` instead.
 
 ## Tests
 
