@@ -1,0 +1,384 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "Patient/seed-patient-1",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "seed-patient-1",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [{ "system": "urn:artemis:mrn", "value": "SEED-0001" }],
+        "active": true,
+        "name": [{ "use": "official", "family": "Kostaki", "given": ["Daphne"] }],
+        "gender": "female",
+        "birthDate": "1968-04-12",
+        "telecom": [{ "system": "email", "value": "daphne.kostaki@example.org" }]
+      },
+      "request": { "method": "PUT", "url": "Patient/seed-patient-1" }
+    },
+    {
+      "fullUrl": "Patient/seed-patient-2",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "seed-patient-2",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [{ "system": "urn:artemis:mrn", "value": "SEED-0002" }],
+        "active": true,
+        "name": [{ "use": "official", "family": "Andreou", "given": ["Nikos", "Petros"] }],
+        "gender": "male",
+        "birthDate": "1955-11-03",
+        "telecom": [{ "system": "phone", "value": "+30 210 000 0002", "use": "mobile" }]
+      },
+      "request": { "method": "PUT", "url": "Patient/seed-patient-2" }
+    },
+    {
+      "fullUrl": "Patient/seed-patient-3",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "seed-patient-3",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [{ "system": "urn:artemis:mrn", "value": "SEED-0003" }],
+        "active": true,
+        "name": [{ "use": "official", "family": "Varga", "given": ["Ilse"] }],
+        "gender": "female",
+        "birthDate": "1990-07-28"
+      },
+      "request": { "method": "PUT", "url": "Patient/seed-patient-3" }
+    },
+    {
+      "fullUrl": "Condition/seed-condition-1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "seed-condition-1",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "254837009",
+              "display": "Malignant neoplasm of breast"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C50.9",
+              "display": "Malignant neoplasm of breast, unspecified"
+            }
+          ],
+          "text": "Breast cancer"
+        },
+        "subject": { "reference": "Patient/seed-patient-1", "display": "Daphne Kostaki" },
+        "onsetDateTime": "2025-02-14",
+        "evidence": [{ "detail": [{ "reference": "ImagingStudy/seed-study-1" }] }]
+      },
+      "request": { "method": "PUT", "url": "Condition/seed-condition-1" }
+    },
+    {
+      "fullUrl": "Condition/seed-condition-2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "seed-condition-2",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive disorder, systemic arterial"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            }
+          ]
+        },
+        "subject": { "reference": "Patient/seed-patient-1", "display": "Daphne Kostaki" },
+        "onsetDateTime": "2019-06"
+      },
+      "request": { "method": "PUT", "url": "Condition/seed-condition-2" }
+    },
+    {
+      "fullUrl": "Condition/seed-condition-3",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "seed-condition-3",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "resolved"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "encounter-diagnosis"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "233604007",
+              "display": "Pneumonia"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "J18.9",
+              "display": "Pneumonia, unspecified organism"
+            }
+          ]
+        },
+        "subject": { "reference": "Patient/seed-patient-2", "display": "Nikos Andreou" },
+        "onsetDateTime": "2026-01-08",
+        "abatementDateTime": "2026-02-20",
+        "evidence": [{ "detail": [{ "reference": "ImagingStudy/seed-study-2" }] }]
+      },
+      "request": { "method": "PUT", "url": "Condition/seed-condition-3" }
+    },
+    {
+      "fullUrl": "Condition/seed-condition-4",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "seed-condition-4",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "provisional"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Diabetes mellitus type 2"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            }
+          ]
+        },
+        "subject": { "reference": "Patient/seed-patient-2", "display": "Nikos Andreou" },
+        "onsetDateTime": "2024-09-30"
+      },
+      "request": { "method": "PUT", "url": "Condition/seed-condition-4" }
+    },
+    {
+      "fullUrl": "ImagingStudy/seed-study-1",
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "seed-study-1",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [
+          {
+            "system": "urn:dicom:uid",
+            "value": "urn:oid:2.25.133047494021215449283204769680095118334"
+          }
+        ],
+        "status": "available",
+        "modality": [{ "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "MR" }],
+        "subject": { "reference": "Patient/seed-patient-1", "display": "Daphne Kostaki" },
+        "started": "2025-02-10T09:30:00+02:00",
+        "description": "MRI breast, bilateral, with contrast",
+        "reasonReference": [{ "reference": "Condition/seed-condition-1" }],
+        "numberOfSeries": 2,
+        "numberOfInstances": 304,
+        "series": [
+          {
+            "uid": "2.25.276496624690808123264340235938435349007",
+            "number": 1,
+            "modality": { "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "MR" },
+            "description": "Axial T1 pre-contrast",
+            "numberOfInstances": 144,
+            "bodySite": {
+              "system": "http://snomed.info/sct",
+              "code": "76752008",
+              "display": "Breast structure"
+            },
+            "started": "2025-02-10T09:34:00+02:00"
+          },
+          {
+            "uid": "2.25.65513960576162851647832644193664086567",
+            "number": 2,
+            "modality": { "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "MR" },
+            "description": "Axial T1 post-contrast",
+            "numberOfInstances": 160,
+            "bodySite": {
+              "system": "http://snomed.info/sct",
+              "code": "76752008",
+              "display": "Breast structure"
+            },
+            "started": "2025-02-10T09:52:00+02:00"
+          }
+        ]
+      },
+      "request": { "method": "PUT", "url": "ImagingStudy/seed-study-1" }
+    },
+    {
+      "fullUrl": "ImagingStudy/seed-study-2",
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "seed-study-2",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [
+          {
+            "system": "urn:dicom:uid",
+            "value": "urn:oid:2.25.238646748274974103558023054426050352717"
+          }
+        ],
+        "status": "available",
+        "modality": [{ "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "CT" }],
+        "subject": { "reference": "Patient/seed-patient-2", "display": "Nikos Andreou" },
+        "started": "2026-01-08T14:05:00+02:00",
+        "description": "CT chest without contrast",
+        "reasonReference": [{ "reference": "Condition/seed-condition-3" }],
+        "numberOfSeries": 1,
+        "numberOfInstances": 212,
+        "series": [
+          {
+            "uid": "2.25.157691965149437346382872126817379904577",
+            "number": 1,
+            "modality": { "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "CT" },
+            "description": "Axial 1.25 mm lung window",
+            "numberOfInstances": 212,
+            "bodySite": {
+              "system": "http://snomed.info/sct",
+              "code": "51185008",
+              "display": "Thoracic structure"
+            },
+            "started": "2026-01-08T14:07:00+02:00"
+          }
+        ]
+      },
+      "request": { "method": "PUT", "url": "ImagingStudy/seed-study-2" }
+    },
+    {
+      "fullUrl": "ImagingStudy/seed-study-3",
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "seed-study-3",
+        "meta": { "tag": [{ "system": "urn:artemis:seed", "code": "seed" }] },
+        "identifier": [
+          {
+            "system": "urn:dicom:uid",
+            "value": "urn:oid:2.25.285310579027866074819395596760267052684"
+          }
+        ],
+        "status": "available",
+        "modality": [{ "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "DX" }],
+        "subject": { "reference": "Patient/seed-patient-2", "display": "Nikos Andreou" },
+        "started": "2026-02-20T10:15:00+02:00",
+        "description": "Chest X-ray, PA and lateral",
+        "numberOfSeries": 1,
+        "numberOfInstances": 2,
+        "series": [
+          {
+            "uid": "2.25.4600201259162558257790771107336450079",
+            "number": 1,
+            "modality": { "system": "http://dicom.nema.org/resources/ontology/DCM", "code": "DX" },
+            "description": "PA and lateral",
+            "numberOfInstances": 2,
+            "bodySite": {
+              "system": "http://snomed.info/sct",
+              "code": "51185008",
+              "display": "Thoracic structure"
+            },
+            "started": "2026-02-20T10:15:00+02:00"
+          }
+        ]
+      },
+      "request": { "method": "PUT", "url": "ImagingStudy/seed-study-3" }
+    }
+  ]
+}
