@@ -354,6 +354,56 @@
     font-size: 0.85rem;
   }
 
+  // A field made of more than one control, e.g. a code search: its label above them.
+  .field-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+
+  .code-field + .code-field {
+    margin-top: 16px;
+  }
+
+  // A code offered for a field, e.g. from a mapping, with a button to use it.
+  .suggestions {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+
+    .hint {
+      margin: 0 0 8px;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .code {
+      min-width: 4.5em;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .display {
+      flex: 1;
+    }
+
+    .button {
+      padding: 4px 12px;
+      font-size: 0.85rem;
+    }
+  }
+
   // A secondary action inside a field: "Enter the code by hand".
   .link-button {
     margin-top: 6px;

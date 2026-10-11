@@ -2,7 +2,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Condition, ValueSet } from 'fhir/r4';
+import { of } from 'rxjs';
 import { CodeSystems } from '../../../code-systems';
+import { IcdMaps } from '../../../terminology/icd-maps';
+import { CodeOption } from '../../../terminology/terminology-client';
 import { ConditionForm } from './condition-form';
 
 const LOCAL = 'urn:other-hospital:diagnoses'; // a code system the form doesn't edit
@@ -14,6 +17,8 @@ describe('ConditionForm', () => {
   let element: HTMLElement;
   let saved: Condition[];
   let http: HttpTestingController;
+  /** Stands in for WHO's mapping tables: each test says what they give. */
+  let mapped: { icd10: CodeOption | null; icd11: CodeOption | null };
 
   const field = <T extends HTMLInputElement | HTMLSelectElement>(name: string) =>
     element.querySelector<T>(`[formControlName="${name}"]`)!;
@@ -26,9 +31,15 @@ describe('ConditionForm', () => {
     control.dispatchEvent(new Event('blur'));
   };
 
-  /** Switches from the search box to typing the code by hand. */
-  const byHand = async () => {
-    element.querySelector<HTMLButtonElement>('.link-button')!.click();
+  /** The code field of a classification ("ICD-10", "ICD-11"). */
+  const codeField = (label: string) =>
+    [...element.querySelectorAll('.code-field')].find(
+      (f) => f.querySelector('.field-label')?.textContent === label,
+    )!;
+
+  /** Switches a code field from the search box to typing the code by hand. */
+  const byHand = async (label = 'ICD-10') => {
+    codeField(label).querySelector<HTMLButtonElement>('.link-button')!.click();
     await fixture.whenStable();
   };
 
@@ -36,6 +47,7 @@ describe('ConditionForm', () => {
   const withCode = async (code = 'J18.9') => {
     await byHand();
     set('icd10Code', code);
+    await fixture.whenStable();
   };
 
   const submit = async () => {
@@ -51,9 +63,17 @@ describe('ConditionForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConditionForm],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: IcdMaps,
+          useValue: { icd11For: () => of(mapped.icd11), icd10For: () => of(mapped.icd10) },
+        },
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
+    mapped = { icd10: null, icd11: null };
     fixture = TestBed.createComponent(ConditionForm);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('subject', subject);
@@ -90,7 +110,7 @@ describe('ConditionForm', () => {
 
   it('needs an ICD-10 code, in the right format', async () => {
     await submit();
-    expect(errors()).toEqual(['Choose an ICD-10 code.']);
+    expect(errors()).toEqual(['Choose an ICD-10 or an ICD-11 code.']);
 
     await withCode('C5');
     await submit();
@@ -105,7 +125,10 @@ describe('ConditionForm', () => {
     await submit();
 
     expect(saved).toHaveLength(0);
-    expect(errors()).toEqual(['Enter the code for this name.', 'Choose an ICD-10 code.']);
+    expect(errors()).toEqual([
+      'Enter the code for this name.',
+      'Choose an ICD-10 or an ICD-11 code.',
+    ]);
   });
 
   it('enforces con-4: an ended condition cannot be active', async () => {
@@ -167,7 +190,8 @@ describe('ConditionForm', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('app-coding-chip .code')?.textContent).toBe('E11.9');
-    expect(element.querySelector('.hint')?.textContent).toContain('Stored as "at age 61 years"');
+    const hints = [...element.querySelectorAll('.hint')].map((h) => h.textContent);
+    expect(hints.some((h) => h?.includes('Stored as "at age 61 years"'))).toBe(true);
 
     set('verificationStatus', 'provisional');
     await submit();
@@ -247,5 +271,67 @@ describe('ConditionForm', () => {
 
     expect(field('icd10Code').value).toBe('not-a-code');
     expect(errors()).toContain('An ICD-10 code looks like C50.9.');
+  });
+
+  it('codes in ICD-11, including combinations with extension codes', async () => {
+    await byHand('ICD-11');
+    set('icd11Code', '1a00&xn8p1');
+    await submit();
+
+    expect(errors()).toEqual([]);
+    expect(saved[0].code?.coding).toEqual([{ system: CodeSystems.icd11, code: '1A00&XN8P1' }]);
+  });
+
+  it("offers WHO's ICD-11 code for the chosen ICD-10 code, used only on request", async () => {
+    mapped.icd11 = {
+      system: CodeSystems.icd11,
+      code: 'CA40.Z',
+      display: 'Pneumonia, organism unspecified',
+    };
+    await withCode('J18.9');
+
+    const suggestion = codeField('ICD-11').querySelector('.suggestions');
+    expect(suggestion?.textContent).toContain('CA40.Z');
+    expect(suggestion?.textContent).toContain("WHO's official mapping from the ICD-10 code");
+
+    suggestion!.querySelector<HTMLButtonElement>('button')!.click();
+    await fixture.whenStable();
+    expect(codeField('ICD-11').querySelector('app-coding-chip .code')?.textContent).toBe('CA40.Z');
+    expect(codeField('ICD-11').querySelector('.suggestions')).toBeNull();
+
+    await submit();
+    expect(saved[0].code?.coding).toEqual([
+      { system: CodeSystems.icd10, code: 'J18.9' },
+      { system: CodeSystems.icd11, code: 'CA40.Z', display: 'Pneumonia, organism unspecified' },
+    ]);
+  });
+
+  it("offers WHO's ICD-10 code for a stored ICD-11 code, and nothing once both are set", async () => {
+    mapped.icd10 = {
+      system: CodeSystems.icd10,
+      code: 'C50',
+      display: 'Malignant neoplasm of breast',
+    };
+    fixture.componentRef.setInput('condition', {
+      resourceType: 'Condition',
+      subject,
+      clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
+      code: {
+        coding: [{ system: CodeSystems.icd11, code: '2C6Z', display: 'Breast, unspecified' }],
+      },
+    } satisfies Condition);
+    await fixture.whenStable();
+
+    expect(codeField('ICD-10').querySelector('.suggestions')?.textContent).toContain('C50');
+    expect(codeField('ICD-11').querySelector('.suggestions')).toBeNull();
+
+    codeField('ICD-10').querySelector<HTMLButtonElement>('.suggestions button')!.click();
+    await fixture.whenStable();
+    expect(element.querySelectorAll('.suggestions')).toHaveLength(0);
+  });
+
+  it('offers nothing when the mapping has no code for it', async () => {
+    await withCode('J18.9'); // mapped.icd11 is null
+    expect(element.querySelectorAll('.suggestions')).toHaveLength(0);
   });
 });

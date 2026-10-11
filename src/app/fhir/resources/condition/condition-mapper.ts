@@ -38,12 +38,14 @@ export type ConditionCategory = keyof typeof CONDITION_CATEGORIES;
 export interface ConditionFormValue {
   icd10Code: string;
   icd10Display: string;
+  icd11Code: string; // WHO ICD-11 MMS, e.g. CA40.Z or a combination like 1A00&XN8P1
+  icd11Display: string;
   clinicalStatus: ClinicalStatus | '';
   verificationStatus: VerificationStatus | '';
   category: ConditionCategory | '';
   onsetDate: string; // YYYY-MM-DD
   abatementDate: string; // YYYY-MM-DD
-  details: string; // free text the ICD-10 code can't say, kept as the condition's first note
+  details: string; // free text the codes can't say, kept as the condition's first note
 }
 
 /** The code of a status or category concept from the given HL7 code system, or ''. */
@@ -88,10 +90,13 @@ const categoryCoding = (concept: CodeableConcept) =>
 /** Condition → form. Onset/abatement show only dates; ages, periods and text stay as stored. */
 export function conditionToForm(condition: Condition): ConditionFormValue {
   const icd10 = findCoding(condition.code, CodeSystems.icd10);
+  const icd11 = findCoding(condition.code, CodeSystems.icd11);
   const category = condition.category?.map(categoryCoding).find(Boolean);
   return {
     icd10Code: icd10?.code ?? '',
     icd10Display: icd10?.display ?? '',
+    icd11Code: icd11?.code ?? '',
+    icd11Display: icd11?.display ?? '',
     clinicalStatus: clinicalStatusOf(condition),
     verificationStatus: verificationStatusOf(condition),
     category: (category?.code as ConditionCategory | undefined) ?? '',
@@ -149,21 +154,28 @@ export function conditionDisplayName(condition: Condition): string {
 }
 
 /**
- * Condition.code with the form's ICD-10 coding; its name is the condition's name. Codings of other
- * systems, e.g. set by another hospital system, stay as stored. A stored `text` (a name given
- * before, or by another system) stays while the ICD-10 code is the same, and is dropped when the
- * code changes, since it would then describe the old code.
+ * Condition.code with the form's ICD-10 and ICD-11 codings; their names are the condition's name.
+ * Codings of other systems, e.g. set by another hospital system, stay as stored. A stored `text`
+ * (a name given before, or by another system) stays while both codes are the same, and is dropped
+ * when either changes, since it might then describe the old code.
  */
 function editedCode(value: ConditionFormValue, current?: CodeableConcept) {
-  const system = CodeSystems.icd10;
-  const code = value.icd10Code.trim();
-  const display = value.icd10Display.trim();
-  const old = findCoding(current, system);
-  const next: Coding | undefined = code
-    ? { ...(old?.code === code ? old : {}), system, code, display: display || undefined }
-    : undefined;
-  const coding = replaceEntry(current?.coding, old, next);
-  const text = (old?.code ?? '') === code ? current?.text : undefined;
+  const edits = [
+    { system: CodeSystems.icd10, code: value.icd10Code, display: value.icd10Display },
+    { system: CodeSystems.icd11, code: value.icd11Code, display: value.icd11Display },
+  ];
+  let coding = current?.coding;
+  let changed = false;
+  for (const { system, code: rawCode, display } of edits) {
+    const code = rawCode.trim();
+    const old = findCoding(current, system);
+    const next: Coding | undefined = code
+      ? { ...(old?.code === code ? old : {}), system, code, display: display.trim() || undefined }
+      : undefined;
+    coding = replaceEntry(coding, old, next);
+    changed ||= (old?.code ?? '') !== code;
+  }
+  const text = changed ? undefined : current?.text;
   if (!coding?.length && !text) return undefined;
   return { ...current, coding, text };
 }

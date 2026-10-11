@@ -2,6 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { IcdMaps } from '../../fhir/terminology/icd-maps';
 import type { Condition, OperationOutcome } from 'fhir/r4';
 import { CodeSystems } from '../../fhir/code-systems';
 import { ConditionEdit } from './condition-edit';
@@ -52,7 +54,13 @@ describe('ConditionEdit', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConditionEdit],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        // The ICD-10 ↔ ICD-11 mapping has its own tests; here it maps nothing.
+        { provide: IcdMaps, useValue: { icd11For: () => of(null), icd10For: () => of(null) } },
+      ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

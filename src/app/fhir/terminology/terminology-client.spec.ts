@@ -58,4 +58,42 @@ describe('TerminologyClient', () => {
       { system: CodeSystems.icd10, code: 'C50.0', display: 'C50.0' },
     ]);
   });
+
+  describe('searching ICD-11 by code', () => {
+    const empty = { resourceType: 'ValueSet', status: 'active' } satisfies ValueSet;
+    const validated = (result: boolean, display?: string): Parameters => ({
+      resourceType: 'Parameters',
+      parameter: [
+        { name: 'result', valueBoolean: result },
+        ...(display ? [{ name: 'display', valueString: display }] : []),
+      ],
+    });
+
+    it('looks a code up too, since the server only matches ICD-11 names', async () => {
+      const result = firstValueFrom(client.search(ValueSets.icd11, 'ca40.z'));
+
+      const lookup = http.expectOne('/tx/ValueSet/$validate-code');
+      const params = (lookup.request.body as Parameters).parameter!;
+      expect(params.find((p) => p.name === 'code')?.valueCode).toBe('CA40.Z');
+      expect(params.find((p) => p.name === 'system')?.valueUri).toBe(CodeSystems.icd11);
+      lookup.flush(validated(true, 'Pneumonia, organism unspecified'));
+      http.expectOne('/tx/ValueSet/$expand').flush(empty);
+
+      expect(await result).toEqual([
+        { system: CodeSystems.icd11, code: 'CA40.Z', display: 'Pneumonia, organism unspecified' },
+      ]);
+    });
+
+    it("finds nothing extra for an unknown code, and doesn't look up names or ICD-10 codes", async () => {
+      const unknown = firstValueFrom(client.search(ValueSets.icd11, 'ZZZZ'));
+      http.expectOne('/tx/ValueSet/$validate-code').flush(validated(false));
+      http.expectOne('/tx/ValueSet/$expand').flush(empty);
+      expect(await unknown).toEqual([]);
+
+      client.search(ValueSets.icd11, 'pneumonia').subscribe();
+      client.search(ValueSets.icd10, 'J189').subscribe();
+      expect(http.match('/tx/ValueSet/$validate-code')).toHaveLength(0);
+      http.match('/tx/ValueSet/$expand').forEach((req) => req.flush(empty));
+    });
+  });
 });

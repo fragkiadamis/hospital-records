@@ -58,6 +58,8 @@ const form = (changes: Partial<ConditionFormValue> = {}): ConditionFormValue => 
 const empty: ConditionFormValue = {
   icd10Code: '',
   icd10Display: '',
+  icd11Code: '',
+  icd11Display: '',
   clinicalStatus: '',
   verificationStatus: '',
   category: '',
@@ -71,6 +73,8 @@ describe('conditionToForm', () => {
     expect(conditionToForm(stored)).toEqual({
       icd10Code: 'C50.9',
       icd10Display: 'Malignant neoplasm of breast, unspecified',
+      icd11Code: '2C6Z',
+      icd11Display: 'Malignant neoplasms of breast, unspecified',
       clinicalStatus: 'active',
       verificationStatus: 'confirmed',
       category: 'problem-list-item',
@@ -124,8 +128,27 @@ describe('formToCondition', () => {
   it('removes the ICD-10 coding when its code is cleared, keeping codings of other systems', () => {
     const condition = formToCondition(form({ icd10Code: '' }), patient, stored);
 
-    // The local code and ICD-11 aren't edited by the form.
+    // The local code isn't edited by the form; ICD-11 is, but wasn't changed here.
     expect(condition.code?.coding?.map((c) => c.system)).toEqual([LOCAL, CodeSystems.icd11]);
+  });
+
+  it('edits the ICD-11 coding next to the ICD-10 one', () => {
+    const condition = formToCondition(
+      form({ icd11Code: '2C6Y', icd11Display: 'Other specified malignant neoplasms of breast' }),
+      patient,
+      stored,
+    );
+
+    expect(condition.code?.coding).toEqual([
+      stored.code!.coding![0],
+      stored.code!.coding![1],
+      {
+        system: CodeSystems.icd11,
+        code: '2C6Y',
+        display: 'Other specified malignant neoplasms of breast',
+      },
+    ]);
+    expect(condition.code?.text).toBeUndefined(); // a code changed: the stored name may be stale
   });
 
   it('edits the first note as the details, keeping the other notes', () => {
@@ -193,6 +216,8 @@ describe('formToCondition', () => {
         ...empty,
         icd10Code: 'J18.9',
         icd10Display: 'Pneumonia, unspecified',
+        icd11Code: 'CA40.Z',
+        icd11Display: 'Pneumonia, organism unspecified',
         clinicalStatus: 'active',
         category: 'encounter-diagnosis',
         onsetDate: '2026-01-08',
@@ -204,7 +229,10 @@ describe('formToCondition', () => {
       resourceType: 'Condition',
       subject: patient,
       code: {
-        coding: [{ system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' }],
+        coding: [
+          { system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' },
+          { system: CodeSystems.icd11, code: 'CA40.Z', display: 'Pneumonia, organism unspecified' },
+        ],
       },
       clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
       category: [

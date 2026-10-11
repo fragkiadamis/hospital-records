@@ -1,45 +1,134 @@
 <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <fieldset>
-    <legend>Diagnosis (ICD-10)</legend>
-    @if (showsFields()) {
-      <div class="row">
-        <label>
-          ICD-10 code
-          <input
-            formControlName="icd10Code"
-            autocomplete="off"
-            placeholder="e.g. C50.9"
-            [attr.aria-invalid]="fieldError('icd10Code', 'pattern')"
-          />
-          @if (fieldError('icd10Code', 'pattern')) {
-            <span class="error" role="alert">An ICD-10 code looks like C50.9.</span>
-          }
-        </label>
-        <label>
-          ICD-10 name
-          <input formControlName="icd10Display" autocomplete="off" />
-          @if (ruleError('icd10CodeMissing', 'icd10Display')) {
-            <span class="error" role="alert">Enter the code for this name.</span>
-          }
-        </label>
-      </div>
-      <button type="button" class="link-button" (click)="byHand.set(false)">Search instead</button>
-    } @else {
-      <app-code-search
-        label="ICD-10 code"
-        placeholder="Search by name or code, e.g. pneumonia or C50.9"
-        [valueSet]="valueSets.icd10"
-        [value]="chosenIcd10()"
-        (picked)="pick($event)"
-      />
-      @if (!chosenIcd10()) {
-        <button type="button" class="link-button" (click)="byHand.set(true)">
-          Enter the code by hand
+    <legend>Diagnosis</legend>
+    <p class="hint">Code it in ICD-10, ICD-11 or both.</p>
+    <div class="code-field">
+      <span class="field-label">ICD-10</span>
+      @if (showsFields('icd10')) {
+        <div class="row">
+          <label>
+            ICD-10 code
+            <input
+              formControlName="icd10Code"
+              autocomplete="off"
+              placeholder="e.g. C50.9"
+              [attr.aria-invalid]="fieldError('icd10Code', 'pattern')"
+            />
+            @if (fieldError('icd10Code', 'pattern')) {
+              <span class="error" role="alert">An ICD-10 code looks like C50.9.</span>
+            }
+          </label>
+          <label>
+            ICD-10 name
+            <input formControlName="icd10Display" autocomplete="off" />
+            @if (ruleError('icd10CodeMissing', 'icd10Display')) {
+              <span class="error" role="alert">Enter the code for this name.</span>
+            }
+          </label>
+        </div>
+        <button type="button" class="link-button" (click)="enterByHand('icd10', false)">
+          Search instead
         </button>
+      } @else {
+        <app-code-search
+          label="ICD-10 code"
+          placeholder="Search by name or code, e.g. pneumonia or J18.9"
+          [valueSet]="valueSets.icd10"
+          [value]="chosen().icd10"
+          (picked)="pick('icd10', $event)"
+        />
+        @if (!chosen().icd10) {
+          @if (icd10Suggestion.value(); as suggestion) {
+            <div class="suggestions" aria-live="polite">
+              <p class="hint">WHO's official mapping from the ICD-11 code:</p>
+              <ul>
+                <li>
+                  <span class="code">{{ suggestion.code }}</span>
+                  <span class="display">{{ suggestion.display }}</span>
+                  <button
+                    type="button"
+                    class="button"
+                    [attr.aria-label]="'Use ICD-10 ' + suggestion.code"
+                    (click)="pick('icd10', suggestion)"
+                  >
+                    Use
+                  </button>
+                </li>
+              </ul>
+            </div>
+          }
+          <button type="button" class="link-button" (click)="enterByHand('icd10', true)">
+            Enter the code by hand
+          </button>
+        }
       }
-    }
-    @if (ruleError('codeRequired', 'icd10Code')) {
-      <p class="error" role="alert">Choose an ICD-10 code.</p>
+    </div>
+
+    <div class="code-field">
+      <span class="field-label">ICD-11</span>
+      @if (showsFields('icd11')) {
+        <div class="row">
+          <label>
+            ICD-11 code
+            <input
+              formControlName="icd11Code"
+              autocomplete="off"
+              placeholder="e.g. CA40.Z"
+              [attr.aria-invalid]="fieldError('icd11Code', 'pattern')"
+            />
+            @if (fieldError('icd11Code', 'pattern')) {
+              <span class="error" role="alert"
+                >An ICD-11 code looks like CA40.Z or 1A00&amp;XN8P1.</span
+              >
+            }
+          </label>
+          <label>
+            ICD-11 name
+            <input formControlName="icd11Display" autocomplete="off" />
+            @if (ruleError('icd11CodeMissing', 'icd11Display')) {
+              <span class="error" role="alert">Enter the code for this name.</span>
+            }
+          </label>
+        </div>
+        <button type="button" class="link-button" (click)="enterByHand('icd11', false)">
+          Search instead
+        </button>
+      } @else {
+        <app-code-search
+          label="ICD-11 code"
+          placeholder="Search by name or code, e.g. pneumonia or CA40.Z"
+          [valueSet]="valueSets.icd11"
+          [value]="chosen().icd11"
+          (picked)="pick('icd11', $event)"
+        />
+        @if (!chosen().icd11) {
+          @if (icd11Suggestion.value(); as suggestion) {
+            <div class="suggestions" aria-live="polite">
+              <p class="hint">WHO's official mapping from the ICD-10 code:</p>
+              <ul>
+                <li>
+                  <span class="code">{{ suggestion.code }}</span>
+                  <span class="display">{{ suggestion.display }}</span>
+                  <button
+                    type="button"
+                    class="button"
+                    [attr.aria-label]="'Use ICD-11 ' + suggestion.code"
+                    (click)="pick('icd11', suggestion)"
+                  >
+                    Use
+                  </button>
+                </li>
+              </ul>
+            </div>
+          }
+          <button type="button" class="link-button" (click)="enterByHand('icd11', true)">
+            Enter the code by hand
+          </button>
+        }
+      }
+    </div>
+    @if (ruleError('codeRequired', 'icd10Code', 'icd11Code')) {
+      <p class="error" role="alert">Choose an ICD-10 or an ICD-11 code.</p>
     }
   </fieldset>
 

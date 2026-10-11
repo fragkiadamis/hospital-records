@@ -165,6 +165,11 @@
               "system": "http://hl7.org/fhir/sid/icd-10",
               "code": "C50.9",
               "display": "Malignant neoplasm of breast, unspecified"
+            },
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "2C6Z",
+              "display": "Malignant neoplasms of breast, unspecified"
             }
           ]
         },
@@ -233,6 +238,11 @@
               "system": "http://hl7.org/fhir/sid/icd-10",
               "code": "I10",
               "display": "Essential (primary) hypertension"
+            },
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "BA00.Z",
+              "display": "Essential hypertension, unspecified"
             }
           ]
         },
@@ -292,6 +302,11 @@
               "system": "http://hl7.org/fhir/sid/icd-10",
               "code": "J18.9",
               "display": "Pneumonia, unspecified organism"
+            },
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "CA40.Z",
+              "display": "Pneumonia, organism unspecified"
             }
           ]
         },
@@ -361,6 +376,11 @@
               "system": "http://hl7.org/fhir/sid/icd-10",
               "code": "E11.9",
               "display": "Type 2 diabetes mellitus without complications"
+            },
+            {
+              "system": "http://id.who.int/icd/release/11/mms",
+              "code": "5A11",
+              "display": "Type 2 diabetes mellitus"
             }
           ]
         },

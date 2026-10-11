@@ -8,7 +8,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -22,6 +22,7 @@ import { notInFuture, today } from '../../../../shared/forms/date-validators';
 import { CodeSystems } from '../../../code-systems';
 import { formatTimeChoice } from '../../../datatypes/time-choice-pipe';
 import { CodeSearch } from '../../../terminology/code-search/code-search';
+import { IcdMaps } from '../../../terminology/icd-maps';
 import { CodeOption, ValueSets } from '../../../terminology/terminology-client';
 import {
   CLINICAL_STATUSES,
@@ -36,6 +37,16 @@ const ONGOING = ['active', 'recurrence', 'relapse'];
 
 /** WHO ICD-10 codes: a letter, two characters, and optionally a dot and up to four more (C50.9). */
 const ICD10_CODE = /^[A-Z]\d[0-9A-Z](\.[0-9A-Z]{1,4})?$/i;
+/**
+ * WHO ICD-11 MMS codes (CA40.Z), possibly combined with five-character extension codes by & or /
+ * (1A00&XN8P1), as WHO's mapping gives some of them.
+ */
+const ICD11_CODE = /^[0-9A-Z]{4}(\.[0-9A-Z]{1,4})?([&/][0-9A-Z]{4,5}(\.[0-9A-Z]{1,4})?)*$/i;
+
+/** The two coded fields, each a code + name pair, filled in parallel. */
+type CodeField = 'icd10' | 'icd11';
+
+const SYSTEMS: Record<CodeField, string> = { icd10: CodeSystems.icd10, icd11: CodeSystems.icd11 };
 
 /**
  * Rules across fields. con-3, con-4 and con-5 are FHIR's own Condition invariants: HAPI reports
@@ -44,9 +55,10 @@ const ICD10_CODE = /^[A-Z]\d[0-9A-Z](\.[0-9A-Z]{1,4})?$/i;
 function conditionRules(group: AbstractControl): ValidationErrors | null {
   const v = group.value as ConditionFormValue;
   const errors: ValidationErrors = {};
-  // The ICD-10 code is what identifies the condition; its name is the condition's name.
-  if (!v.icd10Code.trim()) errors['codeRequired'] = true;
+  // A code is what identifies the condition; its name is the condition's name.
+  if (!v.icd10Code.trim() && !v.icd11Code.trim()) errors['codeRequired'] = true;
   if (v.icd10Display.trim() && !v.icd10Code.trim()) errors['icd10CodeMissing'] = true;
+  if (v.icd11Display.trim() && !v.icd11Code.trim()) errors['icd11CodeMissing'] = true;
   if (v.onsetDate && v.abatementDate && v.abatementDate < v.onsetDate) {
     errors['endBeforeOnset'] = true;
   }
@@ -85,6 +97,8 @@ export class ConditionForm {
     {
       icd10Code: ['', Validators.pattern(ICD10_CODE)],
       icd10Display: [''],
+      icd11Code: ['', Validators.pattern(ICD11_CODE)],
+      icd11Display: [''],
       // A new condition starts as an active problem. Verification starts empty on purpose:
       // a diagnosis shouldn't become "confirmed" just because nobody changed a default.
       clinicalStatus: ['active' as ConditionFormValue['clinicalStatus']],
@@ -114,15 +128,30 @@ export class ConditionForm {
     { initialValue: this.form.getRawValue() },
   );
 
-  /** The chosen ICD-10 code, shown by the search box. */
-  protected readonly chosenIcd10 = computed<CodeOption | null>(() => {
-    const code = this.values().icd10Code.trim();
-    const display = this.values().icd10Display.trim();
-    return code ? { system: CodeSystems.icd10, code, display: display || code } : null;
+  /** The chosen code of each classification, shown by its search box. */
+  protected readonly chosen = computed(() => ({
+    icd10: this.codeOf('icd10'),
+    icd11: this.codeOf('icd11'),
+  }));
+
+  /** Fields whose code is typed by hand (not found by the search, or the server is down). */
+  protected readonly manual = signal<Record<CodeField, boolean>>({ icd10: false, icd11: false });
+
+  private readonly maps = inject(IcdMaps);
+
+  /**
+   * The ICD-11 code WHO's official mapping gives for the chosen ICD-10 code, offered while ICD-11
+   * is empty (and the other way round below). Applied only when the user chooses to use it.
+   */
+  protected readonly icd11Suggestion = rxResource({
+    params: () => this.mapFrom('icd10', 'icd11'),
+    stream: ({ params: code }) => this.maps.icd11For(code),
   });
 
-  /** Whether the code is typed by hand (not found by the search, or the server is down). */
-  protected readonly byHand = signal(false);
+  protected readonly icd10Suggestion = rxResource({
+    params: () => this.mapFrom('icd11', 'icd10'),
+    stream: ({ params: code }) => this.maps.icd10For(code),
+  });
 
   /** A stored onset / end the date field can't show (an age, a period, text): kept unless replaced. */
   protected readonly storedOnset = computed(() => this.storedNonDate('onset'));
@@ -144,24 +173,32 @@ export class ConditionForm {
     const value = this.form.getRawValue();
     this.save.emit(
       formToCondition(
-        { ...value, icd10Code: value.icd10Code.trim().toUpperCase() },
+        {
+          ...value,
+          icd10Code: value.icd10Code.trim().toUpperCase(),
+          icd11Code: value.icd11Code.trim().toUpperCase(),
+        },
         this.subject(),
         this.condition(),
       ),
     );
   }
 
-  /** A code picked in the search box (or cleared with its Change button). */
-  protected pick(option: CodeOption | null): void {
-    const { icd10Code, icd10Display } = this.form.controls;
-    icd10Code.setValue(option?.code ?? '');
-    icd10Display.setValue(option?.display ?? '');
-    icd10Code.markAsTouched();
+  /** A code picked in a search box or from a suggestion (or cleared with Change). */
+  protected pick(field: CodeField, option: CodeOption | null): void {
+    const code = this.form.controls[`${field}Code`];
+    code.setValue(option?.code ?? '');
+    this.form.controls[`${field}Display`].setValue(option?.display ?? '');
+    code.markAsTouched();
   }
 
-  /** Whether the code + name fields show instead of the search: chosen so, or the code is invalid. */
-  protected showsFields(): boolean {
-    return this.byHand() || this.form.controls.icd10Code.invalid;
+  protected enterByHand(field: CodeField, byHand: boolean): void {
+    this.manual.update((manual) => ({ ...manual, [field]: byHand }));
+  }
+
+  /** Whether a field shows code + name inputs instead of the search: chosen so, or invalid code. */
+  protected showsFields(field: CodeField): boolean {
+    return this.manual()[field] || this.form.controls[`${field}Code`].invalid;
   }
 
   /** A field's own error, once the user has left the field (or tried to save). */
@@ -174,6 +211,19 @@ export class ConditionForm {
   protected ruleError(error: string, ...fields: (keyof ConditionFormValue)[]): boolean {
     const touched = this.submitted() || fields.some((f) => this.form.controls[f].touched);
     return touched && this.form.hasError(error);
+  }
+
+  private codeOf(field: CodeField): CodeOption | null {
+    const code = this.values()[`${field}Code`].trim();
+    const display = this.values()[`${field}Display`].trim();
+    return code ? { system: SYSTEMS[field], code, display: display || code } : null;
+  }
+
+  /** The code to look up in WHO's mapping: chosen in `from`, while `to` is empty and searched. */
+  private mapFrom(from: CodeField, to: CodeField): string | undefined {
+    const source = this.chosen()[from];
+    const valid = source && this.form.controls[`${from}Code`].valid;
+    return valid && !this.chosen()[to] && !this.manual()[to] ? source.code : undefined;
   }
 
   private storedNonDate(prefix: 'onset' | 'abatement'): string {

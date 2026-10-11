@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "seed": "node scripts/seed/seed.mjs"
+    "seed": "node scripts/seed/seed.mjs",
+    "icd:maps": "node scripts/icd-maps/icd-maps.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
