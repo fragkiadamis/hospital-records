@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/hospital-records-readme-logo.png" alt="hospital-records" width="720">
+</p>
+
 # Hospital Records
 
 Hospital Records is a medical imaging (DICOM) records platform, at an early stage. It has three parts:
