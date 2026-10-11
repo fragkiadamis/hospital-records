@@ -1,0 +1,58 @@
+@if (value(); as chosen) {
+  <div class="chosen">
+    <app-coding-chip [coding]="chosen" />
+    <span class="display">{{ chosen.display }}</span>
+    <button type="button" class="button change" (click)="clear()">
+      Change<span class="sr-only"> {{ label() }}</span>
+    </button>
+  </div>
+} @else {
+  <div class="search">
+    <app-icon name="search" />
+    <input
+      #box
+      type="text"
+      role="combobox"
+      autocomplete="off"
+      aria-autocomplete="list"
+      [attr.aria-label]="label()"
+      [attr.aria-expanded]="open()"
+      [attr.aria-controls]="id + '-list'"
+      [attr.aria-activedescendant]="active() >= 0 ? optionId(active()) : null"
+      [placeholder]="placeholder()"
+      [value]="query()"
+      (input)="onInput(box.value)"
+      (keydown)="onKeydown($event)"
+      (blur)="open.set(false)"
+    />
+  </div>
+
+  @if (open() && !tooShort()) {
+    <ul class="popup" role="listbox" [id]="id + '-list'" [attr.aria-label]="label()">
+      @if (results.error()) {
+        <li class="note error" role="presentation">
+          Search unavailable: {{ errorMessage() }}. You can enter the code by hand instead.
+        </li>
+      } @else if (results.isLoading()) {
+        <li class="note" role="presentation">Searching…</li>
+      } @else {
+        @for (option of options(); track option.code; let i = $index) {
+          <!-- mousedown, not click: it runs before the input's blur closes the list -->
+          <li
+            role="option"
+            [id]="optionId(i)"
+            [attr.aria-selected]="i === active()"
+            [attr.aria-label]="option.display + ', code ' + option.code"
+            [class.active]="i === active()"
+            (mousedown)="$event.preventDefault(); choose(option)"
+          >
+            <span class="code">{{ option.code }}</span>
+            <span>{{ option.display }}</span>
+          </li>
+        } @empty {
+          <li class="note" role="presentation">No codes match “{{ query().trim() }}”.</li>
+        }
+      }
+    </ul>
+  }
+}

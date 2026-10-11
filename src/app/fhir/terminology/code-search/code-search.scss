@@ -1,0 +1,105 @@
+:host {
+  position: relative;
+  display: block;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+
+  &:focus-within {
+    border-color: var(--accent);
+    outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  app-icon {
+    color: var(--text-muted);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 0;
+    border: 0;
+    outline: 0;
+    color: inherit;
+    background: none;
+    font: inherit;
+
+    // The box around it shows focus; the shared form styles mustn't add a second border.
+    &:focus {
+      border: 0;
+      outline: 0;
+    }
+  }
+}
+
+.popup {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  max-height: 280px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 15%);
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 6px;
+  }
+
+  [role='option'] {
+    cursor: pointer;
+
+    &:hover,
+    &.active {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+  }
+}
+
+.code {
+  flex: none;
+  min-width: 5.5em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  color: var(--text-muted);
+
+  &.error {
+    color: var(--danger);
+  }
+}
+
+.chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.display {
+  flex: 1;
+}
+
+.change {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
