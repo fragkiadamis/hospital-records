@@ -148,22 +148,3 @@ compose.yaml         local development stack
 
 [ROADMAP.md](ROADMAP.md) describes how each FHIR resource is built, the rules the code follows,
 and what has been done so far.
-
-### Conventions
-
-- Angular 22 with standalone components only, signals for state, and lazy-loaded routes.
-- Resource components only display data passed in as inputs; pages fetch and save. Mappers, not
-  components, build FHIR JSON.
-- FHIR types come from `@types/fhir` (`import type { Patient } from 'fhir/r4'`).
-- Icons are Tabler SVGs inlined at build time through `<app-icon name="..." />`. Only icons listed
-  in `src/app/shared/icon/icons.ts` are bundled.
-- Prettier: 100-character lines, single quotes.
-
-## Contributing and releases
-
-- Commits follow [Conventional Commits](https://www.conventionalcommits.org/) with sentence-case
-  subjects (`feat: Add ...`). The allowed types are listed in `commitlint.config.mjs`.
-- Pull requests to `main` run commitlint, ESLint and the unit tests.
-- Releases are manual: Actions, then Release, then Run workflow. semantic-release bumps the
-  version from the `feat:` / `fix:` / `perf:` commits since the last tag, updates
-  [CHANGELOG.md](CHANGELOG.md) and creates the GitHub release.
