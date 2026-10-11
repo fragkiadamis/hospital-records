@@ -46,7 +46,7 @@ describe('patientToForm', () => {
       birthDate: '1955-11-03',
       phone: '+30 210 000 0002',
       email: '',
-      mrn: 'SEED-0002',
+      identifiers: { mrn: 'SEED-0002', dicomPatientId: '' },
     });
   });
 
@@ -58,7 +58,7 @@ describe('patientToForm', () => {
       birthDate: '',
       phone: '',
       email: '',
-      mrn: '',
+      identifiers: { mrn: '', dicomPatientId: '' },
     });
   });
 });
@@ -86,12 +86,41 @@ describe('formToPatient', () => {
       ],
     };
 
-    const patient = formToPatient(form({ mrn: 'MRN-42' }), synced);
+    const patient = formToPatient(
+      form({ identifiers: { mrn: 'MRN-42', dicomPatientId: 'KiTS-00136' } }),
+      synced,
+    );
 
     expect(patient.identifier).toEqual([
       dicomPatientIdentifier('KiTS-00136'),
       { system: MRN_SYSTEM, value: 'MRN-42' },
     ]);
+  });
+
+  it('reads and edits the DICOM Patient ID like the MRN', () => {
+    const synced: Patient = { ...stored, identifier: [dicomPatientIdentifier('KiTS-00136')] };
+    expect(patientToForm(synced).identifiers).toEqual({ mrn: '', dicomPatientId: 'KiTS-00136' });
+
+    const edited = formToPatient(
+      form({ identifiers: { mrn: '', dicomPatientId: 'KiTS-00137' } }),
+      synced,
+    );
+    // Edited in place: still typed PI.
+    expect(edited.identifier).toEqual([dicomPatientIdentifier('KiTS-00137')]);
+  });
+
+  it('adds a DICOM Patient ID typed PI, which links the patient to their PACS studies', () => {
+    const patient = formToPatient(
+      form({ identifiers: { mrn: 'SEED-0002', dicomPatientId: ' TEST-0042 ' } }),
+      stored,
+    );
+
+    expect(patient.identifier).toEqual([
+      { system: 'urn:other:hospital', value: 'X-77' },
+      { system: MRN_SYSTEM, value: 'SEED-0002' },
+      dicomPatientIdentifier('TEST-0042'),
+    ]);
+    expect(patient.identifier?.at(-1)?.system).toBe(DICOM_PATIENT_ID_SYSTEM);
   });
 
   it('edits the preferred name in place and keeps the other names', () => {
@@ -132,7 +161,10 @@ describe('formToPatient', () => {
   });
 
   it('removes only the cleared entry', () => {
-    const patient = formToPatient(form({ phone: '', mrn: '' }), stored);
+    const patient = formToPatient(
+      form({ phone: '', identifiers: { mrn: '', dicomPatientId: '' } }),
+      stored,
+    );
 
     expect(patient.telecom).toEqual([{ system: 'phone', value: '+30 210 999 9999', use: 'work' }]);
     expect(patient.identifier).toEqual([{ system: 'urn:other:hospital', value: 'X-77' }]);
@@ -146,7 +178,7 @@ describe('formToPatient', () => {
       birthDate: '',
       phone: '',
       email: '',
-      mrn: '',
+      identifiers: { mrn: '', dicomPatientId: '' },
     });
 
     expect(patient.name).toBeUndefined();
@@ -162,7 +194,7 @@ describe('formToPatient', () => {
       birthDate: '1990-07-28',
       phone: '',
       email: 'ilse@example.org',
-      mrn: 'SEED-0003',
+      identifiers: { mrn: 'SEED-0003', dicomPatientId: '' },
     });
 
     expect(JSON.parse(JSON.stringify(patient))).toEqual({

@@ -11,7 +11,11 @@
       "key": "dicomPatientId",
       "system": "urn:hospital-records:dicom-patient-id",
       "label": "DICOM Patient ID",
-      "searchParam": "dicom-patient-id"
+      "searchParam": "dicom-patient-id",
+      "use": "secondary",
+      "typeCode": "PI",
+      "typeDisplay": "Patient internal identifier",
+      "hint": "Links the patient to their PACS studies: the next sync files the studies with this Patient ID under this patient."
     }
   ]
 }

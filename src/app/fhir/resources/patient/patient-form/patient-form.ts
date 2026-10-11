@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import type { Patient } from 'fhir/r4';
 import { notInFuture, today } from '../../../../shared/forms/date-validators';
+import { PATIENT_IDENTIFIER_TYPES } from '../patient-identifiers';
 import { formToPatient, PatientFormValue, patientToForm } from '../patient-mapper';
 
 /** A patient needs at least a given or a family name. */
@@ -34,7 +35,12 @@ export class PatientForm {
   readonly save = output<Patient>();
   readonly cancelled = output<void>();
 
-  protected readonly form = inject(NonNullableFormBuilder).group(
+  private readonly fb = inject(NonNullableFormBuilder);
+
+  /** One field per kind of patient identifier (patient-identifiers.json), in its order. */
+  protected readonly identifierTypes = PATIENT_IDENTIFIER_TYPES;
+
+  protected readonly form = this.fb.group(
     {
       given: [''],
       family: [''],
@@ -42,7 +48,9 @@ export class PatientForm {
       birthDate: ['', notInFuture],
       phone: [''],
       email: ['', Validators.email],
-      mrn: [''],
+      identifiers: this.fb.record(
+        Object.fromEntries(PATIENT_IDENTIFIER_TYPES.map((t) => [t.key, ''])),
+      ),
     },
     { validators: nameRequired },
   );
@@ -65,7 +73,10 @@ export class PatientForm {
   }
 
   /** Show a field's error only once the user has left it (or tried to submit). */
-  protected showError(field: keyof PatientFormValue, error: string): boolean {
+  protected showError(
+    field: Exclude<keyof PatientFormValue, 'identifiers'>,
+    error: string,
+  ): boolean {
     const control = this.form.controls[field];
     return control.touched && control.hasError(error);
   }

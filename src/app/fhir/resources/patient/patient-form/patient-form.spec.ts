@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Patient } from 'fhir/r4';
-import { MRN_SYSTEM } from '../patient-mapper';
+import { dicomPatientIdentifier, MRN_SYSTEM } from '../patient-mapper';
 import { PatientForm } from './patient-form';
 
 describe('PatientForm', () => {
@@ -9,7 +9,13 @@ describe('PatientForm', () => {
   let saved: Patient[];
 
   const field = <T extends HTMLInputElement | HTMLSelectElement>(name: string) =>
-    element.querySelector<T>(`[formControlName="${name}"]`)!;
+    (element.querySelector<T>(`[formControlName="${name}"]`) ?? identifierField(name)) as T;
+
+  /** An identifier field, found by its label (its control name is bound, not an attribute). */
+  const identifierField = (label: string) =>
+    [...element.querySelectorAll('fieldset[formGroupName="identifiers"] label')]
+      .find((l) => l.textContent?.trim().startsWith(label))
+      ?.querySelector('input') ?? null;
 
   /** Types into a field the way a user does: input event, then leaving the field. */
   const type = (name: string, value: string) => {
@@ -40,7 +46,7 @@ describe('PatientForm', () => {
     type('family', 'Varga');
     type('gender', 'female');
     type('birthDate', '1990-07-28');
-    type('mrn', 'SEED-0003');
+    type('MRN', 'SEED-0003');
     await submit();
 
     expect(errors()).toEqual([]);
@@ -109,5 +115,32 @@ describe('PatientForm', () => {
     const buttons = [...element.querySelectorAll('button')];
     expect(buttons.every((b) => b.disabled)).toBe(true);
     expect(element.querySelector('button[type="submit"]')?.textContent?.trim()).toBe('Saving…');
+  });
+
+  it('has a field for every kind of patient identifier, and saves the DICOM Patient ID', async () => {
+    const labels = [...element.querySelectorAll('fieldset[formGroupName="identifiers"] label')].map(
+      (l) => l.firstChild?.textContent?.trim(),
+    );
+    expect(labels).toEqual(['MRN', 'DICOM Patient ID']);
+
+    type('family', 'Manual');
+    type('DICOM Patient ID', 'TEST-0042');
+    await submit();
+
+    expect(saved[0].identifier).toEqual([dicomPatientIdentifier('TEST-0042')]);
+  });
+
+  it('shows a stored DICOM Patient ID, with what it is for', async () => {
+    fixture.componentRef.setInput('patient', {
+      resourceType: 'Patient',
+      name: [{ family: 'KiTS-00136' }],
+      identifier: [dicomPatientIdentifier('KiTS-00136')],
+    } satisfies Patient);
+    await fixture.whenStable();
+
+    const input = field('DICOM Patient ID');
+    expect(input.value).toBe('KiTS-00136');
+    const hint = element.querySelector(`#${input.getAttribute('aria-describedby')}`);
+    expect(hint?.textContent).toContain('the next sync files the studies');
   });
 });

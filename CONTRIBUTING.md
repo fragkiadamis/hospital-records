@@ -96,10 +96,11 @@ Each resource lives in `src/app/fhir/resources/<resource>/` and follows the same
 
 ### A new kind of patient identifier
 
-Add an entry to `src/app/fhir/resources/patient/patient-identifiers.json` (key, system, label and
-search parameter code), then run `npm run seed`. That one entry gives the patient detail its label,
-lets a patient without a name go by it, adds it to the search's "Search in" choices, and installs
-its search parameter on HAPI.
+Add an entry to `src/app/fhir/resources/patient/patient-identifiers.json`, then run `npm run seed`:
+`key`, `system`, `label` and `searchParam` are required; `use`, `typeCode` / `typeDisplay` (HL7 v2
+table 0203) and a form `hint` are optional. That one entry gives the patient form a field for it,
+the patient detail its label, a patient without a name a fallback, the search a "Search in"
+choice, and HAPI its search parameter.
 
 ## Tests
 

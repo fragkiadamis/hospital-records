@@ -41,10 +41,26 @@
           <span class="error" role="alert">The birth date can't be in the future.</span>
         }
       </label>
-      <label>
-        <span><abbr title="Medical record number">MRN</abbr></span>
-        <input formControlName="mrn" autocomplete="off" />
-      </label>
+    </div>
+  </fieldset>
+
+  <fieldset formGroupName="identifiers">
+    <legend>Identifiers</legend>
+    <div class="row">
+      @for (type of identifierTypes; track type.key) {
+        <label>
+          {{ type.label }}
+          <input
+            [formControlName]="type.key"
+            autocomplete="off"
+            spellcheck="false"
+            [attr.aria-describedby]="type.hint ? 'hint-' + type.key : null"
+          />
+          @if (type.hint) {
+            <span class="hint" [id]="'hint-' + type.key">{{ type.hint }}</span>
+          }
+        </label>
+      }
     </div>
   </fieldset>
 

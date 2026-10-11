@@ -1,9 +1,12 @@
 import type { ContactPoint, HumanName, Identifier, Patient } from 'fhir/r4';
-import { CodeSystems } from '../../code-systems';
 import { formatHumanName, preferredName } from '../../datatypes/human-name-pipe';
 import { identifierValue } from '../../datatypes/identifier-pipe';
 import { replaceEntry } from '../replace-entry';
-import { PATIENT_IDENTIFIER_TYPES, patientIdentifierType } from './patient-identifiers';
+import {
+  newPatientIdentifier,
+  PATIENT_IDENTIFIER_TYPES,
+  patientIdentifierType,
+} from './patient-identifiers';
 
 /** Identifier system of Hospital Records medical record numbers. A placeholder until the hospital's own URI is known. */
 export const MRN_SYSTEM = patientIdentifierType('mrn').system;
@@ -17,17 +20,7 @@ export const DICOM_PATIENT_ID_SYSTEM = patientIdentifierType('dicomPatientId').s
 
 /** A patient's DICOM Patient ID as a FHIR Identifier, typed PI (patient internal identifier). */
 export function dicomPatientIdentifier(patientId: string): Identifier {
-  return {
-    use: 'secondary',
-    type: {
-      coding: [
-        { system: CodeSystems.identifierType, code: 'PI', display: 'Patient internal identifier' },
-      ],
-      text: 'DICOM Patient ID',
-    },
-    system: DICOM_PATIENT_ID_SYSTEM,
-    value: patientId,
-  };
+  return newPatientIdentifier(patientIdentifierType('dicomPatientId'), patientId);
 }
 
 /** What the patient form edits: flat fields, '' when empty. */
@@ -38,12 +31,12 @@ export interface PatientFormValue {
   birthDate: string; // YYYY-MM-DD
   phone: string;
   email: string;
-  mrn: string;
+  /** One value per kind of patient identifier (PATIENT_IDENTIFIER_TYPES), by its key. */
+  identifiers: Record<string, string>;
 }
 
 const isPhone = (t: ContactPoint) => t.system === 'phone';
 const isEmail = (t: ContactPoint) => t.system === 'email';
-const isMrn = (i: Identifier) => i.system === MRN_SYSTEM;
 
 /** Patient → form. Each field shows the one entry the form edits (the preferred name, the first phone, …). */
 export function patientToForm(patient: Patient): PatientFormValue {
@@ -55,7 +48,9 @@ export function patientToForm(patient: Patient): PatientFormValue {
     birthDate: patient.birthDate ?? '',
     phone: patient.telecom?.find(isPhone)?.value ?? '',
     email: patient.telecom?.find(isEmail)?.value ?? '',
-    mrn: identifierValue(patient.identifier, MRN_SYSTEM),
+    identifiers: Object.fromEntries(
+      PATIENT_IDENTIFIER_TYPES.map((t) => [t.key, identifierValue(patient.identifier, t.system)]),
+    ),
   };
 }
 
@@ -68,11 +63,9 @@ export function formToPatient(value: PatientFormValue, existing?: Patient): Pati
   const currentName = preferredName(existing?.name);
   const currentPhone = existing?.telecom?.find(isPhone);
   const currentEmail = existing?.telecom?.find(isEmail);
-  const currentMrn = existing?.identifier?.find(isMrn);
 
   const phone = value.phone.trim();
   const email = value.email.trim();
-  const mrn = value.mrn.trim();
 
   let telecom = replaceEntry(
     existing?.telecom,
@@ -93,12 +86,27 @@ export function formToPatient(value: PatientFormValue, existing?: Patient): Pati
     gender: value.gender || undefined,
     birthDate: value.birthDate || undefined,
     telecom,
-    identifier: replaceEntry(
-      existing?.identifier,
-      currentMrn,
-      mrn ? { system: MRN_SYSTEM, ...currentMrn, value: mrn } : undefined,
-    ),
+    identifier: editedIdentifiers(value, existing?.identifier),
   };
+}
+
+/**
+ * The identifiers with the form's value for each kind of patient identifier: the first one of
+ * that system is edited in place (keeping its type, period, …), added, or removed when cleared.
+ * Identifiers of other systems are kept as they are.
+ */
+function editedIdentifiers(
+  value: PatientFormValue,
+  identifiers: Identifier[] | undefined,
+): Identifier[] | undefined {
+  return PATIENT_IDENTIFIER_TYPES.reduce((all, type) => {
+    const current = all?.find((i) => i.system === type.system);
+    const entered = (value.identifiers[type.key] ?? '').trim();
+    const edited = entered
+      ? { ...newPatientIdentifier(type, entered), ...current, value: entered }
+      : undefined;
+    return replaceEntry(all, current, edited);
+  }, identifiers);
 }
 
 /**

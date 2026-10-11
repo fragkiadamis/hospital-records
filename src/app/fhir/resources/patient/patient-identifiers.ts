@@ -1,10 +1,12 @@
+import type { Identifier } from 'fhir/r4';
+import { CodeSystems } from '../../code-systems';
 import identifiers from './patient-identifiers.json';
 
 /**
  * A kind of identifier patients have, e.g. the MRN. The list lives in patient-identifiers.json,
  * which `npm run seed` also reads to install the search parameters on HAPI, so adding a kind of
- * identifier is one entry there: the patient detail labels it, a patient without a name goes by
- * it, and the patient search offers it.
+ * identifier is one entry there: the patient form gets a field for it, the patient detail labels
+ * it, a patient without a name goes by it, and the patient search offers it.
  */
 export interface PatientIdentifierType {
   /** Stable name for code, e.g. "mrn". */
@@ -19,10 +21,17 @@ export interface PatientIdentifierType {
    * installs on HAPI.
    */
   searchParam: string;
+  /** Identifier.use given to new identifiers of this type, e.g. "secondary". */
+  use?: Identifier['use'];
+  /** Shown under its field in the patient form. */
+  hint?: string;
+  /** HL7 v2 table 0203 code typing new identifiers of this type, e.g. "PI", with its display. */
+  typeCode?: string;
+  typeDisplay?: string;
 }
 
 /** Every kind of patient identifier, in the order a patient without a name goes by them. */
-export const PATIENT_IDENTIFIER_TYPES: readonly PatientIdentifierType[] = identifiers.types;
+export const PATIENT_IDENTIFIER_TYPES = identifiers.types as readonly PatientIdentifierType[];
 
 /** The custom search parameter on any identifier's value, whatever its system. */
 export const ANY_IDENTIFIER_SEARCH_PARAM = identifiers.anyIdentifierSearchParam;
@@ -38,3 +47,26 @@ export function patientIdentifierType(key: string): PatientIdentifierType {
 export const PATIENT_IDENTIFIER_LABELS: Readonly<Record<string, string>> = Object.fromEntries(
   PATIENT_IDENTIFIER_TYPES.map((t) => [t.system, t.label]),
 );
+
+/** A new identifier of this type with this value, typed and used as the list says. */
+export function newPatientIdentifier(type: PatientIdentifierType, value: string): Identifier {
+  return {
+    ...(type.use ? { use: type.use } : {}),
+    ...(type.typeCode
+      ? {
+          type: {
+            coding: [
+              {
+                system: CodeSystems.identifierType,
+                code: type.typeCode,
+                ...(type.typeDisplay ? { display: type.typeDisplay } : {}),
+              },
+            ],
+            text: type.label,
+          },
+        }
+      : {}),
+    system: type.system,
+    value,
+  };
+}

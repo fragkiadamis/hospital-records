@@ -14,9 +14,11 @@ The frontend works on these FHIR R4 resources:
 
 - **Patients**: list with search, detail page, create, edit, and delete (refused while other
   records still reference the patient). The search looks in names and identifiers (MRN, DICOM
-  Patient ID), or in just one of them, matching anywhere in the value and ignoring case. Patients created
-  by the PACS sync are identified by their DICOM Patient ID, kept apart from the MRN; one without a
-  name is shown by its MRN or DICOM Patient ID.
+  Patient ID), or in just one of them, matching anywhere in the value and ignoring case. Patients
+  created by the PACS sync are identified by their DICOM Patient ID, kept apart from the MRN; one
+  without a name is shown by its MRN or DICOM Patient ID. The patient form edits both identifiers:
+  giving a patient a DICOM Patient ID links them to the PACS studies with that Patient ID on the
+  next sync.
 - **Conditions**: shown on the patient page, with detail, create, edit and delete (refused while an
   imaging study names the condition as its reason). Conditions are coded in WHO ICD-10 and/or
   ICD-11, searched through a FHIR terminology server, and the form suggests the matching code in the
