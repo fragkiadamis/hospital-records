@@ -349,6 +349,33 @@
     font-size: 0.85rem;
   }
 
+  // A field made of more than one control, e.g. a code search: its label above them.
+  .field-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+
+  .code-field + .code-field {
+    margin-top: 16px;
+  }
+
+  // A secondary action inside a field: "Enter the code by hand".
+  .link-button {
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    color: var(--accent);
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   .actions {
     display: flex;
     justify-content: flex-end;

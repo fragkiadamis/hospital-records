@@ -1,5 +1,7 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { Condition } from 'fhir/r4';
+import type { Condition, ValueSet } from 'fhir/r4';
 import { CodeSystems } from '../../../code-systems';
 import { ConditionForm } from './condition-form';
 
@@ -9,6 +11,7 @@ describe('ConditionForm', () => {
   let fixture: ComponentFixture<ConditionForm>;
   let element: HTMLElement;
   let saved: Condition[];
+  let http: HttpTestingController;
 
   const field = <T extends HTMLInputElement | HTMLSelectElement>(name: string) =>
     element.querySelector<T>(`[formControlName="${name}"]`)!;
@@ -21,6 +24,18 @@ describe('ConditionForm', () => {
     control.dispatchEvent(new Event('blur'));
   };
 
+  /** The code field of one system ("SNOMED CT", "ICD-10"). */
+  const codeField = (system: string) =>
+    [...element.querySelectorAll('.code-field')].find(
+      (f) => f.querySelector('.field-label')?.textContent === system,
+    )!;
+
+  /** Switches a system from the search box to typing the code by hand. */
+  const byHand = async (system: string) => {
+    codeField(system).querySelector<HTMLButtonElement>('.link-button')!.click();
+    await fixture.whenStable();
+  };
+
   const submit = async () => {
     element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await fixture.whenStable();
@@ -29,8 +44,14 @@ describe('ConditionForm', () => {
   const errors = () =>
     [...element.querySelectorAll('.error')].map((e) => e.textContent?.replace(/\s+/g, ' ').trim());
 
+  afterEach(() => http.verify());
+
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ConditionForm] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ConditionForm],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ConditionForm);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('subject', subject);
@@ -47,6 +68,8 @@ describe('ConditionForm', () => {
 
   it('emits the condition built from the fields, for the given patient', async () => {
     set('text', 'Pneumonia');
+    await byHand('SNOMED CT');
+    await byHand('ICD-10');
     set('snomedCode', '233604007');
     set('snomedDisplay', 'Pneumonia');
     set('icd10Code', 'j18.9');
@@ -75,6 +98,8 @@ describe('ConditionForm', () => {
     await submit();
     expect(errors()).toEqual(['Enter a name or at least one code.']);
 
+    await byHand('SNOMED CT');
+    await byHand('ICD-10');
     set('snomedCode', '12ab');
     set('icd10Code', 'C5');
     set('icd10Display', 'Breast cancer');
@@ -89,6 +114,7 @@ describe('ConditionForm', () => {
 
   it('asks for the code when only its name is filled in', async () => {
     set('text', 'Asthma');
+    await byHand('ICD-10');
     set('icd10Display', 'Asthma');
     await submit();
 
@@ -162,5 +188,72 @@ describe('ConditionForm', () => {
       onsetAge: { value: 61, unit: 'years' },
       verificationStatus: { coding: [{ code: 'provisional' }] },
     });
+  });
+
+  it('picks codes with the search, which also names a new condition', async () => {
+    const search =
+      codeField('SNOMED CT').querySelector<HTMLInputElement>('input[role="combobox"]')!;
+    search.value = 'pneum';
+    search.dispatchEvent(new Event('input'));
+    await new Promise((resolve) => setTimeout(resolve, 350)); // the search's debounce
+    TestBed.tick();
+    http.expectOne('/tx/ValueSet/$expand').flush({
+      resourceType: 'ValueSet',
+      status: 'active',
+      expansion: {
+        timestamp: '2026-10-11',
+        contains: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+      },
+    } satisfies ValueSet);
+    await fixture.whenStable();
+    codeField('SNOMED CT')
+      .querySelector('[role="option"]')!
+      .dispatchEvent(new MouseEvent('mousedown'));
+    await fixture.whenStable();
+
+    expect(field('text').value).toBe('Pneumonia');
+    expect(codeField('SNOMED CT').querySelector('app-coding-chip .code')?.textContent).toBe(
+      '233604007',
+    );
+
+    await submit();
+    expect(saved[0].code).toEqual({
+      text: 'Pneumonia',
+      coding: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+    });
+  });
+
+  it('shows stored codes as chips that can be changed', async () => {
+    fixture.componentRef.setInput('condition', {
+      resourceType: 'Condition',
+      subject,
+      clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
+      code: {
+        text: 'Breast cancer',
+        coding: [{ system: CodeSystems.icd10, code: 'C50.9', display: 'Breast, unspecified' }],
+      },
+    } satisfies Condition);
+    await fixture.whenStable();
+
+    expect(codeField('ICD-10').querySelector('.display')?.textContent).toBe('Breast, unspecified');
+
+    codeField('ICD-10').querySelector<HTMLButtonElement>('button.change')!.click();
+    await fixture.whenStable();
+    await submit();
+    expect(saved[0].code).toEqual({ text: 'Breast cancer' });
+  });
+
+  it('opens the hand-entry fields for a stored code in the wrong format', async () => {
+    fixture.componentRef.setInput('condition', {
+      resourceType: 'Condition',
+      subject,
+      clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
+      code: { coding: [{ system: CodeSystems.snomed, code: 'not-a-code' }] },
+    } satisfies Condition);
+    await fixture.whenStable();
+    await submit();
+
+    expect(field('snomedCode').value).toBe('not-a-code');
+    expect(errors()).toContain('A SNOMED CT code is 6 to 18 digits.');
   });
 });

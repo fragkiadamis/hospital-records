@@ -15,9 +15,14 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import type { Condition, Reference } from 'fhir/r4';
+import { map } from 'rxjs';
 import { notInFuture, today } from '../../../../shared/forms/date-validators';
+import { CodeSystems } from '../../../code-systems';
 import { formatTimeChoice } from '../../../datatypes/time-choice-pipe';
+import { CodeSearch } from '../../../terminology/code-search/code-search';
+import { CodeOption, ValueSets } from '../../../terminology/terminology-client';
 import {
   CLINICAL_STATUSES,
   CONDITION_CATEGORIES,
@@ -28,6 +33,11 @@ import {
 } from '../condition-mapper';
 
 const ONGOING = ['active', 'recurrence', 'relapse'];
+
+/** The coded fields of the form, each a code + name pair. */
+type CodeField = 'snomed' | 'icd10';
+
+const SYSTEMS: Record<CodeField, string> = { snomed: CodeSystems.snomed, icd10: CodeSystems.icd10 };
 
 /** SNOMED CT concept ids are 6 to 18 digits. */
 const SNOMED_CODE = /^\d{6,18}$/;
@@ -64,7 +74,7 @@ function conditionRules(group: AbstractControl): ValidationErrors | null {
  * it emits the Condition built by the mapper, and the page creates or updates it.
  */
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [CodeSearch, ReactiveFormsModule],
   selector: 'app-condition-form',
   templateUrl: './condition-form.html',
 })
@@ -106,6 +116,23 @@ export class ConditionForm {
 
   private readonly locale = inject(LOCALE_ID);
 
+  protected readonly valueSets = ValueSets;
+
+  /** The form's current values as a signal, for what the template derives from them. */
+  private readonly values = toSignal(
+    this.form.valueChanges.pipe(map(() => this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() },
+  );
+
+  /** The chosen code of each system, shown by its search box. */
+  protected readonly chosen = computed(() => ({
+    snomed: this.codeOf('snomed'),
+    icd10: this.codeOf('icd10'),
+  }));
+
+  /** Systems whose code is typed by hand (not found by the search, or the server is down). */
+  protected readonly manual = signal<Record<CodeField, boolean>>({ snomed: false, icd10: false });
+
   /** A stored onset / end the date field can't show (an age, a period, text): kept unless replaced. */
   protected readonly storedOnset = computed(() => this.storedNonDate('onset'));
   protected readonly storedEnd = computed(() => this.storedNonDate('abatement'));
@@ -133,6 +160,30 @@ export class ConditionForm {
     );
   }
 
+  /** A code picked in a search box (or cleared with its Change button). */
+  protected pick(field: CodeField, option: CodeOption | null): void {
+    const {
+      [`${field}Code` as const]: code,
+      [`${field}Display` as const]: display,
+      text,
+    } = this.form.controls;
+    code.setValue(option?.code ?? '');
+    display.setValue(option?.display ?? '');
+    code.markAsTouched();
+    // A SNOMED concept's name is a good default for the condition's name.
+    if (field === 'snomed' && option && !text.value.trim()) text.setValue(option.display);
+  }
+
+  /** Shows the code + name fields instead of the search box, or back. */
+  protected enterByHand(field: CodeField, byHand: boolean): void {
+    this.manual.update((manual) => ({ ...manual, [field]: byHand }));
+  }
+
+  /** Whether a system shows the code + name fields: chosen so, or its stored code is invalid. */
+  protected showsFields(field: CodeField): boolean {
+    return this.manual()[field] || this.form.controls[`${field}Code`].invalid;
+  }
+
   /** A field's own error, once the user has left the field (or tried to save). */
   protected fieldError(field: keyof ConditionFormValue, error: string): boolean {
     const control = this.form.controls[field];
@@ -143,6 +194,13 @@ export class ConditionForm {
   protected ruleError(error: string, ...fields: (keyof ConditionFormValue)[]): boolean {
     const touched = this.submitted() || fields.some((f) => this.form.controls[f].touched);
     return touched && this.form.hasError(error);
+  }
+
+  private codeOf(field: CodeField): CodeOption | null {
+    const values = this.values();
+    const code = values[`${field}Code`].trim();
+    const display = values[`${field}Display`].trim();
+    return code ? { system: SYSTEMS[field], code, display: display || code } : null;
   }
 
   private storedNonDate(prefix: 'onset' | 'abatement'): string {
