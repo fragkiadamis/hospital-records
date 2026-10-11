@@ -25,7 +25,7 @@ const identifiers = JSON.parse(
   ),
 );
 
-/** A Patient string search parameter, matched like a name: from the start, ignoring case. */
+/** A Patient string search parameter: matched ignoring case, and anywhere with :contains. */
 function searchParameter(code, description, expression) {
   const id = `patient-${code}`;
   return {

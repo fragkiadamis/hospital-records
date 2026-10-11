@@ -14,8 +14,9 @@ export interface PatientIdentifierType {
   /** What the app calls it, e.g. "MRN". */
   label: string;
   /**
-   * The custom search parameter (a string search on this identifier's value, matched like a
-   * name: from the start, ignoring case) that `npm run seed` installs on HAPI.
+   * The custom search parameter (a string search on this identifier's value, so it can match
+   * like a name: anywhere in the value with :contains, ignoring case) that `npm run seed`
+   * installs on HAPI.
    */
   searchParam: string;
 }

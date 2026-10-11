@@ -14,7 +14,7 @@ The frontend works on these FHIR R4 resources:
 
 - **Patients**: list with search, detail page, create, edit, and delete (refused while other
   records still reference the patient). The search looks in names and identifiers (MRN, DICOM
-  Patient ID), or in just one of them, matching from the start and ignoring case. Patients created
+  Patient ID), or in just one of them, matching anywhere in the value and ignoring case. Patients created
   by the PACS sync are identified by their DICOM Patient ID, kept apart from the MRN; one without a
   name is shown by its MRN or DICOM Patient ID.
 - **Conditions**: shown on the patient page, with detail, create, edit and delete (refused while an
@@ -57,7 +57,8 @@ instead of duplicating them.
 
 `npm run seed` also installs the custom search parameters the patient search needs: FHIR's own
 `identifier` search only matches whole values, so each kind of patient identifier gets a string
-search parameter that matches like a name. HAPI reindexes existing patients in the background, so
+search parameter that matches like a name, anywhere in the value (FHIR's `:contains`, which
+HAPI must allow; the compose image does). HAPI reindexes existing patients in the background, so
 identifier search can take a minute to find them after the first seed. Any other HAPI the app uses
 needs these search parameters too.
 

@@ -114,7 +114,7 @@ describe('PatientList', () => {
 
       expect(
         requests.map((r) => [...r.request.params.keys()].find((k) => !k.startsWith('_'))),
-      ).toEqual(['name', 'identifier-value']);
+      ).toEqual(['name:contains', 'identifier-value:contains']);
       requests[0].flush(bundle(named));
       requests[1].flush(bundle(unnamed, named)); // p1 is found both ways
       await fixture.whenStable();
@@ -133,8 +133,8 @@ describe('PatientList', () => {
       const requests = await type('seed');
 
       expect(requests).toHaveLength(1);
-      expect(requests[0].request.params.get('mrn')).toBe('seed');
-      expect(requests[0].request.params.has('name')).toBe(false);
+      expect(requests[0].request.params.get('mrn:contains')).toBe('seed');
+      expect(requests[0].request.params.has('name:contains')).toBe(false);
       requests[0].flush(bundle(named));
       await fixture.whenStable();
       expect(listed()).toEqual(['/patients/p1']);
@@ -146,7 +146,7 @@ describe('PatientList', () => {
       const requests = await type('kost');
 
       expect(requests).toHaveLength(1);
-      expect(requests[0].request.params.get('name')).toBe('kost');
+      expect(requests[0].request.params.get('name:contains')).toBe('kost');
       requests[0].flush(bundle());
       await fixture.whenStable();
     });

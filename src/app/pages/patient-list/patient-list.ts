@@ -54,8 +54,9 @@ export class PatientList {
     return `Search by ${by === 'name' ? 'name' : patientIdentifierType(by).label}`;
   });
 
-  // Names and identifiers both match from the start, ignoring case: identifiers through the
-  // string search parameters `npm run seed` installs (see patient-identifiers.json).
+  // Names and identifiers both match anywhere in the value, ignoring case (FHIR's :contains on
+  // string search parameters): identifiers through the ones `npm run seed` installs (see
+  // patient-identifiers.json). So "0001" finds MRN SEED-0001 and "aki" finds Kostaki.
   protected readonly patients = rxResource({
     params: () => {
       const term = this.searchTerm().trim();
@@ -65,7 +66,7 @@ export class PatientList {
     stream: ({ params: { term, by } }) => {
       const search = (param?: string) =>
         this.fhir.search('Patient', {
-          ...(param && term ? { [param]: term } : {}),
+          ...(param && term ? { [`${param}:contains`]: term } : {}),
           _sort: 'family,given',
           _count: PAGE_SIZE,
         });
