@@ -58,6 +58,31 @@ export const clinicalStatusOf = (c: Condition) =>
 export const verificationStatusOf = (c: Condition) =>
   codeIn<VerificationStatus>(c.verificationStatus, CodeSystems.conditionVerification);
 
+const ONGOING = new Set<string>(['active', 'recurrence', 'relapse']);
+const UNCERTAIN = new Set<string>(['unconfirmed', 'provisional', 'differential']);
+const VOID = new Set<string>(['refuted', 'entered-in-error']);
+
+/** The condition is currently present: active, recurrence or relapse. */
+export const isOngoing = (c: Condition) => ONGOING.has(clinicalStatusOf(c));
+
+/** The diagnosis is not (yet) certain: unconfirmed, provisional or differential. */
+export const isUncertain = (c: Condition) => UNCERTAIN.has(verificationStatusOf(c));
+
+/** The condition turned out not to be real: refuted or entered in error. */
+export const isVoid = (c: Condition) => VOID.has(verificationStatusOf(c));
+
+/** Onset as a sortable string (dateTime or period start), '' when unknown or not a date. */
+const onsetKey = (c: Condition) => c.onsetDateTime ?? c.onsetPeriod?.start ?? '';
+
+/**
+ * Most relevant first: ongoing conditions, then the others, then refuted or entered in error;
+ * within each group, newest onset first and unknown onsets last.
+ */
+export function byRelevance(a: Condition, b: Condition): number {
+  const rank = (c: Condition) => (isVoid(c) ? 2 : isOngoing(c) ? 0 : 1);
+  return rank(a) - rank(b) || onsetKey(b).localeCompare(onsetKey(a));
+}
+
 const categoryCoding = (concept: CodeableConcept) =>
   findCoding(concept, CodeSystems.conditionCategory);
 

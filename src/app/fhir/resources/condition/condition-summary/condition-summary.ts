@@ -6,16 +6,12 @@ import {
   CLINICAL_STATUSES,
   clinicalStatusOf,
   conditionDisplayName,
+  isOngoing,
+  isUncertain,
+  isVoid,
   VERIFICATION_STATUSES,
   verificationStatusOf,
 } from '../condition-mapper';
-
-/** Clinical statuses that mean the condition is currently present. */
-const ONGOING = new Set(['active', 'recurrence', 'relapse']);
-/** Verification statuses that say the diagnosis is not (yet) certain. */
-const UNCERTAIN = new Set(['unconfirmed', 'provisional', 'differential']);
-/** Verification statuses that say the condition is not real. */
-const VOID = new Set(['refuted', 'entered-in-error']);
 
 /**
  * One-line condition: name, clinical status, doubtful verification, onset/end and codes.
@@ -34,17 +30,19 @@ export class ConditionSummary {
 
   protected readonly status = computed(() => {
     const code = clinicalStatusOf(this.condition());
-    return code ? { label: CLINICAL_STATUSES[code], ongoing: ONGOING.has(code) } : undefined;
+    return code
+      ? { label: CLINICAL_STATUSES[code], ongoing: isOngoing(this.condition()) }
+      : undefined;
   });
 
   /** Shown only when it is not the usual "confirmed". */
   protected readonly verification = computed(() => {
     const code = verificationStatusOf(this.condition());
     if (!code || code === 'confirmed') return undefined;
-    return { label: VERIFICATION_STATUSES[code], uncertain: UNCERTAIN.has(code) };
+    return { label: VERIFICATION_STATUSES[code], uncertain: isUncertain(this.condition()) };
   });
 
-  protected readonly isVoid = computed(() => VOID.has(verificationStatusOf(this.condition())));
+  protected readonly voided = computed(() => isVoid(this.condition()));
 
   protected readonly codings = computed(() =>
     (this.condition().code?.coding ?? []).filter((coding) => coding.code),

@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.count {
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--bg);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  padding: 12px 20px;
+
+  & + li {
+    border-top: 1px solid var(--border);
+  }
+}
+
+.alert {
+  margin: 16px 20px;
+}

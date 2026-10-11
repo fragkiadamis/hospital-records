@@ -4,7 +4,7 @@
 
 <i class="ti ti-stethoscope icon" aria-hidden="true"></i>
 
-<span class="name" [class.void]="isVoid()">{{ name() }}</span>
+<span class="name" [class.void]="voided()">{{ name() }}</span>
 
 @if (status(); as s) {
   <span class="badge" [class.ongoing]="s.ongoing">{{ s.label }}</span>

@@ -7,6 +7,7 @@ import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
 import { PatientDetail } from '../../fhir/resources/patient/patient-detail/patient-detail';
 import { patientDisplayName } from '../../fhir/resources/patient/patient-mapper';
+import { PatientConditions } from './patient-conditions/patient-conditions';
 
 /** Where the delete flow is: closed, looking for linked records, blocked by them, or asking. */
 type DeleteStep = 'closed' | 'checking' | 'blocked' | 'confirm' | 'deleting';
@@ -22,7 +23,7 @@ function countLinked(bundle: Bundle): { type: string; count: number }[] {
 }
 
 @Component({
-  imports: [PatientDetail, RouterLink],
+  imports: [PatientConditions, PatientDetail, RouterLink],
   selector: 'app-patient-page',
   styleUrl: './patient-page.scss',
   templateUrl: './patient-page.html',

@@ -22,6 +22,15 @@ describe('PatientPage', () => {
   const respond = async (id: string, body: object, status = 200) => {
     TestBed.tick();
     http.expectOne(`/fhir/Patient/${id}`).flush(body, { status, statusText: 'OK' });
+    // Rendering the patient starts the conditions card's own search (it has its own tests), and
+    // the page only settles once that is answered too, so answer it with no conditions.
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve));
+      TestBed.tick();
+      const searches = http.match((r) => r.url === '/fhir/Condition');
+      searches.forEach((req) => req.flush({ resourceType: 'Bundle', type: 'searchset' }));
+      if (searches.length || status !== 200) break;
+    }
     await fixture.whenStable();
   };
 
@@ -74,6 +83,7 @@ describe('PatientPage', () => {
     expect(element.querySelector('a[href$="/edit"]')?.getAttribute('href')).toBe(
       '/patients/seed-patient-1/edit',
     );
+    expect(element.querySelector('app-patient-conditions')).not.toBeNull();
   });
 
   it('says when the patient does not exist', async () => {

@@ -1,0 +1,30 @@
+<section class="card" aria-labelledby="conditions-heading">
+  <header>
+    <h2 id="conditions-heading">Conditions</h2>
+    @if (conditions.hasValue()) {
+      <span class="count">{{ sorted().length }}</span>
+    }
+  </header>
+
+  <div aria-live="polite" [attr.aria-busy]="conditions.isLoading()">
+    @if (conditions.error()) {
+      <div class="alert" role="alert">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>Conditions could not be loaded: {{ errorMessage() }}</span>
+        <button type="button" class="button" (click)="conditions.reload()">Try again</button>
+      </div>
+    } @else if (conditions.hasValue()) {
+      @if (sorted().length) {
+        <ul>
+          @for (condition of sorted(); track condition.id) {
+            <li><app-condition-summary [condition]="condition" /></li>
+          }
+        </ul>
+      } @else {
+        <p class="state">No conditions recorded.</p>
+      }
+    } @else {
+      <p class="state">Loading conditions…</p>
+    }
+  </div>
+</section>
