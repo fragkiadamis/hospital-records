@@ -26,9 +26,9 @@ The frontend works on these FHIR R4 resources:
   the condition's first note.
 - **Imaging studies**: shown on the patient page, with a detail page and series table. They come
   only from the PACS: the [PACS sync](#pacs-sync) creates them from the DICOM studies in Orthanc,
-  and there is no ImagingStudy without a DICOM study behind it. The one thing the UI edits is a
-  study's reasons, which link it to conditions; the link is saved on both sides in a single
-  transaction.
+  and [DICOM import](#dicom-import) uploads files to Orthanc and creates them in one go. There is
+  no ImagingStudy without a DICOM study behind it. The one thing the UI edits is a study's
+  reasons, which link it to conditions; the link is saved on both sides in a single transaction.
 
 Edits use optimistic locking, so saving over a newer version of a record is refused instead of
 silently overwriting it.
@@ -91,6 +91,21 @@ that is unchanged is not written. Afterwards a report lists:
 - ImagingStudies that are **not in the PACS**. These are only reported, never changed or deleted.
 
 The sync runs in the browser and only when someone clicks the button.
+
+## DICOM import
+
+**Import DICOM** on the patient list uploads DICOM files to the PACS and creates their records:
+
+1. Drop files or folders on the panel, or choose them. Only DICOM files (those with the `DICM`
+   marker) are kept; the others, and any `DICOMDIR`, are listed as skipped.
+2. The files go to Orthanc with STOW-RS (`POST /dicom-web/studies`), in batches of up to 20 files
+   or 50 MB. A file Orthanc refuses is reported with the reason; if Orthanc is down or refuses the
+   login, the upload stops and says so.
+3. The studies the stored files belong to, and only those, are synced as above: each goes to the
+   Patient with its DICOM Patient ID, or to a new patient, and gets its ImagingStudy.
+
+Uploading the same files again is safe: Orthanc keeps instances it already has, and their studies
+come back as unchanged. A study that gained images is updated.
 
 ## Local stack
 
@@ -190,7 +205,8 @@ src/app/
                      mapper, summary, detail and form components; imaging-study also
                      holds the DICOM → FHIR mapper
     delete-panel/    shared delete panel; refuses while other records still link here
-  pacs/              DICOMweb (QIDO-RS) client and the PACS → FHIR sync
+  pacs/              DICOMweb client (QIDO-RS search, STOW-RS upload), the PACS → FHIR sync,
+                     and DICOM file checks for the import
   pages/             routed screens; they fetch data and compose resource components
   shared/            app layout: header, icons, theme, form helpers
 public/terminology/  generated ICD-10 / ICD-11 mapping tables
