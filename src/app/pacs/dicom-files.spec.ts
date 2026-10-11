@@ -22,7 +22,35 @@ describe('pickDicom', () => {
     const picked = await pickDicom([dicom('1.dcm'), other('notes.txt'), dicom('2.dcm')]);
 
     expect(picked.dicom.map((f) => f.name)).toEqual(['1.dcm', '2.dcm']);
-    expect(picked.skipped).toEqual(['notes.txt']);
+    expect(picked.skipped).toEqual([{ name: 'notes.txt', reason: 'Not DICOM' }]);
+  });
+
+  it('skips a file it cannot read instead of failing the whole check', async () => {
+    // Like a file without read permission: the browser lists it, then refuses to read it.
+    const unreadable = Object.assign(new File(['x'.repeat(200)], 'CITATION.txt'), {
+      slice: () => ({
+        arrayBuffer: () => Promise.reject(new DOMException('denied', 'NotReadableError')),
+      }),
+    });
+
+    const picked = await pickDicom([dicom('1.dcm'), unreadable, dicom('2.dcm')]);
+
+    expect(picked.dicom.map((f) => f.name)).toEqual(['1.dcm', '2.dcm']);
+    expect(picked.skipped).toEqual([
+      { name: 'CITATION.txt', reason: 'Could not be read (check its permissions)' },
+    ]);
+  });
+
+  it('checks many files, a few at a time, reporting progress', async () => {
+    const files = Array.from({ length: 100 }, (_, i) => dicom(`${i}.dcm`));
+    const progress: number[] = [];
+
+    const picked = await pickDicom(files, (done) => progress.push(done));
+
+    expect(picked.dicom).toHaveLength(100);
+    expect(progress[0]).toBe(0);
+    expect(progress.at(-1)).toBe(100);
+    expect(progress).toHaveLength(101);
   });
 });
 

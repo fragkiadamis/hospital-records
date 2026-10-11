@@ -40,12 +40,15 @@
         </div>
       }
       @case ('checking') {
-        <p class="state" aria-live="polite">Checking the files…</p>
+        <p class="state" aria-live="polite">
+          Checking {{ progress().done | number }} of {{ progress().total | number }} files…
+        </p>
+        <progress [value]="progress().done" [max]="progress().total"></progress>
       }
       @case ('ready') {
         @let p = picked();
         @if (error()) {
-          <p class="error" role="alert">The import stopped: {{ error() }}</p>
+          <p class="error" role="alert">Something went wrong: {{ error() }}</p>
         }
         @if (p.dicom.length) {
           <p>
@@ -60,11 +63,13 @@
           <details>
             <summary>
               {{ p.skipped.length | number }} {{ p.skipped.length === 1 ? 'file' : 'files' }}
-              skipped: not DICOM
+              skipped
             </summary>
             <ul class="files">
-              @for (name of p.skipped; track $index) {
-                <li>{{ name }}</li>
+              @for (f of p.skipped; track $index) {
+                <li>
+                  <span class="name">{{ f.name }}</span> <span class="reason">{{ f.reason }}</span>
+                </li>
               }
             </ul>
           </details>

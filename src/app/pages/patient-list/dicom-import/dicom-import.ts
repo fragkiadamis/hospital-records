@@ -50,8 +50,16 @@ export class DicomImport {
   protected async drop(event: DragEvent): Promise<void> {
     event.preventDefault();
     this.dragging.set(false);
-    if (event.dataTransfer && !this.busy())
-      await this.check(await droppedFiles(event.dataTransfer));
+    if (!event.dataTransfer || this.busy()) return;
+    let files: File[];
+    try {
+      files = await droppedFiles(event.dataTransfer);
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : String(err));
+      this.step.set('ready');
+      return;
+    }
+    await this.check(files);
   }
 
   protected dragOver(event: DragEvent): void {
@@ -101,8 +109,16 @@ export class DicomImport {
 
   private async check(files: File[]): Promise<void> {
     if (!files.length) return;
+    this.error.set('');
     this.step.set('checking');
-    this.picked.set(await pickDicom(files));
+    try {
+      this.picked.set(await pickDicom(files, (done, total) => this.progress.set({ done, total })));
+    } catch (err) {
+      // pickDicom skips unreadable files itself; this is for the unexpected, e.g. a folder that
+      // can't be listed. Never leave the panel stuck on "Checking".
+      this.picked.set({ dicom: [], skipped: [] });
+      this.error.set(err instanceof Error ? err.message : String(err));
+    }
     this.step.set('ready');
   }
 }

@@ -163,4 +163,21 @@ describe('DicomImport', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.open()).toBe(false);
   });
+
+  it('lists unreadable files as skipped, with the reason, and still offers the rest', async () => {
+    const unreadable = Object.assign(new File(['x'.repeat(200)], 'CITATION.txt'), {
+      slice: () => ({
+        arrayBuffer: () => Promise.reject(new DOMException('denied', 'NotReadableError')),
+      }),
+    });
+
+    await choose(dicom('1.dcm'), unreadable);
+
+    expect(button('Upload 1 file')?.disabled).toBe(false);
+    const skipped = element.querySelector('details li');
+    expect(skipped?.querySelector('.name')?.textContent).toBe('CITATION.txt');
+    expect(skipped?.querySelector('.reason')?.textContent).toBe(
+      'Could not be read (check its permissions)',
+    );
+  });
 });

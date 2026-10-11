@@ -1,11 +1,20 @@
 // Picking DICOM files in the browser: what was dropped or chosen, and which of it is DICOM.
 
-/** The DICOM files among `files`, and the names of the others. */
+/** The DICOM files among `files`, and the others with why they were left out. */
 export interface PickedFiles {
   dicom: File[];
-  /** Files that are not DICOM (or a DICOMDIR, which only indexes the others), by path or name. */
-  skipped: string[];
+  skipped: SkippedFile[];
 }
+
+export interface SkippedFile {
+  /** Its path within a picked folder, or its name. */
+  name: string;
+  /** "Not DICOM" (which includes a DICOMDIR, only an index), or why it couldn't be read. */
+  reason: string;
+}
+
+/** How many files are read at the same time: browsers fail or slow down with thousands. */
+const READS_AT_ONCE = 32;
 
 /**
  * Whether the file is a DICOM file (DICOM PS3.10): a 128-byte preamble, then "DICM". Only those
@@ -18,12 +27,35 @@ export async function isDicomFile(file: File): Promise<boolean> {
   return String.fromCharCode(...marker) === 'DICM';
 }
 
-/** Sorts files into DICOM and skipped, keeping their order. */
-export async function pickDicom(files: readonly File[]): Promise<PickedFiles> {
-  const checks = await Promise.all(files.map(isDicomFile));
+/**
+ * Sorts files into DICOM and skipped, keeping their order. A file that can't be read (e.g. no
+ * read permission) is skipped with the reason, never fails the whole check.
+ */
+export async function pickDicom(
+  files: readonly File[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<PickedFiles> {
+  const outcomes: (true | string)[] = new Array(files.length);
+  let next = 0;
+  let done = 0;
+  onProgress?.(0, files.length);
+  const worker = async () => {
+    while (next < files.length) {
+      const i = next++;
+      try {
+        outcomes[i] = (await isDicomFile(files[i])) || 'Not DICOM';
+      } catch {
+        outcomes[i] = 'Could not be read (check its permissions)';
+      }
+      onProgress?.(++done, files.length);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(READS_AT_ONCE, files.length) }, worker));
   return {
-    dicom: files.filter((_, i) => checks[i]),
-    skipped: files.filter((_, i) => !checks[i]).map(filePath),
+    dicom: files.filter((_, i) => outcomes[i] === true),
+    skipped: files.flatMap((file, i) =>
+      outcomes[i] === true ? [] : [{ name: filePath(file), reason: outcomes[i] as string }],
+    ),
   };
 }
 
