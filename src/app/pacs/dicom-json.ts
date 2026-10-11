@@ -34,3 +34,25 @@ export const Tag = {
   NumberOfStudyRelatedInstances: '00201208',
   NumberOfSeriesRelatedInstances: '00201209',
 } as const;
+
+/** All values of a tag (DICOM attributes can be multi-valued); [] when absent. */
+export function dicomValues(dataset: DicomDataset, tag: string): unknown[] {
+  return dataset[tag]?.Value ?? [];
+}
+
+/** The first value of a tag as trimmed text, '' when absent. Person names give their Alphabetic form. */
+export function dicomText(dataset: DicomDataset, tag: string): string {
+  const value = dicomValues(dataset, tag)[0];
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'object') return String((value as { Alphabetic?: string }).Alphabetic ?? '');
+  return String(value).trim();
+}
+
+/** The first value of a numeric tag (IS, US, …); undefined when absent or not a number. */
+export function dicomNumber(dataset: DicomDataset, tag: string): number | undefined {
+  const [value] = dicomValues(dataset, tag);
+  const n = Number(value);
+  return value !== undefined && value !== null && value !== '' && Number.isFinite(n)
+    ? n
+    : undefined;
+}
