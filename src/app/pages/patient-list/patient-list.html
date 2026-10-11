@@ -14,49 +14,51 @@
       />
     </label>
 
-    <a class="new" routerLink="/patients/new">
+    <a class="button primary" routerLink="/patients/new">
       <i class="ti ti-plus" aria-hidden="true"></i>
       New patient
     </a>
   </header>
 
-  <div class="card" aria-live="polite" [attr.aria-busy]="patients.isLoading()">
-    @if (patients.error()) {
-      <div class="state error" role="alert">
-        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
-        <span>{{ errorMessage() }}</span>
-        <button type="button" (click)="patients.reload()">Try again</button>
-      </div>
-    } @else if (patients.hasValue()) {
-      @let list = patients.value();
-      @if (list.length) {
-        <ul class="list">
-          @for (patient of list; track patient.id) {
-            <li>
-              <a [routerLink]="['/patients', patient.id]">
-                <app-patient-summary [patient]="patient" />
-                <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
-              </a>
-            </li>
-          }
-        </ul>
-        <p class="footer">
-          {{ list.length }} {{ list.length === 1 ? 'patient' : 'patients' }}
-          @if (list.length === pageSize) {
-            (first {{ pageSize }}; refine the search to see others)
-          }
-        </p>
+  @if (patients.error()) {
+    <div class="alert" role="alert">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <span>{{ errorMessage() }}</span>
+      <button type="button" class="button" (click)="patients.reload()">Try again</button>
+    </div>
+  } @else {
+    <div class="card" aria-live="polite" [attr.aria-busy]="patients.isLoading()">
+      @if (patients.hasValue()) {
+        @let list = patients.value();
+        @if (list.length) {
+          <ul class="list">
+            @for (patient of list; track patient.id) {
+              <li>
+                <a [routerLink]="['/patients', patient.id]">
+                  <app-patient-summary [patient]="patient" />
+                  <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+                </a>
+              </li>
+            }
+          </ul>
+          <p class="footer">
+            {{ list.length }} {{ list.length === 1 ? 'patient' : 'patients' }}
+            @if (list.length === pageSize) {
+              (first {{ pageSize }}; refine the search to see others)
+            }
+          </p>
+        } @else {
+          <p class="state">
+            @if (query().trim()) {
+              No patients match “{{ query().trim() }}”.
+            } @else {
+              No patients yet.
+            }
+          </p>
+        }
       } @else {
-        <p class="state">
-          @if (query().trim()) {
-            No patients match “{{ query().trim() }}”.
-          } @else {
-            No patients yet.
-          }
-        </p>
+        <p class="state">Loading patients…</p>
       }
-    } @else {
-      <p class="state">Loading patients…</p>
-    }
-  </div>
+    </div>
+  }
 </section>

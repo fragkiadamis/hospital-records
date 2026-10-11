@@ -1,32 +1,34 @@
-<section class="page">
-  <a class="back" [routerLink]="['/patients', id()]">
-    <i class="ti ti-arrow-left" aria-hidden="true"></i>
-    Back to patient
-  </a>
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/patients', id()]">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Back to patient
+    </a>
+  </nav>
 
   <h1>Edit patient</h1>
 
   @if (conflict()) {
-    <div class="error" role="alert">
+    <div class="alert" role="alert">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i>
       <span>
         Someone else changed this patient after you opened it, so your changes were not saved. Load
         their version and make your changes again.
       </span>
-      <button type="button" (click)="reload()">Load latest version</button>
+      <button type="button" class="button" (click)="reload()">Load latest version</button>
     </div>
   } @else if (saveError()) {
-    <div class="error" role="alert">
+    <div class="alert" role="alert">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i>
       <span>The patient was not saved: {{ saveError() }}</span>
     </div>
   }
 
   @if (patient.error()) {
-    <div class="error" role="alert">
+    <div class="alert" role="alert">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i>
       <span>{{ loadError() }}</span>
-      <button type="button" (click)="patient.reload()">Try again</button>
+      <button type="button" class="button" (click)="patient.reload()">Try again</button>
     </div>
   } @else if (patient.hasValue()) {
     <app-patient-form
@@ -36,6 +38,6 @@
       (cancelled)="cancel()"
     />
   } @else {
-    <p class="loading">Loading patient…</p>
+    <div class="card"><p class="state">Loading patient…</p></div>
   }
 </section>

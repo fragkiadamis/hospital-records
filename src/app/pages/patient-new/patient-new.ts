@@ -8,7 +8,6 @@ import { PatientForm } from '../../fhir/resources/patient/patient-form/patient-f
 @Component({
   imports: [PatientForm, RouterLink],
   selector: 'app-patient-new',
-  styleUrl: './patient-new.scss',
   templateUrl: './patient-new.html',
 })
 export class PatientNew {

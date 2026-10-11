@@ -1,4 +1,5 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'styles/ui';
+
 :root {
   --header-height: 90px;
   --sidebar-width: 316px;
@@ -9,6 +10,10 @@
   --text: #1f2a3d;
   --text-muted: #5b6b82;
   --border: #d8dee8;
+  --accent: #2a5bb8; // buttons, links, focus rings
+  --on-accent: #ffffff; // text on a solid --accent background
+  --danger: #c0392b;
+  --on-danger: #ffffff;
   --header-mid: #2a5bb8;
   --header-bg: linear-gradient(90deg, #1b3f8f 0%, var(--header-mid) 55%, #3d72d4 100%);
   --header-shadow: 0 2px 8px rgb(10 30 80 / 35%);
@@ -22,6 +27,11 @@
   --text: #e3e9f3;
   --text-muted: #8a9ab3;
   --border: #2a3648;
+  // Lighter colours with dark text on top, so every pairing keeps at least 4.5:1 contrast.
+  --accent: #6f9cf0;
+  --on-accent: #172131;
+  --danger: #f0786b;
+  --on-danger: #172131;
   --header-mid: #16357a;
   --header-bg: linear-gradient(90deg, #0f2350 0%, var(--header-mid) 55%, #1f4a9e 100%);
   --header-shadow: 0 2px 8px rgb(0 0 0 / 50%);

@@ -1,13 +1,15 @@
-<section class="page">
-  <a class="back" routerLink="/patients">
-    <i class="ti ti-arrow-left" aria-hidden="true"></i>
-    Patients
-  </a>
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" routerLink="/patients">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Patients
+    </a>
+  </nav>
 
   <h1>New patient</h1>
 
   @if (error()) {
-    <div class="error" role="alert">
+    <div class="alert" role="alert">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i>
       <span>The patient was not saved: {{ error() }}</span>
     </div>

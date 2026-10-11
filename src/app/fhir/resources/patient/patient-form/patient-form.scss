@@ -51,18 +51,18 @@ select {
   font: inherit;
 
   &:focus {
-    border-color: var(--header-mid);
-    outline: 2px solid color-mix(in srgb, var(--header-mid) 25%, transparent);
+    border-color: var(--accent);
+    outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
   }
 
   &[aria-invalid='true'] {
-    border-color: #c0392b;
+    border-color: var(--danger);
   }
 }
 
 .error {
   margin: 8px 0 0;
-  color: #c0392b;
+  color: var(--danger);
   font-size: 0.85rem;
 }
 
@@ -74,29 +74,4 @@ label .error {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-button {
-  padding: 9px 18px;
-  border-radius: 8px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-}
-
-.primary {
-  border: 1px solid var(--header-mid);
-  color: #fff;
-  background: var(--header-mid);
-}
-
-.secondary {
-  border: 1px solid var(--border);
-  color: inherit;
-  background: var(--surface);
 }

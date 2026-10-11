@@ -64,7 +64,7 @@ describe('PatientNew', () => {
   });
 
   it('goes back to the list on cancel', async () => {
-    element.querySelector<HTMLButtonElement>('button.secondary')!.click();
+    element.querySelector<HTMLButtonElement>('button[type="button"]')!.click();
 
     expect(navigate).toHaveBeenCalledWith(['/patients']);
   });

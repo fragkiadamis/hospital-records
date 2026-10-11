@@ -71,10 +71,10 @@
   </fieldset>
 
   <div class="actions">
-    <button type="button" class="secondary" [disabled]="saving()" (click)="cancelled.emit()">
+    <button type="button" class="button" [disabled]="saving()" (click)="cancelled.emit()">
       Cancel
     </button>
-    <button type="submit" class="primary" [disabled]="saving()">
+    <button type="submit" class="button primary" [disabled]="saving()">
       {{ saving() ? 'Saving…' : 'Save patient' }}
     </button>
   </div>
