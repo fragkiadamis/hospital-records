@@ -1,3 +1,22 @@
+## [0.4.0](https://github.com/fragkiadamis/hospital-records/compare/v0.3.0...v0.4.0) (2026-10-11)
+
+### Features
+
+* Add DICOM Patient ID identifier for patients from the PACS ([1196021](https://github.com/fragkiadamis/hospital-records/commit/11960211fb56b6b4ec30f4b279011b080b9b97b4))
+* Add DICOMweb client for QIDO-RS study and series queries ([045a743](https://github.com/fragkiadamis/hospital-records/commit/045a7431ca67f3ac41c68d6705cf6c49c1911c2e))
+* Add script to seed sample DICOM studies into Orthanc with DCMTK ([1ed729a](https://github.com/fragkiadamis/hospital-records/commit/1ed729a019d406f7a436360413ebf12e5cafcc6c))
+* Add Sync with PACS button to the patient list ([0884ee7](https://github.com/fragkiadamis/hospital-records/commit/0884ee7e6434cb4370ae94cf70b87f94bef886b6))
+* Add transaction that keeps study reasons and condition evidence in step ([0b47813](https://github.com/fragkiadamis/hospital-records/commit/0b47813ff302b5a1cacb68dcd2cd4156f541091a))
+* Allow deleting any imaging study, noting it returns on the next sync ([eec2408](https://github.com/fragkiadamis/hospital-records/commit/eec2408f647abab45157a01faafe0b258980b13d))
+* Allow deleting imaging studies missing from the PACS ([8ffc838](https://github.com/fragkiadamis/hospital-records/commit/8ffc8380b1268369f29b9fc03797f2f30dd5ed26))
+* Edit an imaging study's reasons from the study page ([1e3e91b](https://github.com/fragkiadamis/hospital-records/commit/1e3e91b3e144f7bf56eb58c0a7967c685e7fd3d3))
+* Edit patient identifiers in the patient form ([9267dfa](https://github.com/fragkiadamis/hospital-records/commit/9267dfa01923b1a5e9dd7f7ad83c5b1508f896c7))
+* Enable patient search by exact identifier (MRN, DICOM Patient ID) ([f20d67d](https://github.com/fragkiadamis/hospital-records/commit/f20d67d9206c15f0a9a4d45d4db1eb6ec1f26d8d))
+* Map DICOM studies to FHIR Patient and ImagingStudy ([ed28427](https://github.com/fragkiadamis/hospital-records/commit/ed2842709f5e6c28d300dc579498190d5b1bebf1))
+* Search patients by any identifier as flexibly as by name ([48963c6](https://github.com/fragkiadamis/hospital-records/commit/48963c642efcfd3fce2aed7eec7cc8cc4a817aba))
+* Search patients by any part of a name or identifier ([bd5b85b](https://github.com/fragkiadamis/hospital-records/commit/bd5b85b38ae43c117bdf1fc48bd16fe54fb5ccb3))
+* Sync PACS studies into FHIR ([7610a07](https://github.com/fragkiadamis/hospital-records/commit/7610a07ebb6ae3f5499851e27f123c09255454ca))
+
 ## [0.3.0](https://github.com/fragkiadamis/hospital-records/compare/v0.2.0...v0.3.0) (2026-10-11)
 
 ### Features
