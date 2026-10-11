@@ -11,23 +11,6 @@
   margin-bottom: 20px;
 }
 
-.edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: inherit;
-  background: var(--surface);
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    border-color: var(--header-mid);
-  }
-}
-
 .back {
   display: inline-flex;
   align-items: center;
@@ -38,6 +21,71 @@
   &:hover {
     color: var(--text);
   }
+}
+
+.actions,
+.panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.panel-actions {
+  justify-content: flex-end;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: inherit;
+  background: var(--surface);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--header-mid);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &.danger {
+    color: #c0392b;
+
+    &:hover:not(:disabled) {
+      border-color: #c0392b;
+    }
+  }
+
+  &.danger.solid {
+    border-color: #c0392b;
+    color: #fff;
+    background: #c0392b;
+  }
+}
+
+.delete-panel {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 1px solid #c0392b;
+  border-radius: 12px;
+  background: var(--surface);
+
+  p,
+  ul {
+    margin: 0 0 12px;
+  }
+}
+
+.error {
+  color: #c0392b;
 }
 
 .state {
