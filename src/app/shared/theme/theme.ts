@@ -33,7 +33,9 @@ export class Theme {
       if (saved === 'light' || saved === 'dark') {
         return saved;
       }
-    } catch {}
+    } catch {
+      // Storage can be unavailable (private mode, blocked site data); fall back to the OS preference.
+    }
     const prefersDark = this.document.defaultView?.matchMedia?.('(prefers-color-scheme: dark)');
     return prefersDark?.matches ? 'dark' : 'light';
   }
