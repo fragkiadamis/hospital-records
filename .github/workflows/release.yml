@@ -1,10 +1,11 @@
 name: Release
 
+# Run by hand (Actions → Release → Run workflow) when a milestone is done. Everything merged
+# since the last tag goes into one version bump and one CHANGELOG section.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
-# Never run two releases at once; a second merge waits for the first to finish.
+# Never run two releases at once.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -17,6 +18,7 @@ permissions:
 jobs:
   release:
     name: Semantic release
+    if: github.ref == 'refs/heads/main' # the Run workflow button lets you pick any branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
