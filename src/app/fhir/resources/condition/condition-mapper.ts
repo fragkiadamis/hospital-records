@@ -37,8 +37,6 @@ export type ConditionCategory = keyof typeof CONDITION_CATEGORIES;
 /** What the condition form edits: flat fields, '' when empty. */
 export interface ConditionFormValue {
   text: string; // the condition's name, as the user calls it
-  snomedCode: string;
-  snomedDisplay: string;
   icd10Code: string;
   icd10Display: string;
   clinicalStatus: ClinicalStatus | '';
@@ -89,13 +87,10 @@ const categoryCoding = (concept: CodeableConcept) =>
 
 /** Condition → form. Onset/abatement show only dates; ages, periods and text stay as stored. */
 export function conditionToForm(condition: Condition): ConditionFormValue {
-  const snomed = findCoding(condition.code, CodeSystems.snomed);
   const icd10 = findCoding(condition.code, CodeSystems.icd10);
   const category = condition.category?.map(categoryCoding).find(Boolean);
   return {
     text: condition.code?.text ?? '',
-    snomedCode: snomed?.code ?? '',
-    snomedDisplay: snomed?.display ?? '',
     icd10Code: icd10?.code ?? '',
     icd10Display: icd10?.display ?? '',
     clinicalStatus: clinicalStatusOf(condition),
@@ -148,23 +143,23 @@ export function isConditionOf(condition: Condition, patientId: string): boolean 
 /** "Breast cancer", from the code's text or a coding's display, else the resource reference. */
 export function conditionDisplayName(condition: Condition): string {
   return (
-    formatCodeableConcept(condition.code, CodeSystems.snomed) ||
-    `Condition/${condition.id ?? 'new'}`
+    formatCodeableConcept(condition.code, CodeSystems.icd10) || `Condition/${condition.id ?? 'new'}`
   );
 }
 
-/** Condition.code with the form's text and its SNOMED and ICD-10 codings; other codings stay. */
+/**
+ * Condition.code with the form's text and ICD-10 coding. Codings of other systems, e.g. set by
+ * another hospital system, stay as stored.
+ */
 function editedCode(value: ConditionFormValue, current?: CodeableConcept) {
-  const coding = [CodeSystems.snomed, CodeSystems.icd10].reduce((list, system) => {
-    const isSnomed = system === CodeSystems.snomed;
-    const code = (isSnomed ? value.snomedCode : value.icd10Code).trim();
-    const display = (isSnomed ? value.snomedDisplay : value.icd10Display).trim();
-    const old = findCoding(current, system);
-    const next: Coding | undefined = code
-      ? { ...(old?.code === code ? old : {}), system, code, display: display || undefined }
-      : undefined;
-    return replaceEntry(list, old, next);
-  }, current?.coding);
+  const system = CodeSystems.icd10;
+  const code = value.icd10Code.trim();
+  const display = value.icd10Display.trim();
+  const old = findCoding(current, system);
+  const next: Coding | undefined = code
+    ? { ...(old?.code === code ? old : {}), system, code, display: display || undefined }
+    : undefined;
+  const coding = replaceEntry(current?.coding, old, next);
   const text = value.text.trim();
   if (!coding?.length && !text) return undefined;
   return { ...current, coding, text: text || undefined };

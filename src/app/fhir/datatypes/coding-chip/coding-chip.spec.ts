@@ -21,15 +21,15 @@ describe('CodingChip', () => {
 
   it('shows the short system name and the code, with the name on hover', async () => {
     await render({
-      system: CodeSystems.snomed,
-      code: '254837009',
-      display: 'Malignant neoplasm of breast',
+      system: CodeSystems.icd10,
+      code: 'C50.9',
+      display: 'Malignant neoplasm of breast, unspecified',
     });
 
-    expect(text('.system')).toBe('SNOMED');
-    expect(text('.code')).toBe('254837009');
+    expect(text('.system')).toBe('ICD-10');
+    expect(text('.code')).toBe('C50.9');
     expect(element.getAttribute('title')).toBe(
-      'Malignant neoplasm of breast\nhttp://snomed.info/sct',
+      'Malignant neoplasm of breast, unspecified\nhttp://hl7.org/fhir/sid/icd-10',
     );
   });
 

@@ -1,7 +1,7 @@
 // Dev-server proxy (ng serve). In deployment nginx does the same.
 //   /fhir → the HAPI container from compose.yaml
-//   /tx   → the terminology server (SNOMED CT / ICD-10 search); HL7's public test server unless
-//           TERMINOLOGY_URL says otherwise, e.g. your own Snowstorm
+//   /tx   → the terminology server (ICD-10 search); HL7's public test server unless
+//           TERMINOLOGY_URL says otherwise
 // Settings are resolved like `podman compose` does: shell environment, then .env, then defaults.
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';

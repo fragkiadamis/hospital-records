@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import type { CodeableConcept, Coding } from 'fhir/r4';
 
-/** The coding from a given code system, e.g. the SNOMED CT one among SNOMED and ICD-10 codes. */
+/** The coding from a given code system, e.g. the ICD-10 one among a concept's codings. */
 export function findCoding(
   concept: CodeableConcept | undefined | null,
   system: string,

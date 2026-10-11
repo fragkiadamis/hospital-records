@@ -1,13 +1,13 @@
 import type { CodeableConcept } from 'fhir/r4';
 import { CodeableConceptPipe, findCoding, formatCodeableConcept } from './codeable-concept-pipe';
 
-const SNOMED = 'http://snomed.info/sct';
+const ICD11 = 'http://id.who.int/icd/release/11/mms';
 const ICD10 = 'http://hl7.org/fhir/sid/icd-10';
 
 // Like seed-condition-1, without the text.
 const breastCancer: CodeableConcept = {
   coding: [
-    { system: SNOMED, code: '254837009', display: 'Malignant neoplasm of breast' },
+    { system: ICD11, code: '2C6Z', display: 'Malignant neoplasm of breast' },
     { system: ICD10, code: 'C50.9', display: 'Malignant neoplasm of breast, unspecified' },
   ],
 };
@@ -16,7 +16,7 @@ describe('findCoding', () => {
   it('returns the coding of the given system', () => {
     expect(findCoding(breastCancer, ICD10)?.code).toBe('C50.9');
     expect(findCoding(breastCancer, 'urn:other')).toBeUndefined();
-    expect(findCoding(undefined, SNOMED)).toBeUndefined();
+    expect(findCoding(undefined, ICD11)).toBeUndefined();
   });
 });
 
@@ -37,7 +37,7 @@ describe('formatCodeableConcept', () => {
       formatCodeableConcept({
         coding: [
           { system: ICD10, code: 'C50.9' },
-          { system: SNOMED, display: 'Breast cancer' },
+          { system: ICD11, display: 'Breast cancer' },
         ],
       }),
     ).toBe('Breast cancer');

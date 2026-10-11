@@ -27,7 +27,7 @@ export class CodeSearch {
   private readonly terminology = inject(TerminologyClient);
 
   readonly valueSet = input.required<ValueSet>();
-  /** The input's accessible name, e.g. "SNOMED CT code". */
+  /** The input's accessible name, e.g. "ICD-10 code". */
   readonly label = input.required<string>();
   /** The code chosen so far, shown instead of the search box. */
   readonly value = input<CodeOption | null>(null);

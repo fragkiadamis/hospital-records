@@ -12,128 +12,50 @@
         />
       </label>
     </div>
-    @if (ruleError('identity', 'text', 'snomedCode', 'icd10Code')) {
-      <p class="error" role="alert">Enter a name or at least one code.</p>
+    @if (ruleError('identity', 'text', 'icd10Code')) {
+      <p class="error" role="alert">Enter a name or an ICD-10 code.</p>
     }
   </fieldset>
 
   <fieldset>
-    <legend>Codes</legend>
-
-    <div class="code-field">
-      <span class="field-label">SNOMED CT</span>
-      @if (showsFields('snomed')) {
-        <div class="row">
-          <label>
-            SNOMED CT code
-            <input
-              formControlName="snomedCode"
-              inputmode="numeric"
-              autocomplete="off"
-              [attr.aria-invalid]="fieldError('snomedCode', 'pattern')"
-            />
-            @if (fieldError('snomedCode', 'pattern')) {
-              <span class="error" role="alert">A SNOMED CT code is 6 to 18 digits.</span>
-            }
-          </label>
-          <label>
-            SNOMED CT name
-            <input formControlName="snomedDisplay" autocomplete="off" />
-            @if (ruleError('snomedCodeMissing', 'snomedDisplay')) {
-              <span class="error" role="alert">Enter the code for this name.</span>
-            }
-          </label>
-        </div>
-        <button type="button" class="link-button" (click)="enterByHand('snomed', false)">
-          Search instead
+    <legend>ICD-10 code</legend>
+    @if (showsFields()) {
+      <div class="row">
+        <label>
+          ICD-10 code
+          <input
+            formControlName="icd10Code"
+            autocomplete="off"
+            placeholder="e.g. C50.9"
+            [attr.aria-invalid]="fieldError('icd10Code', 'pattern')"
+          />
+          @if (fieldError('icd10Code', 'pattern')) {
+            <span class="error" role="alert">An ICD-10 code looks like C50.9.</span>
+          }
+        </label>
+        <label>
+          ICD-10 name
+          <input formControlName="icd10Display" autocomplete="off" />
+          @if (ruleError('icd10CodeMissing', 'icd10Display')) {
+            <span class="error" role="alert">Enter the code for this name.</span>
+          }
+        </label>
+      </div>
+      <button type="button" class="link-button" (click)="byHand.set(false)">Search instead</button>
+    } @else {
+      <app-code-search
+        label="ICD-10 code"
+        placeholder="Search by name or code, e.g. pneumonia or C50.9"
+        [valueSet]="valueSets.icd10"
+        [value]="chosenIcd10()"
+        (picked)="pick($event)"
+      />
+      @if (!chosenIcd10()) {
+        <button type="button" class="link-button" (click)="byHand.set(true)">
+          Enter the code by hand
         </button>
-      } @else {
-        <app-code-search
-          label="SNOMED CT code"
-          placeholder="Search clinical findings, e.g. pneumonia"
-          [valueSet]="valueSets.snomedClinicalFindings"
-          [value]="chosen().snomed"
-          (picked)="pick('snomed', $event)"
-        />
-        @if (!chosen().snomed) {
-          <button type="button" class="link-button" (click)="enterByHand('snomed', true)">
-            Enter the code by hand
-          </button>
-        }
       }
-    </div>
-
-    <div class="code-field">
-      <span class="field-label">ICD-10</span>
-      @if (showsFields('icd10')) {
-        <div class="row">
-          <label>
-            ICD-10 code
-            <input
-              formControlName="icd10Code"
-              autocomplete="off"
-              placeholder="e.g. C50.9"
-              [attr.aria-invalid]="fieldError('icd10Code', 'pattern')"
-            />
-            @if (fieldError('icd10Code', 'pattern')) {
-              <span class="error" role="alert">An ICD-10 code looks like C50.9.</span>
-            }
-          </label>
-          <label>
-            ICD-10 name
-            <input formControlName="icd10Display" autocomplete="off" />
-            @if (ruleError('icd10CodeMissing', 'icd10Display')) {
-              <span class="error" role="alert">Enter the code for this name.</span>
-            }
-          </label>
-        </div>
-        <button type="button" class="link-button" (click)="enterByHand('icd10', false)">
-          Search instead
-        </button>
-      } @else {
-        <app-code-search
-          label="ICD-10 code"
-          placeholder="Search by name or code, e.g. C50.9"
-          [valueSet]="valueSets.icd10"
-          [value]="chosen().icd10"
-          (picked)="pick('icd10', $event)"
-        />
-        @if (!chosen().icd10 && icd10Suggestions.value()?.length) {
-          <div class="suggestions" aria-live="polite">
-            <p class="hint">
-              Suggested by SNOMED CT's official ICD-10 map. Check that its advice applies to this
-              patient before using one.
-            </p>
-            <ul>
-              @for (suggestion of icd10Suggestions.value(); track suggestion.code) {
-                <li>
-                  <span class="code">{{ suggestion.code }}</span>
-                  <span class="display">
-                    {{ suggestion.display }}
-                    @if (suggestion.advice) {
-                      <span class="advice">{{ suggestion.advice }}</span>
-                    }
-                  </span>
-                  <button
-                    type="button"
-                    class="button"
-                    (click)="pick('icd10', suggestion)"
-                    [attr.aria-label]="'Use ICD-10 ' + suggestion.code"
-                  >
-                    Use
-                  </button>
-                </li>
-              }
-            </ul>
-          </div>
-        }
-        @if (!chosen().icd10) {
-          <button type="button" class="link-button" (click)="enterByHand('icd10', true)">
-            Enter the code by hand
-          </button>
-        }
-      }
-    </div>
+    }
   </fieldset>
 
   <fieldset>

@@ -25,7 +25,11 @@ const breastCancer: Condition = {
   ],
   code: {
     coding: [
-      { system: CodeSystems.snomed, code: '254837009', display: 'Malignant neoplasm of breast' },
+      {
+        system: CodeSystems.icd11,
+        code: '2C6Z',
+        display: 'Malignant neoplasms of breast, unspecified',
+      },
       {
         system: CodeSystems.icd10,
         code: 'C50.9',
@@ -82,7 +86,7 @@ describe('ConditionDetail', () => {
       Category: 'Problem List Item',
     });
     expect(texts('section:has(app-coding-chip) li > span')).toEqual([
-      'Malignant neoplasm of breast',
+      'Malignant neoplasms of breast, unspecified',
       'Malignant neoplasm of breast, unspecified',
     ]);
   });

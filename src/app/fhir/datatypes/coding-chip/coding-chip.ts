@@ -3,7 +3,7 @@ import type { Coding } from 'fhir/r4';
 import { CODE_SYSTEM_LABELS } from '../../code-systems';
 
 /**
- * A code as a small badge: "SNOMED 254837009". Hovering shows the code's name and its system
+ * A code as a small badge: "ICD-10 C50.9". Hovering shows the code's name and its system
  * URI; screen readers get the name as text, since they can't hover.
  */
 @Component({

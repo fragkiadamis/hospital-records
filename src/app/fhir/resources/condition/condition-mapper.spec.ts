@@ -9,6 +9,8 @@ import {
   isConditionOf,
 } from './condition-mapper';
 
+const LOCAL = 'urn:other-hospital:diagnoses'; // a code system the form doesn't edit
+
 const patient = { reference: 'Patient/seed-patient-1', display: 'Daphne Kostaki' };
 
 // Like seed-condition-1, plus fields the form does not edit.
@@ -28,7 +30,7 @@ const stored: Condition = {
   ],
   code: {
     coding: [
-      { system: CodeSystems.snomed, code: '254837009', display: 'Malignant neoplasm of breast' },
+      { system: LOCAL, code: 'ONC-17', display: 'Breast carcinoma' },
       {
         system: CodeSystems.icd10,
         code: 'C50.9',
@@ -55,8 +57,6 @@ const form = (changes: Partial<ConditionFormValue> = {}): ConditionFormValue => 
 
 const empty: ConditionFormValue = {
   text: '',
-  snomedCode: '',
-  snomedDisplay: '',
   icd10Code: '',
   icd10Display: '',
   clinicalStatus: '',
@@ -70,8 +70,6 @@ describe('conditionToForm', () => {
   it('reads the fields the form edits', () => {
     expect(conditionToForm(stored)).toEqual({
       text: 'Breast cancer',
-      snomedCode: '254837009',
-      snomedDisplay: 'Malignant neoplasm of breast',
       icd10Code: 'C50.9',
       icd10Display: 'Malignant neoplasm of breast, unspecified',
       clinicalStatus: 'active',
@@ -113,13 +111,11 @@ describe('formToCondition', () => {
     ]);
   });
 
-  it('removes a coding whose code is cleared', () => {
-    const condition = formToCondition(form({ snomedCode: '' }), patient, stored);
+  it('removes the ICD-10 coding when its code is cleared, keeping codings of other systems', () => {
+    const condition = formToCondition(form({ icd10Code: '' }), patient, stored);
 
-    expect(condition.code?.coding?.map((c) => c.system)).toEqual([
-      CodeSystems.icd10,
-      CodeSystems.icd11,
-    ]);
+    // The local code and ICD-11 aren't edited by the form.
+    expect(condition.code?.coding?.map((c) => c.system)).toEqual([LOCAL, CodeSystems.icd11]);
   });
 
   it('replaces a status only when its code changes', () => {
@@ -164,8 +160,8 @@ describe('formToCondition', () => {
       {
         ...empty,
         text: 'Pneumonia',
-        snomedCode: '233604007',
-        snomedDisplay: 'Pneumonia',
+        icd10Code: 'J18.9',
+        icd10Display: 'Pneumonia, unspecified',
         clinicalStatus: 'active',
         category: 'encounter-diagnosis',
         onsetDate: '2026-01-08',
@@ -177,7 +173,7 @@ describe('formToCondition', () => {
       resourceType: 'Condition',
       subject: patient,
       code: {
-        coding: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+        coding: [{ system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' }],
         text: 'Pneumonia',
       },
       clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
@@ -198,10 +194,10 @@ describe('formToCondition', () => {
 });
 
 describe('conditionDisplayName', () => {
-  it('uses the text, then the SNOMED display, then the reference', () => {
+  it('uses the text, then the ICD-10 display, then the reference', () => {
     expect(conditionDisplayName(stored)).toBe('Breast cancer');
     expect(conditionDisplayName({ ...stored, code: { ...stored.code, text: undefined } })).toBe(
-      'Malignant neoplasm of breast',
+      'Malignant neoplasm of breast, unspecified',
     );
     expect(conditionDisplayName({ resourceType: 'Condition', id: 'c9', subject: patient })).toBe(
       'Condition/c9',

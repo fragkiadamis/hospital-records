@@ -7,14 +7,14 @@ import { CodeOption, ValueSets } from '../terminology-client';
 import { CodeSearch } from './code-search';
 
 const pneumonia: CodeOption = {
-  system: CodeSystems.snomed,
-  code: '233604007',
-  display: 'Pneumonia',
+  system: CodeSystems.icd10,
+  code: 'J18.9',
+  display: 'Pneumonia, unspecified',
 };
-const pneumonitis: CodeOption = {
-  system: CodeSystems.snomed,
-  code: '205237003',
-  display: 'Pneumonitis',
+const lobar: CodeOption = {
+  system: CodeSystems.icd10,
+  code: 'J18.1',
+  display: 'Lobar pneumonia, unspecified',
 };
 
 describe('CodeSearch', () => {
@@ -56,8 +56,8 @@ describe('CodeSearch', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(CodeSearch);
     element = fixture.nativeElement;
-    fixture.componentRef.setInput('valueSet', ValueSets.snomedClinicalFindings);
-    fixture.componentRef.setInput('label', 'SNOMED CT code');
+    fixture.componentRef.setInput('valueSet', ValueSets.icd10);
+    fixture.componentRef.setInput('label', 'ICD-10 code');
     picked = [];
     fixture.componentInstance.picked.subscribe((option) => picked.push(option));
     await fixture.whenStable();
@@ -66,7 +66,7 @@ describe('CodeSearch', () => {
   afterEach(() => http.verify());
 
   it('is an accessible combobox', () => {
-    expect(input().getAttribute('aria-label')).toBe('SNOMED CT code');
+    expect(input().getAttribute('aria-label')).toBe('ICD-10 code');
     expect(input().getAttribute('aria-autocomplete')).toBe('list');
     expect(input().getAttribute('aria-expanded')).toBe('false');
   });
@@ -77,27 +77,30 @@ describe('CodeSearch', () => {
   });
 
   it('lists the codes found and picks one with the mouse', async () => {
-    await type('pneum', [pneumonia, pneumonitis]);
+    await type('pneum', [pneumonia, lobar]);
 
     expect(input().getAttribute('aria-expanded')).toBe('true');
-    expect(options()).toEqual(['Pneumonia, code 233604007', 'Pneumonitis, code 205237003']);
+    expect(options()).toEqual([
+      'Pneumonia, unspecified, code J18.9',
+      'Lobar pneumonia, unspecified, code J18.1',
+    ]);
 
     element.querySelectorAll('[role="option"]')[1].dispatchEvent(new MouseEvent('mousedown'));
-    expect(picked).toEqual([pneumonitis]);
+    expect(picked).toEqual([lobar]);
   });
 
   it('can be used with the keyboard', async () => {
-    await type('pneum', [pneumonia, pneumonitis]);
+    await type('pneum', [pneumonia, lobar]);
 
     key('ArrowDown');
     key('ArrowDown');
     await fixture.whenStable();
     const active = element.querySelector('[aria-selected="true"]');
-    expect(active?.textContent).toContain('Pneumonitis');
+    expect(active?.textContent).toContain('Lobar pneumonia');
     expect(input().getAttribute('aria-activedescendant')).toBe(active?.id);
 
     key('Enter');
-    expect(picked).toEqual([pneumonitis]);
+    expect(picked).toEqual([lobar]);
 
     await type('pneum'); // same text: the results are already there
     key('Escape');
@@ -117,8 +120,8 @@ describe('CodeSearch', () => {
     fixture.componentRef.setInput('value', pneumonia);
     await fixture.whenStable();
 
-    expect(element.querySelector('app-coding-chip .code')?.textContent).toBe('233604007');
-    expect(element.querySelector('.display')?.textContent).toBe('Pneumonia');
+    expect(element.querySelector('app-coding-chip .code')?.textContent).toBe('J18.9');
+    expect(element.querySelector('.display')?.textContent).toBe('Pneumonia, unspecified');
     expect(input()).toBeNull();
 
     element.querySelector<HTMLButtonElement>('button.change')!.click();

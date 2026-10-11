@@ -39,8 +39,8 @@ describe('ConditionSummary', () => {
       verificationStatus: verification('confirmed'),
       code: {
         coding: [
-          { system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' },
-          { system: CodeSystems.icd10, code: 'J18.9' },
+          { system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia' },
+          { system: CodeSystems.icd11, code: 'CA40.Z' },
         ],
       },
       onsetDateTime: '2026-01-08',
@@ -51,7 +51,7 @@ describe('ConditionSummary', () => {
     expect(texts('.badge')).toEqual(['Resolved']); // "Confirmed" is the normal case, not shown
     expect(element.querySelector('.badge.ongoing')).toBeNull();
     expect(texts('.details > span')).toEqual(['Onset 8 Jan 2026', 'Ended 20 Feb 2026']);
-    expect(texts('app-coding-chip .code')).toEqual(['233604007', 'J18.9']);
+    expect(texts('app-coding-chip .code')).toEqual(['J18.9', 'CA40.Z']);
   });
 
   it('highlights an ongoing condition and marks an uncertain diagnosis', async () => {

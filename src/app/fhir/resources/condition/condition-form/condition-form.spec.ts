@@ -5,6 +5,8 @@ import type { Condition, ValueSet } from 'fhir/r4';
 import { CodeSystems } from '../../../code-systems';
 import { ConditionForm } from './condition-form';
 
+const LOCAL = 'urn:other-hospital:diagnoses'; // a code system the form doesn't edit
+
 const subject = { reference: 'Patient/seed-patient-2', display: 'Nikos Andreou' };
 
 describe('ConditionForm', () => {
@@ -24,15 +26,9 @@ describe('ConditionForm', () => {
     control.dispatchEvent(new Event('blur'));
   };
 
-  /** The code field of one system ("SNOMED CT", "ICD-10"). */
-  const codeField = (system: string) =>
-    [...element.querySelectorAll('.code-field')].find(
-      (f) => f.querySelector('.field-label')?.textContent === system,
-    )!;
-
-  /** Switches a system from the search box to typing the code by hand. */
-  const byHand = async (system: string) => {
-    codeField(system).querySelector<HTMLButtonElement>('.link-button')!.click();
+  /** Switches from the search box to typing the code by hand. */
+  const byHand = async () => {
+    element.querySelector<HTMLButtonElement>('.link-button')!.click();
     await fixture.whenStable();
   };
 
@@ -68,10 +64,7 @@ describe('ConditionForm', () => {
 
   it('emits the condition built from the fields, for the given patient', async () => {
     set('text', 'Pneumonia');
-    await byHand('SNOMED CT');
-    await byHand('ICD-10');
-    set('snomedCode', '233604007');
-    set('snomedDisplay', 'Pneumonia');
+    await byHand();
     set('icd10Code', 'j18.9');
     set('verificationStatus', 'confirmed');
     set('onsetDate', '2026-01-08');
@@ -83,10 +76,7 @@ describe('ConditionForm', () => {
       subject,
       code: {
         text: 'Pneumonia',
-        coding: [
-          { system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' },
-          { system: CodeSystems.icd10, code: 'J18.9' }, // upper-cased
-        ],
+        coding: [{ system: CodeSystems.icd10, code: 'J18.9' }], // upper-cased
       },
       clinicalStatus: { coding: [{ code: 'active' }] },
       verificationStatus: { coding: [{ code: 'confirmed' }] },
@@ -94,27 +84,22 @@ describe('ConditionForm', () => {
     });
   });
 
-  it('needs a name or a code, and codes in the right format', async () => {
+  it('needs a name or a code, and a code in the right format', async () => {
     await submit();
-    expect(errors()).toEqual(['Enter a name or at least one code.']);
+    expect(errors()).toEqual(['Enter a name or an ICD-10 code.']);
 
-    await byHand('SNOMED CT');
-    await byHand('ICD-10');
-    set('snomedCode', '12ab');
+    await byHand();
     set('icd10Code', 'C5');
     set('icd10Display', 'Breast cancer');
     await submit();
 
     expect(saved).toHaveLength(0);
-    expect(errors()).toEqual([
-      'A SNOMED CT code is 6 to 18 digits.',
-      'An ICD-10 code looks like C50.9.',
-    ]);
+    expect(errors()).toEqual(['An ICD-10 code looks like C50.9.']);
   });
 
   it('asks for the code when only its name is filled in', async () => {
     set('text', 'Asthma');
-    await byHand('ICD-10');
+    await byHand();
     set('icd10Display', 'Asthma');
     await submit();
 
@@ -190,9 +175,8 @@ describe('ConditionForm', () => {
     });
   });
 
-  it('picks codes with the search, which also names a new condition', async () => {
-    const search =
-      codeField('SNOMED CT').querySelector<HTMLInputElement>('input[role="combobox"]')!;
+  it('picks the code with the search, which also names a new condition', async () => {
+    const search = element.querySelector<HTMLInputElement>('input[role="combobox"]')!;
     search.value = 'pneum';
     search.dispatchEvent(new Event('input'));
     await new Promise((resolve) => setTimeout(resolve, 350)); // the search's debounce
@@ -202,50 +186,47 @@ describe('ConditionForm', () => {
       status: 'active',
       expansion: {
         timestamp: '2026-10-11',
-        contains: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+        contains: [{ system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' }],
       },
     } satisfies ValueSet);
     await fixture.whenStable();
-    codeField('SNOMED CT')
-      .querySelector('[role="option"]')!
-      .dispatchEvent(new MouseEvent('mousedown'));
-    TestBed.tick();
-    // A chosen SNOMED code asks the ICD-10 map for suggestions; this server has none.
-    http
-      .expectOne((r) => r.url === '/tx/ConceptMap/$translate')
-      .flush({ resourceType: 'Parameters', parameter: [{ name: 'result', valueBoolean: false }] });
+    element.querySelector('[role="option"]')!.dispatchEvent(new MouseEvent('mousedown'));
     await fixture.whenStable();
 
-    expect(field('text').value).toBe('Pneumonia');
-    expect(codeField('SNOMED CT').querySelector('app-coding-chip .code')?.textContent).toBe(
-      '233604007',
-    );
+    expect(field('text').value).toBe('Pneumonia, unspecified');
+    expect(element.querySelector('app-coding-chip .code')?.textContent).toBe('J18.9');
 
     await submit();
     expect(saved[0].code).toEqual({
-      text: 'Pneumonia',
-      coding: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
+      text: 'Pneumonia, unspecified',
+      coding: [{ system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' }],
     });
   });
 
-  it('shows stored codes as chips that can be changed', async () => {
+  it('shows a stored code as a chip that can be changed, keeping codes of other systems', async () => {
     fixture.componentRef.setInput('condition', {
       resourceType: 'Condition',
       subject,
       clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
       code: {
         text: 'Breast cancer',
-        coding: [{ system: CodeSystems.icd10, code: 'C50.9', display: 'Breast, unspecified' }],
+        coding: [
+          { system: LOCAL, code: 'ONC-17', display: 'Breast carcinoma' }, // not the form's
+          { system: CodeSystems.icd10, code: 'C50.9', display: 'Breast, unspecified' },
+        ],
       },
     } satisfies Condition);
     await fixture.whenStable();
 
-    expect(codeField('ICD-10').querySelector('.display')?.textContent).toBe('Breast, unspecified');
+    expect(element.querySelector('.display')?.textContent).toBe('Breast, unspecified');
 
-    codeField('ICD-10').querySelector<HTMLButtonElement>('button.change')!.click();
+    element.querySelector<HTMLButtonElement>('button.change')!.click();
     await fixture.whenStable();
     await submit();
-    expect(saved[0].code).toEqual({ text: 'Breast cancer' });
+    expect(saved[0].code).toEqual({
+      text: 'Breast cancer',
+      coding: [{ system: LOCAL, code: 'ONC-17', display: 'Breast carcinoma' }],
+    });
   });
 
   it('opens the hand-entry fields for a stored code in the wrong format', async () => {
@@ -253,62 +234,12 @@ describe('ConditionForm', () => {
       resourceType: 'Condition',
       subject,
       clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
-      code: { coding: [{ system: CodeSystems.snomed, code: 'not-a-code' }] },
+      code: { coding: [{ system: CodeSystems.icd10, code: 'not-a-code' }] },
     } satisfies Condition);
     await fixture.whenStable();
     await submit();
 
-    expect(field('snomedCode').value).toBe('not-a-code');
-    expect(errors()).toContain('A SNOMED CT code is 6 to 18 digits.');
-  });
-
-  it("offers the official map's ICD-10 codes for the chosen SNOMED concept, applied only on request", async () => {
-    fixture.componentRef.setInput('condition', {
-      resourceType: 'Condition',
-      subject,
-      clinicalStatus: { coding: [{ system: CodeSystems.conditionClinical, code: 'active' }] },
-      code: {
-        text: 'Pneumonia',
-        coding: [{ system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' }],
-      },
-    } satisfies Condition);
-    TestBed.tick();
-    const req = http.expectOne((r) => r.url === '/tx/ConceptMap/$translate');
-    expect(req.request.params.get('code')).toBe('233604007');
-    req.flush({
-      resourceType: 'Parameters',
-      parameter: [
-        { name: 'result', valueBoolean: true },
-        {
-          name: 'match',
-          part: [
-            { name: 'equivalence', valueCode: 'equivalent' },
-            {
-              name: 'concept',
-              valueCoding: {
-                system: CodeSystems.icd10,
-                code: 'J18.9',
-                display: 'Pneumonia, unspecified',
-              },
-            },
-          ],
-        },
-      ],
-    });
-    await fixture.whenStable();
-
-    const suggestions = codeField('ICD-10').querySelector('.suggestions');
-    expect(suggestions?.textContent).toContain('J18.9');
-    expect(field('icd10Code')).toBeNull(); // nothing filled in by itself
-
-    suggestions!.querySelector<HTMLButtonElement>('button')!.click();
-    await fixture.whenStable();
-    expect(codeField('ICD-10').querySelector('.suggestions')).toBeNull();
-
-    await submit();
-    expect(saved[0].code?.coding).toEqual([
-      { system: CodeSystems.snomed, code: '233604007', display: 'Pneumonia' },
-      { system: CodeSystems.icd10, code: 'J18.9', display: 'Pneumonia, unspecified' },
-    ]);
+    expect(field('icd10Code').value).toBe('not-a-code');
+    expect(errors()).toContain('An ICD-10 code looks like C50.9.');
   });
 });

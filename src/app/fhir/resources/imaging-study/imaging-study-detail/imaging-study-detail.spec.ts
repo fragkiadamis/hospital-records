@@ -5,7 +5,7 @@ import { CodeSystems } from '../../../code-systems';
 import { ImagingStudyDetail } from './imaging-study-detail';
 
 const dcm = (code: string) => ({ system: CodeSystems.dicom, code });
-const breast = { system: CodeSystems.snomed, code: '76752008', display: 'Breast structure' };
+const breast = { display: 'Breast' };
 const series = (number: number, description: string, instances: number): ImagingStudySeries => ({
   uid: `2.25.${number}`,
   number,
@@ -92,8 +92,8 @@ describe('ImagingStudyDetail', () => {
       [...row.querySelectorAll('td')].map((td) => td.firstChild?.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['1', 'MR', 'Axial T1 pre-contrast', 'Breast structure', '144', '10 Feb 2025'],
-      ['2', 'MR', 'Axial T1 post-contrast', 'Breast structure', '160', '10 Feb 2025'],
+      ['1', 'MR', 'Axial T1 pre-contrast', 'Breast', '144', '10 Feb 2025'],
+      ['2', 'MR', 'Axial T1 post-contrast', 'Breast', '160', '10 Feb 2025'],
     ]);
     expect(element.querySelector('tbody abbr')?.getAttribute('title')).toBe('Magnetic resonance');
   });
