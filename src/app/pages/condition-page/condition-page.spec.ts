@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import type { Condition } from 'fhir/r4';
 import { ConditionPage } from './condition-page';
 
@@ -66,5 +66,31 @@ describe('ConditionPage', () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'The resource was not found (HTTP 404)',
     );
+  });
+
+  it('deletes the condition after confirmation and goes back to the patient', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await open('seed-patient-2', pneumonia);
+
+    const button = (label: string) =>
+      [...element.querySelectorAll<HTMLButtonElement>('button')].find(
+        (b) => b.textContent?.trim() === label,
+      );
+    button('Delete')!.click();
+    await fixture.whenStable();
+    http
+      .expectOne((r) => r.url === '/fhir/Condition' && r.params.get('_revinclude') === '*')
+      .flush({ resourceType: 'Bundle', type: 'searchset' });
+    const studies = http.expectOne((r) => r.url === '/fhir/ImagingStudy');
+    expect(studies.request.params.get('subject')).toBe('Patient/seed-patient-2');
+    studies.flush({ resourceType: 'Bundle', type: 'searchset' });
+    await fixture.whenStable();
+
+    expect(element.querySelector('app-delete-panel')?.textContent).toContain('Delete Pneumonia?');
+    button('Delete condition')!.click();
+    http.expectOne('/fhir/Condition/seed-condition-3').flush(null);
+    await fixture.whenStable();
+
+    expect(navigate).toHaveBeenCalledWith(['/patients', 'seed-patient-2']);
   });
 });

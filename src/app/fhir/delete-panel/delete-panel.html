@@ -1,0 +1,56 @@
+@if (open()) {
+  <div class="panel" aria-live="polite">
+    @switch (step()) {
+      @case ('checking') {
+        <p>Checking for records linked to this {{ noun() }}…</p>
+      }
+      @case ('failed') {
+        <p class="error" role="alert">
+          Linked records could not be checked, so the {{ noun() }} can't be deleted safely:
+          {{ error() }}
+        </p>
+        <div class="actions">
+          <button type="button" class="button" (click)="close()">Close</button>
+          <button type="button" class="button" (click)="retry()">Try again</button>
+        </div>
+      }
+      @case ('blocked') {
+        <p>
+          <strong>{{ name() }} can't be deleted</strong> because other records point to this
+          {{ noun() }}:
+        </p>
+        <ul>
+          @for (link of linked(); track link.type) {
+            <li>{{ link.type }} ({{ link.count }})</li>
+          }
+        </ul>
+        <p>Delete or reassign those first.</p>
+        <div class="actions">
+          <button type="button" class="button" (click)="close()">Close</button>
+        </div>
+      }
+      @default {
+        <p>
+          <strong>Delete {{ name() }}?</strong> The {{ noun() }} is removed from the FHIR server and
+          can't be restored from Artemis.
+        </p>
+        @if (error()) {
+          <p class="error" role="alert">{{ error() }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="button" [disabled]="step() === 'deleting'" (click)="close()">
+            Keep {{ noun() }}
+          </button>
+          <button
+            type="button"
+            class="button danger-solid"
+            [disabled]="step() === 'deleting'"
+            (click)="confirm()"
+          >
+            {{ step() === 'deleting' ? 'Deleting…' : 'Delete ' + noun() }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+}

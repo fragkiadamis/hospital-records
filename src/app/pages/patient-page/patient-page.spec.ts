@@ -54,7 +54,7 @@ describe('PatientPage', () => {
   };
 
   const panelText = () =>
-    element.querySelector('.delete-panel')?.textContent?.replace(/\s+/g, ' ').trim();
+    element.querySelector('app-delete-panel .panel')?.textContent?.replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -144,7 +144,7 @@ describe('PatientPage', () => {
       );
       await fixture.whenStable();
 
-      expect(element.querySelector('.delete-panel [role="alert"]')?.textContent).toContain(
+      expect(element.querySelector('app-delete-panel [role="alert"]')?.textContent).toContain(
         'Unable to delete',
       );
       expect(navigate).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe('PatientPage', () => {
       button('Keep patient')!.click();
       await fixture.whenStable();
 
-      expect(element.querySelector('.delete-panel')).toBeNull();
+      expect(element.querySelector('app-delete-panel .panel')).toBeNull();
     });
   });
 });

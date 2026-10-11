@@ -13,8 +13,8 @@
         <button
           type="button"
           class="button danger"
-          [disabled]="deleteStep() !== 'closed'"
-          (click)="startDelete()"
+          [disabled]="deleting()"
+          (click)="deleting.set(true)"
         >
           <i class="ti ti-trash" aria-hidden="true"></i>
           Delete
@@ -23,56 +23,15 @@
     }
   </nav>
 
-  @if (deleteStep() !== 'closed') {
-    <div class="delete-panel" aria-live="polite">
-      @switch (deleteStep()) {
-        @case ('checking') {
-          <p>Checking for records linked to this patient…</p>
-        }
-        @case ('blocked') {
-          <p>
-            <strong>{{ name() }} can't be deleted</strong> because other records point to this
-            patient:
-          </p>
-          <ul>
-            @for (link of linked(); track link.type) {
-              <li>{{ link.type }} ({{ link.count }})</li>
-            }
-          </ul>
-          <p>Delete or reassign those first.</p>
-          <div class="panel-actions">
-            <button type="button" class="button" (click)="cancelDelete()">Close</button>
-          </div>
-        }
-        @default {
-          <p>
-            <strong>Delete {{ name() }}?</strong> The patient is removed from the FHIR server and
-            can't be restored from Artemis.
-          </p>
-          @if (deleteError()) {
-            <p class="error" role="alert">{{ deleteError() }}</p>
-          }
-          <div class="panel-actions">
-            <button
-              type="button"
-              class="button"
-              [disabled]="deleteStep() === 'deleting'"
-              (click)="cancelDelete()"
-            >
-              Keep patient
-            </button>
-            <button
-              type="button"
-              class="button danger-solid"
-              [disabled]="deleteStep() === 'deleting'"
-              (click)="confirmDelete()"
-            >
-              {{ deleteStep() === 'deleting' ? 'Deleting…' : 'Delete patient' }}
-            </button>
-          </div>
-        }
-      }
-    </div>
+  @if (patient.hasValue()) {
+    <app-delete-panel
+      resourceType="Patient"
+      noun="patient"
+      [resourceId]="id()"
+      [name]="name()"
+      [(open)]="deleting"
+      (deleted)="onDeleted()"
+    />
   }
 
   <div aria-live="polite" [attr.aria-busy]="patient.isLoading()">

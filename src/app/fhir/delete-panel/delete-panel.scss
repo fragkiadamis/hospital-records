@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+.panel {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: var(--surface);
+
+  p,
+  ul {
+    margin: 0 0 12px;
+  }
+}
+
+.error {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
