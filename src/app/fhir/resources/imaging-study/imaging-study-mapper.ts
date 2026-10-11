@@ -4,7 +4,7 @@ import { formatCodeableConcept } from '../../datatypes/codeable-concept-pipe';
 import { isReferenceTo } from '../../datatypes/reference-pipe';
 
 /**
- * Names of the DICOM modality codes (DICOM PS3.16 CID 29 / CID 33) Artemis is likely to see.
+ * Names of the DICOM modality codes (DICOM PS3.16 CID 29 / CID 33) Hospital Records is likely to see.
  * Codes not listed here are shown as the bare code.
  */
 export const MODALITY_NAMES: Readonly<Record<string, string>> = {

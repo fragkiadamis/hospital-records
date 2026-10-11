@@ -52,7 +52,7 @@ export class ConditionPage {
   constructor() {
     const title = inject(Title);
     effect(() => {
-      if (this.belongsToPatient()) title.setTitle(`${this.name()} · Artemis`);
+      if (this.belongsToPatient()) title.setTitle(`${this.name()} · Hospital Records`);
     });
   }
 

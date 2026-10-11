@@ -14,7 +14,7 @@ describe('Header', () => {
     fixture = TestBed.createComponent(Header);
     component = fixture.componentInstance;
     element = fixture.nativeElement;
-    fixture.componentRef.setInput('title', 'Artemis');
+    fixture.componentRef.setInput('title', 'Hospital Records');
     fixture.componentRef.setInput('userName', 'John Papadopoulos');
     await fixture.whenStable();
   });
@@ -31,7 +31,7 @@ describe('Header', () => {
   });
 
   it('should show the title', () => {
-    expect(element.querySelector('.brand-name')?.textContent?.trim()).toBe('Artemis');
+    expect(element.querySelector('.brand-name')?.textContent?.trim()).toBe('Hospital Records');
   });
 
   it('should show the unread badge only when there are unread notifications', async () => {

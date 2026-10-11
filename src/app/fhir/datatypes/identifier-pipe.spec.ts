@@ -1,7 +1,7 @@
 import type { Identifier } from 'fhir/r4';
 import { identifierLabel, IdentifierPipe, identifierValue } from './identifier-pipe';
 
-const MRN = 'urn:artemis:mrn';
+const MRN = 'urn:hospital-records:mrn';
 
 describe('identifierValue', () => {
   const identifiers: Identifier[] = [

@@ -39,7 +39,7 @@ export class StudyPage {
     const title = inject(Title);
     effect(() => {
       if (this.belongsToPatient() && this.study.hasValue()) {
-        title.setTitle(`${imagingStudyDisplayName(this.study.value())} · Artemis`);
+        title.setTitle(`${imagingStudyDisplayName(this.study.value())} · Hospital Records`);
       }
     });
   }

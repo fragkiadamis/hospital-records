@@ -3,8 +3,8 @@ import { formatHumanName, preferredName } from '../../datatypes/human-name-pipe'
 import { identifierValue } from '../../datatypes/identifier-pipe';
 import { replaceEntry } from '../replace-entry';
 
-/** Identifier system of Artemis medical record numbers. A placeholder until the hospital's own URI is known. */
-export const MRN_SYSTEM = 'urn:artemis:mrn';
+/** Identifier system of Hospital Records medical record numbers. A placeholder until the hospital's own URI is known. */
+export const MRN_SYSTEM = 'urn:hospital-records:mrn';
 
 /** What the patient form edits: flat fields, '' when empty. */
 export interface PatientFormValue {

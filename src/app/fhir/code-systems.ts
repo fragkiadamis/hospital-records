@@ -1,4 +1,4 @@
-/** URIs of the code systems Artemis uses, so they are written (and mistyped) in one place. */
+/** URIs of the code systems Hospital Records uses, so they are written (and mistyped) in one place. */
 export const CodeSystems = {
   /** WHO's international ICD-10. National variants (ICD-10-CM, -GM, …) have their own URIs. */
   icd10: 'http://hl7.org/fhir/sid/icd-10',

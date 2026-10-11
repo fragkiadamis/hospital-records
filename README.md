@@ -1,6 +1,6 @@
-# Artemis
+# Hospital Records
 
-Artemis is a medical imaging (DICOM) records platform, at an early stage. It has three parts:
+Hospital Records is a medical imaging (DICOM) records platform, at an early stage. It has three parts:
 
 - **FHIR server**: HAPI-FHIR (R4) with Postgres, which stores the clinical records.
 - **PACS**: Orthanc with a Postgres index, which stores the DICOM images.
@@ -51,7 +51,7 @@ instead of duplicating them.
 | `hapi-fhir`  | FHIR R4 REST API                      | http://localhost:8080/fhir                     |
 | `fhir-db`    | Postgres for HAPI                     | internal only                                  |
 | `orthanc`    | PACS: REST API, Explorer UI, DICOMweb | http://localhost:8042 (DICOMweb at /dicom-web) |
-| `orthanc`    | DICOM C-STORE / C-FIND / C-MOVE       | port 4242, AE title `ARTEMIS`                  |
+| `orthanc`    | DICOM C-STORE / C-FIND / C-MOVE       | port 4242, AE title `HOSPITAL_RECORDS`         |
 | `orthanc-db` | Postgres index for Orthanc            | internal only                                  |
 
 Ports are bound to `127.0.0.1` by default. DICOM files themselves stay on the `orthanc-data`

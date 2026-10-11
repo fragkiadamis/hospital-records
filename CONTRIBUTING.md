@@ -1,4 +1,4 @@
-# Contributing to Artemis
+# Contributing to Hospital Records
 
 Thanks for helping out. This guide covers how work is planned, how to set up, and what a pull
 request needs before it can be merged.

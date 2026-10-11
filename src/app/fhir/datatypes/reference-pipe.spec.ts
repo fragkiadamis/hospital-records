@@ -53,9 +53,9 @@ describe('formatReference', () => {
       'Patient/p1',
     );
     expect(formatReference({ reference: '#contained-1' })).toBe('#contained-1');
-    expect(formatReference({ identifier: { system: 'urn:artemis:mrn', value: 'SEED-0001' } })).toBe(
-      'SEED-0001',
-    );
+    expect(
+      formatReference({ identifier: { system: 'urn:hospital-records:mrn', value: 'SEED-0001' } }),
+    ).toBe('SEED-0001');
     expect(formatReference({})).toBe('');
     expect(formatReference(undefined)).toBe('');
   });

@@ -82,7 +82,7 @@ describe('PatientPage', () => {
     } satisfies Patient);
 
     expect(element.querySelector('app-patient-detail h2')?.textContent).toBe('Daphne Kostaki');
-    expect(TestBed.inject(Title).getTitle()).toBe('Daphne Kostaki · Artemis');
+    expect(TestBed.inject(Title).getTitle()).toBe('Daphne Kostaki · Hospital Records');
     expect(element.querySelector('a.back')?.getAttribute('href')).toBe('/patients');
     expect(element.querySelector('a[href$="/edit"]')?.getAttribute('href')).toBe(
       '/patients/seed-patient-1/edit',

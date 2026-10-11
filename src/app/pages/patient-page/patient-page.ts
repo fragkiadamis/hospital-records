@@ -40,7 +40,7 @@ export class PatientPage {
   constructor() {
     const title = inject(Title);
     effect(() => {
-      if (this.name()) title.setTitle(`${this.name()} · Artemis`);
+      if (this.name()) title.setTitle(`${this.name()} · Hospital Records`);
     });
   }
 

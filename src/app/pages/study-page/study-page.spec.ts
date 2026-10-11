@@ -47,7 +47,7 @@ describe('StudyPage', () => {
       'CT chest without contrast',
     );
     expect(element.querySelector('a.back')?.getAttribute('href')).toBe('/patients/seed-patient-2');
-    expect(TestBed.inject(Title).getTitle()).toBe('CT chest without contrast · Artemis');
+    expect(TestBed.inject(Title).getTitle()).toBe('CT chest without contrast · Hospital Records');
   });
 
   it('refuses to show a study under a patient it does not belong to', async () => {

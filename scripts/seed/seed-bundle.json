@@ -10,14 +10,14 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
         },
         "identifier": [
           {
-            "system": "urn:artemis:mrn",
+            "system": "urn:hospital-records:mrn",
             "value": "SEED-0001"
           }
         ],
@@ -51,14 +51,14 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
         },
         "identifier": [
           {
-            "system": "urn:artemis:mrn",
+            "system": "urn:hospital-records:mrn",
             "value": "SEED-0002"
           }
         ],
@@ -93,14 +93,14 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
         },
         "identifier": [
           {
-            "system": "urn:artemis:mrn",
+            "system": "urn:hospital-records:mrn",
             "value": "SEED-0003"
           }
         ],
@@ -128,7 +128,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -201,7 +201,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -265,7 +265,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -339,7 +339,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -403,7 +403,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -478,7 +478,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]
@@ -539,7 +539,7 @@
         "meta": {
           "tag": [
             {
-              "system": "urn:artemis:seed",
+              "system": "urn:hospital-records:seed",
               "code": "seed"
             }
           ]

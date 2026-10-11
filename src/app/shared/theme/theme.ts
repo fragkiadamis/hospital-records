@@ -3,7 +3,7 @@ import { DOCUMENT, effect, inject, Injectable, signal } from '@angular/core';
 export type ThemeMode = 'light' | 'dark';
 
 // Also read by the inline script in index.html, which applies the theme before Angular boots.
-const STORAGE_KEY = 'artemis-theme';
+const STORAGE_KEY = 'hospital-records-theme';
 
 @Injectable({ providedIn: 'root' })
 export class Theme {

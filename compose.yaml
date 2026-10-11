@@ -1,4 +1,4 @@
-# Local development stack for Artemis: HAPI-FHIR and Orthanc, each with its own Postgres.
+# Local development stack for Hospital Records: HAPI-FHIR and Orthanc, each with its own Postgres.
 #
 #   podman compose up -d        # start
 #   podman compose logs -f      # follow logs
@@ -9,7 +9,7 @@
 # The Postgres images only apply their database name, user and password on first start; after
 # changing those, recreate the volume (podman compose down -v).
 
-name: artemis # override with COMPOSE_PROJECT_NAME
+name: hospital-records # override with COMPOSE_PROJECT_NAME
 
 x-postgres: &postgres
   image: ${POSTGRES_IMAGE:-docker.io/library/postgres:18-alpine}
@@ -62,8 +62,8 @@ services:
       orthanc-db:
         condition: service_healthy
     environment:
-      ORTHANC__NAME: ${ORTHANC_NAME:-Artemis}
-      ORTHANC__DICOM_AET: ${ORTHANC_DICOM_AET:-ARTEMIS}
+      ORTHANC__NAME: ${ORTHANC_NAME:-hospital-records-orthanc}
+      ORTHANC__DICOM_AET: ${ORTHANC_DICOM_AET:-HOSPITAL_RECORDS}
       ORTHANC__AUTHENTICATION_ENABLED: 'true'
       ORTHANC__REGISTERED_USERS: '{"${ORTHANC_USER:-orthanc}": "${ORTHANC_PASSWORD:?set ORTHANC_PASSWORD in .env}"}'
       # Index in Postgres; DICOM files stay on the orthanc-data volume.

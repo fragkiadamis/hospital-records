@@ -8,7 +8,7 @@ describe('Theme', () => {
   });
 
   it('should start from the saved choice', () => {
-    localStorage.setItem('artemis-theme', 'dark');
+    localStorage.setItem('hospital-records-theme', 'dark');
 
     expect(TestBed.inject(Theme).mode()).toBe('dark');
   });
@@ -23,6 +23,6 @@ describe('Theme', () => {
 
     expect(theme.mode()).toBe(next);
     expect(document.documentElement.dataset['theme']).toBe(next);
-    expect(localStorage.getItem('artemis-theme')).toBe(next);
+    expect(localStorage.getItem('hospital-records-theme')).toBe(next);
   });
 });
