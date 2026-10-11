@@ -1,6 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { OperationOutcome } from 'fhir/r4';
-import { fhirErrorMessage } from './fhir-error';
+import { fhirErrorMessage, isVersionConflict } from './fhir-error';
+
+describe('isVersionConflict', () => {
+  it('recognises the 412 of the FHIR spec and the 409 HAPI sends', () => {
+    expect(isVersionConflict(new HttpErrorResponse({ status: 412 }))).toBe(true);
+    expect(isVersionConflict(new HttpErrorResponse({ status: 409 }))).toBe(true);
+    expect(
+      isVersionConflict(new Error('wrapped', { cause: new HttpErrorResponse({ status: 409 }) })),
+    ).toBe(true);
+  });
+
+  it('is false for other errors', () => {
+    expect(isVersionConflict(new HttpErrorResponse({ status: 422 }))).toBe(false);
+    expect(isVersionConflict(new Error('boom'))).toBe(false);
+  });
+});
 
 describe('fhirErrorMessage', () => {
   it("shows the server's OperationOutcome diagnostics", () => {

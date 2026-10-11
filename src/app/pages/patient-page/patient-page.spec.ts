@@ -41,6 +41,9 @@ describe('PatientPage', () => {
     expect(element.querySelector('app-patient-detail h2')?.textContent).toBe('Daphne Kostaki');
     expect(TestBed.inject(Title).getTitle()).toBe('Daphne Kostaki · Artemis');
     expect(element.querySelector('a.back')?.getAttribute('href')).toBe('/patients');
+    expect(element.querySelector('a.edit')?.getAttribute('href')).toBe(
+      '/patients/seed-patient-1/edit',
+    );
   });
 
   it('says when the patient does not exist', async () => {

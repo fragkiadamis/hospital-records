@@ -4,11 +4,34 @@
   padding: 20px 32px 28px;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: inherit;
+  background: var(--surface);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--header-mid);
+  }
+}
+
 .back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 20px;
   color: var(--text-muted);
   text-decoration: none;
 

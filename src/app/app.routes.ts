@@ -18,4 +18,9 @@ export const routes: Routes = [
     title: 'Patient · Artemis', // replaced by the patient's name once loaded
     loadComponent: () => import('./pages/patient-page/patient-page').then((m) => m.PatientPage),
   },
+  {
+    path: 'patients/:id/edit',
+    title: 'Edit patient · Artemis',
+    loadComponent: () => import('./pages/patient-edit/patient-edit').then((m) => m.PatientEdit),
+  },
 ];

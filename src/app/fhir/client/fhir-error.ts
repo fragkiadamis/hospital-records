@@ -13,10 +13,24 @@ const STATUS_MESSAGES: Record<number, string> = {
   422: 'The resource failed validation',
 };
 
+// Signal resources wrap errors that are not Error instances (like HttpErrorResponse) in .cause.
+function unwrap(err: unknown): unknown {
+  return err instanceof Error && err.cause instanceof HttpErrorResponse ? err.cause : err;
+}
+
+/**
+ * Whether an update was refused because the resource changed since it was read (the If-Match
+ * version no longer matches). The FHIR spec suggests 412; HAPI answers 409. Only meaningful for
+ * the response to FhirClient.update.
+ */
+export function isVersionConflict(err: unknown): boolean {
+  err = unwrap(err);
+  return err instanceof HttpErrorResponse && (err.status === 409 || err.status === 412);
+}
+
 /** Turns an HTTP error into display text, using the server's OperationOutcome when there is one. */
 export function fhirErrorMessage(err: unknown): string {
-  // Signal resources wrap errors that are not Error instances (like HttpErrorResponse) in .cause.
-  if (err instanceof Error && err.cause instanceof HttpErrorResponse) err = err.cause;
+  err = unwrap(err);
   if (err instanceof HttpErrorResponse) {
     const outcome = err.error as OperationOutcome | undefined;
     if (outcome?.resourceType === 'OperationOutcome' && outcome.issue?.length) {

@@ -1,8 +1,16 @@
 <section class="page">
-  <a class="back" routerLink="/patients">
-    <i class="ti ti-arrow-left" aria-hidden="true"></i>
-    Patients
-  </a>
+  <nav class="toolbar">
+    <a class="back" routerLink="/patients">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      Patients
+    </a>
+    @if (patient.hasValue()) {
+      <a class="edit" [routerLink]="['/patients', id(), 'edit']">
+        <i class="ti ti-pencil" aria-hidden="true"></i>
+        Edit
+      </a>
+    }
+  </nav>
 
   <div aria-live="polite" [attr.aria-busy]="patient.isLoading()">
     @if (patient.error()) {
