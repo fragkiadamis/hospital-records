@@ -4,7 +4,29 @@
       <app-icon name="arrow-left" />
       Back to patient
     </a>
+    @if (belongsToPatient()) {
+      <div class="actions">
+        <button
+          type="button"
+          class="button"
+          [disabled]="editingReasons()"
+          (click)="editingReasons.set(true)"
+        >
+          <app-icon name="stethoscope" />
+          Edit reasons
+        </button>
+      </div>
+    }
   </nav>
+
+  @if (belongsToPatient() && study.hasValue()) {
+    <app-study-reasons
+      [study]="study.value()"
+      [patientId]="id()"
+      [(open)]="editingReasons"
+      (changed)="study.reload()"
+    />
+  }
 
   <div aria-live="polite" [attr.aria-busy]="study.isLoading()">
     @if (study.error()) {

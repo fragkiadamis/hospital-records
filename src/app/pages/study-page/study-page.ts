@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -10,9 +10,10 @@ import {
   isStudyOf,
 } from '../../fhir/resources/imaging-study/imaging-study-mapper';
 import { Icon } from '../../shared/icon/icon';
+import { StudyReasons } from './study-reasons/study-reasons';
 
 @Component({
-  imports: [Icon, ImagingStudyDetail, RouterLink],
+  imports: [Icon, ImagingStudyDetail, RouterLink, StudyReasons],
   selector: 'app-study-page',
   templateUrl: './study-page.html',
 })
@@ -29,6 +30,9 @@ export class StudyPage {
   });
 
   protected readonly errorMessage = computed(() => fhirErrorMessage(this.study.error()));
+
+  /** Whether the reasons panel is open; it is two-way bound to the panel's `open`. */
+  protected readonly editingReasons = signal(false);
 
   /** False when the URL pairs the study with a patient it doesn't belong to. */
   protected readonly belongsToPatient = computed(

@@ -1,0 +1,67 @@
+@if (open()) {
+  <section class="panel" aria-labelledby="reasons-heading">
+    <h2 id="reasons-heading">Reasons for this study</h2>
+    <p class="hint">Choose the conditions this study was done for.</p>
+
+    @if (conflict()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>
+          This study or one of the conditions was changed by someone else, so nothing was saved.
+          Load the latest versions and choose again.
+        </span>
+        <button type="button" class="button" (click)="reload()">Load latest versions</button>
+      </div>
+    } @else if (error()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>The reasons were not saved: {{ error() }}</span>
+      </div>
+    }
+
+    @if (conditions.error()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>Conditions could not be loaded: {{ loadError() }}</span>
+        <button type="button" class="button" (click)="conditions.reload()">Try again</button>
+      </div>
+    } @else if (conditions.hasValue()) {
+      @if (options().length) {
+        <fieldset>
+          <legend class="sr-only">Conditions</legend>
+          @for (option of options(); track option.id) {
+            <label>
+              <input
+                #box
+                type="checkbox"
+                [checked]="selected().includes(option.id)"
+                [disabled]="saving()"
+                (change)="toggle(option.id, box.checked)"
+              />
+              <span class="name">{{ option.name }}</span>
+              @if (option.status) {
+                <span class="status">{{ option.status }}</span>
+              }
+            </label>
+          }
+        </fieldset>
+      } @else {
+        <p class="state">This patient has no conditions to choose from.</p>
+      }
+    } @else {
+      <p class="state">Loading conditions…</p>
+    }
+
+    <div class="actions">
+      <button type="button" class="button" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button
+        type="button"
+        class="button primary"
+        [disabled]="saving() || !conditions.hasValue()"
+        (click)="save()"
+      >
+        {{ saving() ? 'Saving…' : 'Save reasons' }}
+      </button>
+    </div>
+  </section>
+}
