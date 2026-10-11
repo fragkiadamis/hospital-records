@@ -1,0 +1,313 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
+import type { Bundle, BundleEntry, ImagingStudy, Patient } from 'fhir/r4';
+import { Observable, of, throwError } from 'rxjs';
+import { FhirClient, SearchParams } from '../fhir/client/fhir-client';
+import { imagingStudyFrom, studyUidIdentifier } from '../fhir/resources/imaging-study/dicom-mapper';
+import {
+  DICOM_PATIENT_ID_SYSTEM,
+  dicomPatientIdentifier,
+} from '../fhir/resources/patient/patient-mapper';
+import { DicomDataset, Tag } from './dicom-json';
+import { DicomwebClient } from './dicomweb-client';
+import { PacsSync } from './pacs-sync';
+
+const at = (vr: string, ...Value: unknown[]) => ({ vr, Value });
+
+const dicomStudy = (uid: string, patientId: string, description = 'CT chest'): DicomDataset => ({
+  [Tag.StudyInstanceUID]: at('UI', uid),
+  [Tag.PatientID]: at('LO', patientId),
+  [Tag.PatientName]: at('PN', { Alphabetic: patientId }),
+  [Tag.StudyDate]: at('DA', '20250210'),
+  [Tag.StudyDescription]: at('LO', description),
+  [Tag.ModalitiesInStudy]: at('CS', 'CT'),
+});
+const dicomSeries: DicomDataset[] = [
+  {
+    [Tag.SeriesInstanceUID]: at('UI', '9.1'),
+    [Tag.SeriesNumber]: at('IS', 1),
+    [Tag.Modality]: at('CS', 'CT'),
+    [Tag.NumberOfSeriesRelatedInstances]: at('IS', 10),
+  },
+];
+
+/** An ImagingStudy as the sync stores it for `study`, under `patientId`. */
+const storedStudy = (id: string, study: DicomDataset, patientId: string): ImagingStudy => ({
+  ...imagingStudyFrom(study, dicomSeries, { reference: `Patient/${patientId}` }),
+  id,
+  meta: { versionId: '1' },
+});
+
+/** A small in-memory FHIR server: just what the sync calls. */
+class FakeFhir {
+  patients: Patient[] = [];
+  studies: ImagingStudy[] = [];
+  transactions: BundleEntry[][] = [];
+  updates: ImagingStudy[] = [];
+  failTransactions = false;
+  private nextId = 1;
+
+  search(type: string, params: SearchParams): Observable<unknown[]> {
+    if (type === 'Patient') {
+      const [system, value] = String(params['identifier']).split('|');
+      return of(
+        this.patients.filter((p) =>
+          p.identifier?.some((i) => i.system === system && i.value === value),
+        ),
+      );
+    }
+    const offset = Number(params['_offset'] ?? 0);
+    return of(this.studies.slice(offset, offset + Number(params['_count'])));
+  }
+
+  update(study: ImagingStudy): Observable<ImagingStudy> {
+    this.updates.push(study);
+    return of({ ...study, meta: { versionId: '2' } });
+  }
+
+  transaction(entries: BundleEntry[]): Observable<Bundle> {
+    this.transactions.push(entries);
+    if (this.failTransactions) {
+      return throwError(() => new HttpErrorResponse({ status: 500 }));
+    }
+    const response = entries.map((entry) => {
+      const id = `new-${this.nextId++}`;
+      const resource = entry.resource!;
+      if (resource.resourceType === 'Patient') this.patients.push({ ...(resource as Patient), id });
+      return {
+        response: { status: '201 Created', location: `${resource.resourceType}/${id}/_history/1` },
+      };
+    });
+    return of({ resourceType: 'Bundle', type: 'transaction-response', entry: response });
+  }
+}
+
+class FakeDicomweb {
+  studies: DicomDataset[] = [];
+  unreachable = false;
+
+  allStudies(): Observable<DicomDataset[]> {
+    return this.unreachable
+      ? throwError(() => new HttpErrorResponse({ status: 0 }))
+      : of(this.studies);
+  }
+
+  searchSeries(): Observable<DicomDataset[]> {
+    return of(dicomSeries);
+  }
+}
+
+describe('PacsSync', () => {
+  let sync: PacsSync;
+  let fhir: FakeFhir;
+  let pacs: FakeDicomweb;
+
+  beforeEach(() => {
+    fhir = new FakeFhir();
+    pacs = new FakeDicomweb();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: FhirClient, useValue: fhir },
+        { provide: DicomwebClient, useValue: pacs },
+      ],
+    });
+    sync = TestBed.inject(PacsSync);
+  });
+
+  it('creates the Patient and the ImagingStudy of a new DICOM study in one transaction', async () => {
+    pacs.studies = [dicomStudy('1.1', 'KiTS-00136')];
+
+    const report = await sync.sync();
+
+    expect(report.studies).toEqual([
+      {
+        studyInstanceUid: '1.1',
+        outcome: 'created',
+        imagingStudyId: 'new-2',
+        patientCreated: true,
+      },
+    ]);
+    const [patientEntry, studyEntry] = fhir.transactions[0];
+    expect(patientEntry.request).toEqual({
+      method: 'POST',
+      url: 'Patient',
+      ifNoneExist: `identifier=${encodeURIComponent(`${DICOM_PATIENT_ID_SYSTEM}|KiTS-00136`)}`,
+    });
+    expect(studyEntry.request?.ifNoneExist).toBe(
+      `identifier=${encodeURIComponent('urn:dicom:uid|urn:oid:1.1')}`,
+    );
+    // The study points at the patient created in the same transaction.
+    expect((studyEntry.resource as ImagingStudy).subject.reference).toBe(patientEntry.fullUrl);
+    expect(patientEntry.fullUrl).toMatch(/^urn:uuid:/);
+  });
+
+  it('files the study under the Patient that already has its DICOM Patient ID', async () => {
+    fhir.patients = [
+      { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('KiTS-00136')] },
+    ];
+    pacs.studies = [dicomStudy('1.1', 'KiTS-00136')];
+
+    const report = await sync.sync();
+
+    expect(report.studies[0]).toMatchObject({ outcome: 'created', patientCreated: false });
+    expect(fhir.transactions[0]).toHaveLength(1);
+    expect((fhir.transactions[0][0].resource as ImagingStudy).subject.reference).toBe('Patient/p1');
+  });
+
+  it('never matches a patient by MRN', async () => {
+    fhir.patients = [
+      {
+        resourceType: 'Patient',
+        id: 'p1',
+        identifier: [{ system: 'urn:hospital-records:mrn', value: 'KiTS-00136' }],
+      },
+    ];
+    pacs.studies = [dicomStudy('1.1', 'KiTS-00136')];
+
+    const report = await sync.sync();
+
+    expect(report.studies[0].patientCreated).toBe(true);
+  });
+
+  it('creates one Patient for several studies of the same DICOM Patient ID', async () => {
+    pacs.studies = [dicomStudy('1.1', 'KiTS-00136'), dicomStudy('1.2', 'KiTS-00136')];
+
+    await sync.sync();
+
+    expect(fhir.transactions.map((entries) => entries.length)).toEqual([2, 1]);
+    expect((fhir.transactions[1][0].resource as ImagingStudy).subject.reference).toBe(
+      'Patient/new-1',
+    );
+  });
+
+  it('leaves an ImagingStudy alone when its DICOM study has not changed', async () => {
+    const study = dicomStudy('1.1', 'KiTS-00136');
+    fhir.patients = [
+      { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('KiTS-00136')] },
+    ];
+    fhir.studies = [storedStudy('s1', study, 'p1')];
+    pacs.studies = [study];
+
+    const report = await sync.sync();
+
+    expect(report.studies[0]).toEqual({
+      studyInstanceUid: '1.1',
+      outcome: 'unchanged',
+      imagingStudyId: 's1',
+    });
+    expect(fhir.updates).toEqual([]);
+    expect(fhir.transactions).toEqual([]);
+  });
+
+  it('updates an ImagingStudy from the PACS and keeps the reasons set in the app', async () => {
+    fhir.patients = [
+      { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('KiTS-00136')] },
+    ];
+    fhir.studies = [
+      {
+        ...storedStudy('s1', dicomStudy('1.1', 'KiTS-00136', 'old'), 'p1'),
+        reasonReference: [{ reference: 'Condition/c1' }],
+      },
+    ];
+    pacs.studies = [dicomStudy('1.1', 'KiTS-00136', 'CT chest with contrast')];
+
+    const report = await sync.sync();
+
+    expect(report.studies[0]).toMatchObject({ outcome: 'updated', imagingStudyId: 's1' });
+    expect(fhir.updates[0].description).toBe('CT chest with contrast');
+    expect(fhir.updates[0].reasonReference).toEqual([{ reference: 'Condition/c1' }]);
+    expect(fhir.updates[0].meta).toEqual({ versionId: '1' }); // sent as If-Match
+  });
+
+  it('skips an ImagingStudy stored under a different patient instead of moving it', async () => {
+    const study = dicomStudy('1.1', 'KiTS-00136');
+    fhir.patients = [
+      { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('KiTS-00136')] },
+    ];
+    fhir.studies = [storedStudy('s1', study, 'someone-else')];
+    pacs.studies = [study];
+
+    const report = await sync.sync();
+
+    expect(report.studies[0]).toMatchObject({ outcome: 'skipped', imagingStudyId: 's1' });
+    expect(report.studies[0].reason).toContain('Patient/someone-else');
+    expect(fhir.updates).toEqual([]);
+  });
+
+  it('skips DICOM studies it cannot file: no Patient ID, or several ImagingStudies', async () => {
+    const twice = dicomStudy('1.2', 'B');
+    fhir.studies = [storedStudy('s1', twice, 'p1'), storedStudy('s2', twice, 'p1')];
+    pacs.studies = [dicomStudy('1.1', ''), twice];
+
+    const report = await sync.sync();
+
+    expect(report.studies.map((s) => [s.outcome, s.reason])).toEqual([
+      ['skipped', 'The DICOM study has no Patient ID.'],
+      ['skipped', '2 ImagingStudies have this Study Instance UID.'],
+    ]);
+  });
+
+  it('reports a failed study with the reason and carries on with the rest', async () => {
+    pacs.studies = [dicomStudy('1.1', 'A'), dicomStudy('1.2', 'B')];
+    fhir.failTransactions = true;
+
+    const report = await sync.sync();
+
+    expect(report.studies.map((s) => s.outcome)).toEqual(['failed', 'failed']);
+    expect(report.studies[0].reason).toBe('The FHIR server failed (HTTP 500)');
+  });
+
+  it('reports ImagingStudies whose DICOM study is not in the PACS, without changing them', async () => {
+    fhir.studies = [
+      storedStudy('s1', dicomStudy('1.9', 'A'), 'p1'),
+      {
+        resourceType: 'ImagingStudy',
+        id: 's2',
+        status: 'available',
+        subject: { reference: 'Patient/p1' },
+      },
+    ];
+    pacs.studies = [];
+
+    const report = await sync.sync();
+
+    expect(report.missingFromPacs).toEqual([
+      { imagingStudyId: 's1', studyInstanceUid: '1.9' },
+      { imagingStudyId: 's2', studyInstanceUid: '' },
+    ]);
+    expect(fhir.updates).toEqual([]);
+  });
+
+  it('reads every page of ImagingStudies', async () => {
+    fhir.studies = Array.from({ length: 450 }, (_, i) => ({
+      resourceType: 'ImagingStudy' as const,
+      id: `s${i}`,
+      status: 'available' as const,
+      subject: { reference: 'Patient/p1' },
+      identifier: [studyUidIdentifier(`2.${i}`)],
+    }));
+
+    const report = await sync.sync();
+
+    expect(report.missingFromPacs).toHaveLength(450);
+  });
+
+  it('reports progress per DICOM study', async () => {
+    pacs.studies = [dicomStudy('1.1', 'A'), dicomStudy('1.2', 'B')];
+    const progress: [number, number][] = [];
+
+    await sync.sync((done, total) => progress.push([done, total]));
+
+    expect(progress).toEqual([
+      [0, 2],
+      [1, 2],
+      [2, 2],
+    ]);
+  });
+
+  it('rejects when the PACS cannot be read', async () => {
+    pacs.unreachable = true;
+
+    await expect(sync.sync()).rejects.toMatchObject({ status: 0 });
+  });
+});
