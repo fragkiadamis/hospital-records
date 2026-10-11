@@ -1,0 +1,33 @@
+@let c = condition();
+@let onset = c | timeChoice: 'onset';
+@let ended = c | timeChoice: 'abatement';
+
+<i class="ti ti-stethoscope icon" aria-hidden="true"></i>
+
+<span class="name" [class.void]="isVoid()">{{ name() }}</span>
+
+@if (status(); as s) {
+  <span class="badge" [class.ongoing]="s.ongoing">{{ s.label }}</span>
+}
+@if (verification(); as v) {
+  <span class="badge" [class.uncertain]="v.uncertain" [class.void]="!v.uncertain">{{
+    v.label
+  }}</span>
+}
+
+<span class="details">
+  @if (onset) {
+    <span>Onset {{ onset }}</span>
+  }
+  @if (ended) {
+    <span>Ended {{ ended }}</span>
+  }
+</span>
+
+@if (codings().length) {
+  <span class="codes">
+    @for (coding of codings(); track $index) {
+      <app-coding-chip [coding]="coding" />
+    }
+  </span>
+}
