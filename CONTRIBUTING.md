@@ -22,6 +22,7 @@ npm ci
 cp .env.example .env      # fill in the passwords
 podman compose up -d      # HAPI-FHIR, Orthanc and their databases
 npm run seed              # sample data
+npm run seed:orthanc      # sample DICOM studies (needs DCMTK and scripts/seed/dicom/)
 npm start                 # http://localhost:4200
 ```
 

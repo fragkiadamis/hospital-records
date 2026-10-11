@@ -45,3 +45,6 @@ Thumbs.db
 
 # Local secrets for compose.yaml
 .env
+
+# Sample DICOM studies for seeding Orthanc (large, kept out of git)
+scripts/seed/dicom/

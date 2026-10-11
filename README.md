@@ -31,6 +31,7 @@ silently overwriting it.
 
 - Node.js 24 and npm 11
 - Podman with `podman compose` (or Docker Compose) for the local stack
+- [DCMTK](https://dicom.offis.de/dcmtk) for `npm run seed:orthanc` (`dnf`/`apt install dcmtk`)
 
 ## Getting started
 
@@ -39,12 +40,18 @@ npm ci                    # install dependencies
 cp .env.example .env      # then fill in the three passwords, which have no defaults
 podman compose up -d      # start HAPI-FHIR, Orthanc and their Postgres databases
 npm run seed              # load sample patients, conditions and imaging studies into HAPI
+npm run seed:orthanc      # send the sample DICOM studies to Orthanc (DICOM C-STORE)
 npm start                 # dev server at http://localhost:4200
 ```
 
 HAPI takes a minute or so to start the first time; `npm run seed` fails with a clear message
 until it is reachable. The seed uses fixed ids, so running it again resets the sample records
 instead of duplicating them.
+
+`npm run seed:orthanc` sends every `*.dcm` under `scripts/seed/dicom/` to Orthanc's DICOM port
+with DCMTK's `dcmsend`. That folder is git-ignored (the samples are about 1.2 GB), so put the
+series there first, one folder each. Orthanc ignores instances it already has, so it can be run
+again safely.
 
 ## Local stack
 

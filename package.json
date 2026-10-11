@@ -9,6 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "seed": "node scripts/seed/seed.mjs",
+    "seed:orthanc": "node scripts/seed/seed-orthanc.mjs",
     "icd:maps": "node scripts/icd-maps/icd-maps.mjs"
   },
   "private": true,
