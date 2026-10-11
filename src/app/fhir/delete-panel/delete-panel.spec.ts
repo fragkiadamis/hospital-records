@@ -131,4 +131,13 @@ describe('DeletePanel', () => {
     expect(text()).toContain('ImagingStudy (3)');
     expect(button('Delete condition')).toBeUndefined();
   });
+
+  it('shows a note before confirming, when given one', async () => {
+    fixture.componentRef.setInput('note', 'The next PACS sync will create it again.');
+    await openWith();
+
+    expect(element.querySelector('.note')?.textContent).toBe(
+      'The next PACS sync will create it again.',
+    );
+  });
 });

@@ -15,17 +15,15 @@
           <app-icon name="stethoscope" />
           Edit reasons
         </button>
-        @if (missingFromPacs()) {
-          <button
-            type="button"
-            class="button danger"
-            [disabled]="deleting()"
-            (click)="deleting.set(true)"
-          >
-            <app-icon name="trash" />
-            Delete
-          </button>
-        }
+        <button
+          type="button"
+          class="button danger"
+          [disabled]="deleting()"
+          (click)="deleting.set(true)"
+        >
+          <app-icon name="trash" />
+          Delete
+        </button>
       </div>
     }
   </nav>
@@ -41,7 +39,7 @@
         } @else {
           This imaging study has no Study Instance UID, so it can't be found in the PACS.
         }
-        Imaging studies come only from the PACS: you can delete this one.
+        Imaging studies come only from the PACS, so you may want to delete this one.
       </span>
     </div>
   } @else if (pacsError()) {
@@ -52,12 +50,13 @@
     </div>
   }
 
-  @if (missingFromPacs()) {
+  @if (belongsToPatient()) {
     <app-delete-panel
       resourceType="ImagingStudy"
       noun="imaging study"
       [resourceId]="studyId()"
       [name]="name()"
+      [note]="deleteNote()"
       [(open)]="deleting"
       (deleted)="onDeleted()"
     />

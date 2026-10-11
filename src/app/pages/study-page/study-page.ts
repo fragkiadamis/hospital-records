@@ -47,7 +47,8 @@ export class StudyPage {
 
   /**
    * Whether the PACS still has the study's DICOM study, asked each time the page opens:
-   * ImagingStudies come only from the PACS, so one without a DICOM study can be deleted.
+   * ImagingStudies come only from the PACS, so one without a DICOM study should be deleted, and
+   * one with a DICOM study comes back on the next sync after being deleted.
    */
   protected readonly inPacs = rxResource({
     // An object, so a study without a UID ('') is still asked about rather than left idle.
@@ -77,6 +78,18 @@ export class StudyPage {
   protected readonly name = computed(() =>
     this.study.hasValue() ? imagingStudyDisplayName(this.study.value()) : '',
   );
+
+  /** What deleting means for this study, depending on what the PACS said. */
+  protected readonly deleteNote = computed(() => {
+    if (this.missingFromPacs()) return '';
+    if (this.inPacs.hasValue() && this.inPacs.value()) {
+      return (
+        'Its DICOM study is still in the PACS, so the next PACS sync will create the imaging ' +
+        'study again, without the reasons set here.'
+      );
+    }
+    return 'If its DICOM study is still in the PACS, the next PACS sync will create it again.';
+  });
 
   /** Whether the delete panel is open; it is two-way bound to the panel's `open`. */
   protected readonly deleting = signal(false);

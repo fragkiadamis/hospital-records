@@ -47,6 +47,8 @@ export class DeletePanel {
   readonly name = input.required<string>();
   /** What kind of record it is, in words: "patient", "condition". */
   readonly noun = input.required<string>();
+  /** Anything else to know before confirming, e.g. that the record will come back. */
+  readonly note = input('');
 
   /**
    * Extra links to look for, for references `_revinclude=*` can't see because FHIR has no search

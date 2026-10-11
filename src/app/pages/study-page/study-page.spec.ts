@@ -47,6 +47,16 @@ describe('StudyPage', () => {
     await fixture.whenStable();
   };
 
+  /** Clicks Delete and answers the panel's check for linked records with none. */
+  const openDeletePanel = async () => {
+    deleteButton()!.click();
+    await fixture.whenStable();
+    http
+      .expectOne((r) => r.url === '/fhir/ImagingStudy' && r.params.get('_revinclude') === '*')
+      .flush({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
+    await fixture.whenStable();
+  };
+
   const deleteButton = () =>
     [...element.querySelectorAll<HTMLButtonElement>('.toolbar button')].find((b) =>
       b.textContent?.includes('Delete'),
@@ -91,20 +101,26 @@ describe('StudyPage', () => {
     );
   });
 
-  it('neither warns nor offers to delete a study the PACS has', async () => {
+  it('can delete a study the PACS still has, warning that the next sync brings it back', async () => {
     await open('seed-patient-2', ctChest, 200, { studies: [dicomStudy] });
-
     expect(element.querySelector('[role="status"]')).toBeNull();
-    expect(deleteButton()).toBeUndefined();
+
+    await openDeletePanel();
+
+    expect(element.querySelector('app-delete-panel .note')?.textContent).toContain(
+      'still in the PACS, so the next PACS sync will create the imaging study again',
+    );
   });
 
-  it('says when the study is no longer in the PACS, and offers to delete it', async () => {
+  it('says when the study is no longer in the PACS, and deletes it without a note', async () => {
     await open('seed-patient-2', ctChest, 200, { studies: null, status: 204 }); // no match
 
     const notice = element.querySelector('[role="status"]')?.textContent;
     expect(notice).toContain('Not available in the PACS.');
     expect(notice).toContain('2.25.42');
-    expect(deleteButton()).toBeDefined();
+
+    await openDeletePanel();
+    expect(element.querySelector('app-delete-panel .note')).toBeNull();
   });
 
   it('also offers to delete a study without a Study Instance UID, without asking the PACS', async () => {
@@ -120,12 +136,7 @@ describe('StudyPage', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await open('seed-patient-2', ctChest, 200, { studies: [] });
 
-    deleteButton()!.click();
-    await fixture.whenStable();
-    http
-      .expectOne((r) => r.url === '/fhir/ImagingStudy' && r.params.get('_revinclude') === '*')
-      .flush({ resourceType: 'Bundle', type: 'searchset' } satisfies Bundle);
-    await fixture.whenStable();
+    await openDeletePanel();
 
     [...element.querySelectorAll<HTMLButtonElement>('app-delete-panel button')]
       .find((b) => b.textContent?.includes('Delete'))!
@@ -138,12 +149,15 @@ describe('StudyPage', () => {
     expect(navigate).toHaveBeenCalledWith(['/patients', 'seed-patient-2']);
   });
 
-  it('says when the PACS could not be asked, and does not offer to delete', async () => {
+  it('says when the PACS could not be asked, and can still delete, with a hedged note', async () => {
     await open('seed-patient-2', ctChest, 200, { studies: null, status: 504 });
 
     expect(element.querySelector('[role="status"]')?.textContent).toContain(
       'Could not check whether the study is in the PACS: Cannot reach the PACS.',
     );
-    expect(deleteButton()).toBeUndefined();
+    await openDeletePanel();
+    expect(element.querySelector('app-delete-panel .note')?.textContent).toContain(
+      'If its DICOM study is still in the PACS',
+    );
   });
 });
