@@ -18,7 +18,10 @@
         <ul class="rows">
           @for (study of sorted(); track study.id) {
             <li>
-              <div class="row"><app-imaging-study-summary [study]="study" /></div>
+              <a [routerLink]="['/patients', patientId(), 'studies', study.id]">
+                <app-imaging-study-summary [study]="study" />
+                <app-icon name="chevron-right" class="chevron" />
+              </a>
             </li>
           }
         </ul>

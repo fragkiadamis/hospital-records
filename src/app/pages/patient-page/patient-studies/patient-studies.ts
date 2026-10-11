@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { FhirClient } from '../../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../../fhir/client/fhir-error';
 import { byStudyOrder } from '../../../fhir/resources/imaging-study/imaging-study-mapper';
@@ -11,7 +12,7 @@ const MAX_STUDIES = 200;
 
 /** The "Imaging studies" card of the patient page: every ImagingStudy of the patient. */
 @Component({
-  imports: [Icon, ImagingStudySummary],
+  imports: [Icon, ImagingStudySummary, RouterLink],
   selector: 'app-patient-studies',
   styles: ':host { display: block; }',
   templateUrl: './patient-studies.html',

@@ -1,0 +1,29 @@
+<section class="page">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/patients', id()]">
+      <app-icon name="arrow-left" />
+      Back to patient
+    </a>
+  </nav>
+
+  <div aria-live="polite" [attr.aria-busy]="study.isLoading()">
+    @if (study.error()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="button" (click)="study.reload()">Try again</button>
+      </div>
+    } @else if (study.hasValue()) {
+      @if (belongsToPatient()) {
+        <app-imaging-study-detail [study]="study.value()" />
+      } @else {
+        <div class="alert" role="alert">
+          <app-icon name="alert-triangle" />
+          <span>This imaging study does not belong to this patient.</span>
+        </div>
+      }
+    } @else {
+      <div class="card"><p class="state">Loading imaging study…</p></div>
+    }
+  </div>
+</section>

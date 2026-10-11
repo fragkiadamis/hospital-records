@@ -40,4 +40,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/condition-edit/condition-edit').then((m) => m.ConditionEdit),
   },
+  {
+    path: 'patients/:id/studies/:studyId',
+    title: 'Imaging study · Artemis', // replaced by the study's name once loaded
+    loadComponent: () => import('./pages/study-page/study-page').then((m) => m.StudyPage),
+  },
 ];

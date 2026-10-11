@@ -1,0 +1,111 @@
+:host {
+  display: block;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 24px;
+}
+
+.sub {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.void {
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+abbr {
+  text-decoration: none;
+  cursor: default;
+}
+
+// UIDs are long digit strings: break anywhere rather than overflow.
+.uid {
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+td .uid {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.notes li {
+  display: block;
+
+  p {
+    margin: 0;
+    white-space: pre-line;
+  }
+}
+
+.updated {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}

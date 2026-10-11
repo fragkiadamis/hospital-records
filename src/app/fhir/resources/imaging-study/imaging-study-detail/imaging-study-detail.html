@@ -1,0 +1,152 @@
+@let s = study();
+
+<header class="heading">
+  <span class="avatar" aria-hidden="true"><app-icon name="photo-scan" /></span>
+  <div>
+    <h2 [class.void]="voided()">{{ name() }}</h2>
+    <p class="sub">{{ s.subject | reference }}</p>
+  </div>
+</header>
+
+<div class="sections">
+  <section>
+    <h3>Study</h3>
+    <dl>
+      <dt>Status</dt>
+      <dd [class.void]="voided()">{{ status() }}</dd>
+      @if (s.started) {
+        <dt>Started</dt>
+        <dd>{{ s.started | fhirDate }}</dd>
+      }
+      @if (modalities()) {
+        <dt>Modalities</dt>
+        <dd>{{ modalities() }}</dd>
+      }
+      <dt>Series</dt>
+      <dd>{{ seriesTotal() }}</dd>
+      @if (images() !== undefined) {
+        <dt>Images</dt>
+        <dd>{{ images() }}</dd>
+      }
+      @if (s.procedureCode?.length) {
+        <dt>Procedure</dt>
+        <dd>{{ s.procedureCode | codeableConcept }}</dd>
+      }
+      @if (s.referrer) {
+        <dt>Referred by</dt>
+        <dd>{{ s.referrer | reference }}</dd>
+      }
+      @for (interpreter of s.interpreter; track $index) {
+        <dt>Read by</dt>
+        <dd>{{ interpreter | reference }}</dd>
+      }
+      @if (s.location) {
+        <dt>Location</dt>
+        <dd>{{ s.location | reference }}</dd>
+      }
+    </dl>
+  </section>
+
+  @if (uid() || accession() || otherIdentifiers().length) {
+    <section>
+      <h3>Identifiers</h3>
+      <dl>
+        @if (uid()) {
+          <dt><abbr title="DICOM Study Instance UID">Study UID</abbr></dt>
+          <dd class="uid">{{ uid() }}</dd>
+        }
+        @if (accession()) {
+          <dt>Accession number</dt>
+          <dd>{{ accession() }}</dd>
+        }
+        @for (identifier of otherIdentifiers(); track $index) {
+          <dt>{{ identifier.label }}</dt>
+          <dd>{{ identifier.value }}</dd>
+        }
+      </dl>
+    </section>
+  }
+
+  @if (s.reasonReference?.length || s.reasonCode?.length) {
+    <section>
+      <h3>Reason</h3>
+      <ul>
+        @for (reason of s.reasonReference; track $index) {
+          <li>
+            <app-icon name="stethoscope" />
+            <span>{{ reason | reference }}</span>
+          </li>
+        }
+        @for (reason of s.reasonCode; track $index) {
+          <li>
+            <app-icon name="list-details" />
+            <span>{{ reason | codeableConcept }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (series().length) {
+    <section class="wide">
+      <h3>Series</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">No.</th>
+              <th scope="col">Modality</th>
+              <th scope="col">Description</th>
+              <th scope="col">Body site</th>
+              <th scope="col" class="number">Images</th>
+              <th scope="col">Started</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of series(); track item.uid) {
+              <tr>
+                <td class="number">{{ item.number ?? '–' }}</td>
+                <td>
+                  <abbr [title]="modalityName(item.modality)">{{ item.modality.code }}</abbr>
+                </td>
+                <td>
+                  {{ item.description || '–' }}
+                  <span class="uid" [title]="'Series Instance UID ' + item.uid">{{
+                    item.uid
+                  }}</span>
+                </td>
+                <td>
+                  {{ item.bodySite?.display || item.bodySite?.code || '–' }}
+                  @if (item.laterality) {
+                    <span class="muted"
+                      >({{ item.laterality.display || item.laterality.code }})</span
+                    >
+                  }
+                </td>
+                <td class="number">{{ item.numberOfInstances ?? '–' }}</td>
+                <td>{{ (item.started | fhirDate) || '–' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (s.note?.length) {
+    <section class="notes">
+      <h3>Notes</h3>
+      <ul>
+        @for (note of s.note; track $index) {
+          <li>
+            <p>{{ note.text }}</p>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+
+@if (s.meta?.lastUpdated; as updated) {
+  <p class="updated">Record last updated {{ updated | fhirDate }}</p>
+}

@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import type { Bundle, ImagingStudy } from 'fhir/r4';
 import { PatientStudies } from './patient-studies';
 
@@ -43,7 +44,7 @@ describe('PatientStudies', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PatientStudies],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PatientStudies);
@@ -63,6 +64,9 @@ describe('PatientStudies', () => {
     expect(request.params.get('subject')).toBe('Patient/seed-patient-2');
     expect(names()).toEqual(['xray', 'ct-chest', 'cancelled']);
     expect(element.querySelector('.count')?.textContent).toBe('3');
+    expect(element.querySelector('.rows a')?.getAttribute('href')).toBe(
+      '/patients/seed-patient-2/studies/xray',
+    );
   });
 
   it('says when the patient has no studies', async () => {
