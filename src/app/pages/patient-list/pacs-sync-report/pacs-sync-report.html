@@ -41,12 +41,19 @@
   @if (report().missingFromPacs.length) {
     <h3>Not in the PACS</h3>
     <p class="hint">
-      These imaging studies have no DICOM study in the PACS. They were left as they are.
+      These imaging studies have no DICOM study in the PACS. They were left as they are: open one to
+      delete it.
     </p>
     <ul class="details">
       @for (m of report().missingFromPacs; track m.imagingStudyId) {
         <li>
-          <span class="uid">ImagingStudy/{{ m.imagingStudyId }}</span>
+          @if (m.patientId) {
+            <a class="uid" [routerLink]="['/patients', m.patientId, 'studies', m.imagingStudyId]"
+              >ImagingStudy/{{ m.imagingStudyId }}</a
+            >
+          } @else {
+            <span class="uid">ImagingStudy/{{ m.imagingStudyId }}</span>
+          }
           <span class="reason">{{ m.studyInstanceUid || 'No Study Instance UID' }}</span>
         </li>
       }

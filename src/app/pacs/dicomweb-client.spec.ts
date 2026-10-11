@@ -81,6 +81,21 @@ describe('DicomwebClient', () => {
     expect(await result).toEqual([]);
   });
 
+  it('finds one study by its Study Instance UID, or nothing', async () => {
+    const found = firstValueFrom(client.findStudy('1.2.3'));
+    const req = http.expectOne((r) => r.url === '/dicom-web/studies');
+    expect(req.request.params.get('StudyInstanceUID')).toBe('1.2.3');
+    expect(req.request.params.get('limit')).toBe('1');
+    req.flush([study('1.2.3')]);
+    expect(await found).toEqual(study('1.2.3'));
+
+    const missing = firstValueFrom(client.findStudy('9.9'));
+    http
+      .expectOne((r) => r.url === '/dicom-web/studies')
+      .flush(null, { status: 204, statusText: 'No Content' });
+    expect(await missing).toBeUndefined();
+  });
+
   it("searches a study's series by its Study Instance UID", async () => {
     const result = firstValueFrom(client.searchSeries('1.2.840.1'));
 

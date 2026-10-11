@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { FhirClient } from '../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../fhir/client/fhir-error';
 import { formatHumanName } from '../fhir/datatypes/human-name-pipe';
+import { parseReference } from '../fhir/datatypes/reference-pipe';
 import { imagingStudyFrom, patientFromStudy } from '../fhir/resources/imaging-study/dicom-mapper';
 import { studyInstanceUid } from '../fhir/resources/imaging-study/imaging-study-mapper';
 import { DICOM_PATIENT_ID_SYSTEM } from '../fhir/resources/patient/patient-mapper';
@@ -30,6 +31,8 @@ export interface MissingFromPacs {
   imagingStudyId: string;
   /** '' when the ImagingStudy has no Study Instance UID at all. */
   studyInstanceUid: string;
+  /** Its patient's id, for a link to the study page; undefined if its subject is no Patient. */
+  patientId?: string;
 }
 
 export interface PacsSyncReport {
@@ -86,7 +89,14 @@ export class PacsSync {
     const inPacs = new Set(dicomStudies.map((s) => dicomText(s, Tag.StudyInstanceUID)));
     const missingFromPacs = imagingStudies
       .filter((study) => !inPacs.has(studyInstanceUid(study)))
-      .map((study) => ({ imagingStudyId: study.id!, studyInstanceUid: studyInstanceUid(study) }));
+      .map((study) => {
+        const subject = parseReference(study.subject);
+        return {
+          imagingStudyId: study.id!,
+          studyInstanceUid: studyInstanceUid(study),
+          patientId: subject?.type === 'Patient' ? subject.id : undefined,
+        };
+      });
 
     return { studies, missingFromPacs };
   }

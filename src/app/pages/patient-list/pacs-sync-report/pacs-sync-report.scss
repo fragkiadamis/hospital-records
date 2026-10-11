@@ -96,6 +96,10 @@
   overflow-wrap: anywhere;
 }
 
+a.uid {
+  color: var(--accent);
+}
+
 .reason {
   color: var(--text-muted);
 }

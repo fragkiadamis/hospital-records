@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { PacsSyncReport as Report } from '../../../pacs/pacs-sync';
 import { PacsSyncReport } from './pacs-sync-report';
@@ -22,7 +23,10 @@ describe('PacsSyncReport', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [PacsSyncReport] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [PacsSyncReport],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(PacsSyncReport);
     element = fixture.nativeElement;
   });
@@ -65,15 +69,17 @@ describe('PacsSyncReport', () => {
     await render({
       studies: [],
       missingFromPacs: [
-        { imagingStudyId: 's1', studyInstanceUid: '1.9' },
+        { imagingStudyId: 's1', studyInstanceUid: '1.9', patientId: 'p1' },
         { imagingStudyId: 's2', studyInstanceUid: '' },
       ],
     });
 
     expect(text('.summary')).toBe('The PACS has no DICOM studies.');
-    expect(items('Not in the PACS')).toEqual([
-      'ImagingStudy/s1 1.9',
-      'ImagingStudy/s2 No Study Instance UID',
+    expect(items('Not in the PACS')).toEqual(['1.9', 'ImagingStudy/s2 No Study Instance UID']);
+    // Each links to its study page, where it can be deleted; one without a patient can't link.
+    const links = [...element.querySelectorAll('.details a')];
+    expect(links.map((a) => [a.textContent?.trim(), a.getAttribute('href')])).toEqual([
+      ['ImagingStudy/s1', '/patients/p1/studies/s1'],
     ]);
   });
 

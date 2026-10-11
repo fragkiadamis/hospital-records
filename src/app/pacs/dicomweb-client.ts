@@ -33,6 +33,7 @@ export const STUDY_PAGE_SIZE = 100;
  *
  *   searchStudies  GET [base]/studies?limit&offset
  *   allStudies     the same, page after page until a short page
+ *   findStudy      GET [base]/studies?StudyInstanceUID=[uid]
  *   searchSeries   GET [base]/studies/[uid]/series
  */
 @Injectable({ providedIn: 'root' })
@@ -59,6 +60,12 @@ export class DicomwebClient {
       ),
       reduce((all, { studies }) => [...all, ...studies], [] as DicomDataset[]),
     );
+  }
+
+  /** The study with this Study Instance UID, or undefined when the PACS doesn't have it. */
+  findStudy(studyInstanceUid: string): Observable<DicomDataset | undefined> {
+    const params = new HttpParams().set('StudyInstanceUID', studyInstanceUid).set('limit', 1);
+    return this.get(`${this.base}/studies`, params).pipe(map(([study]) => study));
   }
 
   /** The series of one study. */

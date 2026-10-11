@@ -272,8 +272,8 @@ describe('PacsSync', () => {
     const report = await sync.sync();
 
     expect(report.missingFromPacs).toEqual([
-      { imagingStudyId: 's1', studyInstanceUid: '1.9' },
-      { imagingStudyId: 's2', studyInstanceUid: '' },
+      { imagingStudyId: 's1', studyInstanceUid: '1.9', patientId: 'p1' },
+      { imagingStudyId: 's2', studyInstanceUid: '', patientId: 'p1' },
     ]);
     expect(fhir.updates).toEqual([]);
   });

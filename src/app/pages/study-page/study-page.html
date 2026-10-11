@@ -15,9 +15,53 @@
           <app-icon name="stethoscope" />
           Edit reasons
         </button>
+        @if (missingFromPacs()) {
+          <button
+            type="button"
+            class="button danger"
+            [disabled]="deleting()"
+            (click)="deleting.set(true)"
+          >
+            <app-icon name="trash" />
+            Delete
+          </button>
+        }
       </div>
     }
   </nav>
+
+  @if (missingFromPacs()) {
+    <div class="alert" role="status">
+      <app-icon name="alert-triangle" />
+      <span>
+        <strong>Not available in the PACS.</strong>
+        @if (studyUid()) {
+          Its DICOM study ({{ studyUid() }}) is no longer in the PACS, so its images can't be
+          viewed.
+        } @else {
+          This imaging study has no Study Instance UID, so it can't be found in the PACS.
+        }
+        Imaging studies come only from the PACS: you can delete this one.
+      </span>
+    </div>
+  } @else if (pacsError()) {
+    <div class="alert" role="status">
+      <app-icon name="alert-triangle" />
+      <span>Could not check whether the study is in the PACS: {{ pacsError() }}</span>
+      <button type="button" class="button" (click)="inPacs.reload()">Try again</button>
+    </div>
+  }
+
+  @if (missingFromPacs()) {
+    <app-delete-panel
+      resourceType="ImagingStudy"
+      noun="imaging study"
+      [resourceId]="studyId()"
+      [name]="name()"
+      [(open)]="deleting"
+      (deleted)="onDeleted()"
+    />
+  }
 
   @if (belongsToPatient() && study.hasValue()) {
     <app-study-reasons

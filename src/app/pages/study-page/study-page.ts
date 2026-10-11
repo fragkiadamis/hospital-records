@@ -1,24 +1,30 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { map, of } from 'rxjs';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
+import { DeletePanel } from '../../fhir/delete-panel/delete-panel';
 import { ImagingStudyDetail } from '../../fhir/resources/imaging-study/imaging-study-detail/imaging-study-detail';
 import {
   imagingStudyDisplayName,
   isStudyOf,
+  studyInstanceUid,
 } from '../../fhir/resources/imaging-study/imaging-study-mapper';
+import { DicomwebClient, dicomwebErrorMessage } from '../../pacs/dicomweb-client';
 import { Icon } from '../../shared/icon/icon';
 import { StudyReasons } from './study-reasons/study-reasons';
 
 @Component({
-  imports: [Icon, ImagingStudyDetail, RouterLink, StudyReasons],
+  imports: [DeletePanel, Icon, ImagingStudyDetail, RouterLink, StudyReasons],
   selector: 'app-study-page',
   templateUrl: './study-page.html',
 })
 export class StudyPage {
   private readonly fhir = inject(FhirClient);
+  private readonly dicomweb = inject(DicomwebClient);
+  private readonly router = inject(Router);
 
   /** From the route, /patients/:id/studies/:studyId (router input binding). */
   readonly id = input.required<string>();
@@ -38,6 +44,46 @@ export class StudyPage {
   protected readonly belongsToPatient = computed(
     () => this.study.hasValue() && isStudyOf(this.study.value(), this.id()),
   );
+
+  /**
+   * Whether the PACS still has the study's DICOM study, asked each time the page opens:
+   * ImagingStudies come only from the PACS, so one without a DICOM study can be deleted.
+   */
+  protected readonly inPacs = rxResource({
+    // An object, so a study without a UID ('') is still asked about rather than left idle.
+    params: () =>
+      this.belongsToPatient() && this.study.hasValue()
+        ? { uid: studyInstanceUid(this.study.value()) }
+        : undefined,
+    stream: ({ params: { uid } }) =>
+      uid ? this.dicomweb.findStudy(uid).pipe(map((study) => !!study)) : of(false),
+  });
+
+  /** The PACS was asked and doesn't have the study (or the ImagingStudy has no UID to ask by). */
+  protected readonly missingFromPacs = computed(
+    () => this.inPacs.hasValue() && this.inPacs.value() === false,
+  );
+
+  protected readonly pacsError = computed(() =>
+    this.inPacs.error()
+      ? dicomwebErrorMessage(this.inPacs.error()!.cause ?? this.inPacs.error())
+      : '',
+  );
+
+  protected readonly studyUid = computed(() =>
+    this.study.hasValue() ? studyInstanceUid(this.study.value()) : '',
+  );
+
+  protected readonly name = computed(() =>
+    this.study.hasValue() ? imagingStudyDisplayName(this.study.value()) : '',
+  );
+
+  /** Whether the delete panel is open; it is two-way bound to the panel's `open`. */
+  protected readonly deleting = signal(false);
+
+  protected onDeleted(): void {
+    this.router.navigate(['/patients', this.id()]);
+  }
 
   constructor() {
     const title = inject(Title);

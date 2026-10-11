@@ -1,4 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type {
   PacsSyncReport as Report,
   StudySyncResult,
@@ -20,7 +21,7 @@ const OUTCOMES: readonly { outcome: SyncOutcome; label: string }[] = [
  * the reason, and the ImagingStudies whose DICOM study is not in the PACS.
  */
 @Component({
-  imports: [Icon],
+  imports: [Icon, RouterLink],
   selector: 'app-pacs-sync-report',
   styleUrl: './pacs-sync-report.scss',
   templateUrl: './pacs-sync-report.html',
