@@ -1,10 +1,33 @@
 import type { ContactPoint, HumanName, Identifier, Patient } from 'fhir/r4';
+import { CodeSystems } from '../../code-systems';
 import { formatHumanName, preferredName } from '../../datatypes/human-name-pipe';
 import { identifierValue } from '../../datatypes/identifier-pipe';
 import { replaceEntry } from '../replace-entry';
 
 /** Identifier system of Hospital Records medical record numbers. A placeholder until the hospital's own URI is known. */
 export const MRN_SYSTEM = 'urn:hospital-records:mrn';
+
+/**
+ * Identifier system of the DICOM Patient ID (0010,0020) the PACS files a patient's studies under.
+ * Kept apart from the MRN: the two often differ (outside studies, modalities assigning their own
+ * ids), so patients are matched to PACS studies by this identifier only, never by MRN.
+ */
+export const DICOM_PATIENT_ID_SYSTEM = 'urn:hospital-records:dicom-patient-id';
+
+/** A patient's DICOM Patient ID as a FHIR Identifier, typed PI (patient internal identifier). */
+export function dicomPatientIdentifier(patientId: string): Identifier {
+  return {
+    use: 'secondary',
+    type: {
+      coding: [
+        { system: CodeSystems.identifierType, code: 'PI', display: 'Patient internal identifier' },
+      ],
+      text: 'DICOM Patient ID',
+    },
+    system: DICOM_PATIENT_ID_SYSTEM,
+    value: patientId,
+  };
+}
 
 /** What the patient form edits: flat fields, '' when empty. */
 export interface PatientFormValue {

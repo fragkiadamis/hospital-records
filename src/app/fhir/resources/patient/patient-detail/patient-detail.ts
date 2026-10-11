@@ -5,11 +5,14 @@ import { AddressPipe } from '../../../datatypes/address-pipe';
 import { FhirDatePipe } from '../../../datatypes/fhir-date-pipe';
 import { formatHumanName } from '../../../datatypes/human-name-pipe';
 import { identifierLabel } from '../../../datatypes/identifier-pipe';
-import { MRN_SYSTEM, patientDisplayName } from '../patient-mapper';
+import { DICOM_PATIENT_ID_SYSTEM, MRN_SYSTEM, patientDisplayName } from '../patient-mapper';
 import { Icon } from '../../../../shared/icon/icon';
 import { IconName } from '../../../../shared/icon/icons';
 
-const KNOWN_IDENTIFIER_SYSTEMS = { [MRN_SYSTEM]: 'MRN' };
+const KNOWN_IDENTIFIER_SYSTEMS = {
+  [MRN_SYSTEM]: 'MRN',
+  [DICOM_PATIENT_ID_SYSTEM]: 'DICOM Patient ID',
+};
 
 const CONTACT_ICONS: Partial<Record<NonNullable<ContactPoint['system']>, IconName>> = {
   phone: 'phone',

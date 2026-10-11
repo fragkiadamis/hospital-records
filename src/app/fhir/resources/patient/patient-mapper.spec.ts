@@ -1,5 +1,7 @@
 import type { Patient } from 'fhir/r4';
 import {
+  DICOM_PATIENT_ID_SYSTEM,
+  dicomPatientIdentifier,
   formToPatient,
   MRN_SYSTEM,
   patientDisplayName,
@@ -73,6 +75,23 @@ describe('formToPatient', () => {
     expect(patient.meta).toEqual({ versionId: '4' }); // sent as If-Match by FhirClient.update
     expect(patient.address).toEqual([{ city: 'Athens' }]);
     expect(patient.birthDate).toBe('1955-11-04');
+  });
+
+  it('keeps the DICOM Patient ID when the MRN is edited, since the two are separate', () => {
+    const synced: Patient = {
+      ...stored,
+      identifier: [
+        dicomPatientIdentifier('KiTS-00136'),
+        { system: MRN_SYSTEM, value: 'SEED-0002' },
+      ],
+    };
+
+    const patient = formToPatient(form({ mrn: 'MRN-42' }), synced);
+
+    expect(patient.identifier).toEqual([
+      dicomPatientIdentifier('KiTS-00136'),
+      { system: MRN_SYSTEM, value: 'MRN-42' },
+    ]);
   });
 
   it('edits the preferred name in place and keeps the other names', () => {
@@ -162,5 +181,19 @@ describe('patientDisplayName', () => {
   it('shows the preferred name, or the reference when there is no name', () => {
     expect(patientDisplayName(stored)).toBe('Nikos Petros Andreou');
     expect(patientDisplayName({ resourceType: 'Patient', id: 'p9' })).toBe('Patient/p9');
+  });
+});
+
+describe('dicomPatientIdentifier', () => {
+  it('types the DICOM Patient ID as PI under its own system, not as an MRN', () => {
+    const identifier = dicomPatientIdentifier('KiTS-00136');
+
+    expect(identifier.system).toBe(DICOM_PATIENT_ID_SYSTEM);
+    expect(identifier.system).not.toBe(MRN_SYSTEM);
+    expect(identifier.value).toBe('KiTS-00136');
+    expect(identifier.type?.coding?.[0]).toMatchObject({
+      system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
+      code: 'PI',
+    });
   });
 });

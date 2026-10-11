@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Patient } from 'fhir/r4';
-import { MRN_SYSTEM } from '../patient-mapper';
+import { DICOM_PATIENT_ID_SYSTEM, dicomPatientIdentifier, MRN_SYSTEM } from '../patient-mapper';
 import { PatientDetail } from './patient-detail';
 
 describe('PatientDetail', () => {
@@ -52,6 +52,20 @@ describe('PatientDetail', () => {
       'Ermou 12, Athens',
       'home',
     ]);
+  });
+
+  it('labels the DICOM Patient ID next to the MRN', async () => {
+    await render({
+      resourceType: 'Patient',
+      identifier: [
+        { system: MRN_SYSTEM, value: 'SEED-0002' },
+        dicomPatientIdentifier('KiTS-00136'),
+        { system: DICOM_PATIENT_ID_SYSTEM, value: 'LIDC-IDRI-0580' }, // without a type
+      ],
+    });
+
+    expect(texts('dt')).toEqual(['MRN', 'DICOM Patient ID', 'DICOM Patient ID']);
+    expect(texts('dd')).toEqual(['SEED-0002', 'KiTS-00136', 'LIDC-IDRI-0580']);
   });
 
   it('hides sections the record has no data for', async () => {
