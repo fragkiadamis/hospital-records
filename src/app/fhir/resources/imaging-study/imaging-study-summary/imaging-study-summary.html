@@ -1,0 +1,24 @@
+@let s = study();
+
+<app-icon name="photo-scan" class="icon" />
+
+<span class="name" [class.void]="voided()">{{ name() }}</span>
+
+@for (modality of modalities(); track modality.code) {
+  <abbr class="modality" [title]="modality.name">{{ modality.code }}</abbr>
+}
+@if (status()) {
+  <span class="badge" [class.void]="voided()">{{ status() }}</span>
+}
+
+<span class="details">
+  @if (s.started) {
+    <span>{{ s.started | fhirDate }}</span>
+  }
+  @if (series()) {
+    <span>{{ series() }} series</span>
+  }
+  @if (images() !== undefined) {
+    <span>{{ images() }} {{ images() === 1 ? 'image' : 'images' }}</span>
+  }
+</span>

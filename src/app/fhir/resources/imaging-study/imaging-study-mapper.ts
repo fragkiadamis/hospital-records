@@ -25,6 +25,19 @@ export const MODALITY_NAMES: Readonly<Record<string, string>> = {
   OT: 'Other',
 };
 
+/** ImagingStudy.status codes, with the labels the app shows. "available" is the normal case. */
+export const STUDY_STATUSES = {
+  registered: 'Registered',
+  available: 'Available',
+  cancelled: 'Cancelled',
+  'entered-in-error': 'Entered in error',
+  unknown: 'Status unknown',
+} as const;
+
+/** The study was cancelled or entered in error: it doesn't hold valid images for the patient. */
+export const isVoidStudy = (study: ImagingStudy) =>
+  study.status === 'cancelled' || study.status === 'entered-in-error';
+
 /** "Magnetic resonance" for MR; the coding's own display or the bare code otherwise. */
 export function modalityName(coding: Coding): string {
   return MODALITY_NAMES[coding.code ?? ''] ?? coding.display ?? coding.code ?? '';

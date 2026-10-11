@@ -6,6 +6,7 @@ import {
   imagingStudyDisplayName,
   instanceCount,
   isStudyOf,
+  isVoidStudy,
   modalityName,
   seriesCount,
   sortedSeries,
@@ -140,5 +141,14 @@ describe('isStudyOf / byStartedDesc', () => {
       { ...mri, id: 'new', started: '2026-02-20T10:15:00+02:00' },
     ];
     expect(studies.sort(byStartedDesc).map((s) => s.id)).toEqual(['new', 'old', 'undated']);
+  });
+});
+
+describe('isVoidStudy', () => {
+  it('is true for cancelled and entered-in-error studies only', () => {
+    expect(isVoidStudy({ ...mri, status: 'cancelled' })).toBe(true);
+    expect(isVoidStudy({ ...mri, status: 'entered-in-error' })).toBe(true);
+    expect(isVoidStudy(mri)).toBe(false);
+    expect(isVoidStudy({ ...mri, status: 'registered' })).toBe(false);
   });
 });
