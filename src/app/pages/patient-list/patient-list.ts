@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { FhirClient } from '../../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../../fhir/client/fhir-error';
@@ -9,7 +10,7 @@ import { PatientSummary } from '../../fhir/resources/patient/patient-summary/pat
 const PAGE_SIZE = 50;
 
 @Component({
-  imports: [PatientSummary],
+  imports: [PatientSummary, RouterLink],
   selector: 'app-patient-list',
   styleUrl: './patient-list.scss',
   templateUrl: './patient-list.html',

@@ -1,0 +1,20 @@
+<section class="page">
+  <a class="back" routerLink="/patients">
+    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+    Patients
+  </a>
+
+  <div aria-live="polite" [attr.aria-busy]="patient.isLoading()">
+    @if (patient.error()) {
+      <div class="state error" role="alert">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="patient.reload()">Try again</button>
+      </div>
+    } @else if (patient.hasValue()) {
+      <app-patient-detail [patient]="patient.value()" />
+    } @else {
+      <p class="state">Loading patient…</p>
+    }
+  </div>
+</section>

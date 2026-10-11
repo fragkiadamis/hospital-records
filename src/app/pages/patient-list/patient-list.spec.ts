@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Bundle, OperationOutcome, Patient } from 'fhir/r4';
+import { provideRouter } from '@angular/router';
 import { PatientList } from './patient-list';
 
 describe('PatientList', () => {
@@ -21,7 +22,7 @@ describe('PatientList', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PatientList],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(PatientList);
@@ -46,6 +47,8 @@ describe('PatientList', () => {
       (n) => n.textContent,
     );
     expect(names).toEqual(['Andreou', 'Kostaki']);
+    const links = [...element.querySelectorAll('.list a')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/patients/p2', '/patients/p1']);
     expect(element.querySelector('.footer')?.textContent).toContain('2 patients');
   });
 

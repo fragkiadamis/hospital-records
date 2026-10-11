@@ -27,7 +27,12 @@
       @if (list.length) {
         <ul class="list">
           @for (patient of list; track patient.id) {
-            <li><app-patient-summary [patient]="patient" /></li>
+            <li>
+              <a [routerLink]="['/patients', patient.id]">
+                <app-patient-summary [patient]="patient" />
+                <i class="ti ti-chevron-right chevron" aria-hidden="true"></i>
+              </a>
+            </li>
           }
         </ul>
         <p class="footer">

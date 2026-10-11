@@ -1,5 +1,5 @@
 import type { Identifier } from 'fhir/r4';
-import { IdentifierPipe, identifierValue } from './identifier-pipe';
+import { identifierLabel, IdentifierPipe, identifierValue } from './identifier-pipe';
 
 const MRN = 'urn:artemis:mrn';
 
@@ -17,6 +17,28 @@ describe('identifierValue', () => {
     expect(identifierValue(identifiers, 'urn:unknown')).toBe('');
     expect(identifierValue([{ system: MRN }], MRN)).toBe('');
     expect(identifierValue(undefined, MRN)).toBe('');
+  });
+});
+
+describe('identifierLabel', () => {
+  it("prefers the identifier's own type label", () => {
+    expect(
+      identifierLabel({ system: MRN, type: { text: 'Hospital number' } }, { [MRN]: 'MRN' }),
+    ).toBe('Hospital number');
+    expect(
+      identifierLabel({
+        type: { coding: [{ code: 'PPN', display: 'Passport number' }] },
+        system: 'urn:x',
+      }),
+    ).toBe('Passport number');
+  });
+
+  it('then the label the caller knows for the system, then the system itself', () => {
+    expect(identifierLabel({ system: MRN, value: '1' }, { [MRN]: 'MRN' })).toBe('MRN');
+    expect(identifierLabel({ system: 'urn:other:hospital', value: '1' })).toBe(
+      'urn:other:hospital',
+    );
+    expect(identifierLabel({ value: '1' })).toBe('Identifier');
   });
 });
 

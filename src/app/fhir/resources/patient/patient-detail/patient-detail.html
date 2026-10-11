@@ -1,0 +1,90 @@
+@let p = patient();
+
+<header class="heading">
+  <span class="avatar" aria-hidden="true"><i class="ti ti-user"></i></span>
+  <div>
+    <h2>{{ name() }}</h2>
+    <p class="sub">
+      @if (p.gender) {
+        <span>{{ p.gender | titlecase }}</span>
+      }
+      @if (p.birthDate) {
+        <span>Born {{ p.birthDate | fhirDate }}</span>
+      }
+      @if (deceased(); as d) {
+        <span class="deceased">Deceased {{ d.date | fhirDate }}</span>
+      }
+    </p>
+  </div>
+  @if (p.active === false) {
+    <span class="badge">Inactive record</span>
+  }
+</header>
+
+<div class="sections">
+  @if (identifiers().length) {
+    <section>
+      <h3>Identifiers</h3>
+      <dl>
+        @for (identifier of identifiers(); track $index) {
+          <dt>{{ identifier.label }}</dt>
+          <dd class="mono">{{ identifier.value }}</dd>
+        }
+      </dl>
+    </section>
+  }
+
+  @if (contacts().length) {
+    <section>
+      <h3>Contact</h3>
+      <ul>
+        @for (contact of contacts(); track $index) {
+          <li>
+            <i class="ti {{ contact.icon }}" aria-hidden="true"></i>
+            <span>{{ contact.value }}</span>
+            @if (contact.use) {
+              <span class="use">{{ contact.use }}</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (p.address?.length) {
+    <section>
+      <h3>Address</h3>
+      <ul>
+        @for (address of p.address; track $index) {
+          <li>
+            <i class="ti ti-map-pin" aria-hidden="true"></i>
+            <span>{{ address | address }}</span>
+            @if (address.use) {
+              <span class="use">{{ address.use }}</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (otherNames().length) {
+    <section>
+      <h3>Names</h3>
+      <ul>
+        @for (name of otherNames(); track $index) {
+          <li>
+            <span>{{ name.text }}</span>
+            @if (name.use) {
+              <span class="use">{{ name.use }}</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+
+@if (p.meta?.lastUpdated; as updated) {
+  <p class="updated">Record last updated {{ updated | fhirDate }}</p>
+}
