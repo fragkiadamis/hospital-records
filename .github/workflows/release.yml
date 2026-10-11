@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Never run two releases at once; a second merge waits for the first to finish.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the release commit and tag
+  issues: write # @semantic-release/github comments on released issues
+  pull-requests: write # ...and on released PRs
+
+jobs:
+  release:
+    name: Semantic release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+
+      - name: Install semantic-release
+        run: >
+          npm install --no-save --no-package-lock
+          semantic-release@25.0.9
+          @semantic-release/changelog@7.0.0
+          @semantic-release/git@11.0.1
+          conventional-changelog-conventionalcommits@9.3.1
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
