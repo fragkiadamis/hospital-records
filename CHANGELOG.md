@@ -1,3 +1,9 @@
+## [0.1.1](https://github.com/fragkiadamis/hospital-records/compare/v0.1.0...v0.1.1) (2026-10-11)
+
+### Bug Fixes
+
+* Empty block statement lint error ([7028ac0](https://github.com/fragkiadamis/hospital-records/commit/7028ac0d94f7cfab49837a0396d1d6784597bd79))
+
 ## [0.1.0](https://github.com/fragkiadamis/hospital-records/compare/v0.0.0...v0.1.0) (2026-10-11)
 
 ### Features
