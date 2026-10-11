@@ -1,0 +1,52 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Patients</h1>
+
+    <label class="search">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <span class="sr-only">Search patients by name</span>
+      <input
+        #search
+        type="search"
+        placeholder="Search by name"
+        [value]="query()"
+        (input)="query.set(search.value)"
+      />
+    </label>
+  </header>
+
+  <div class="card" aria-live="polite" [attr.aria-busy]="patients.isLoading()">
+    @if (patients.error()) {
+      <div class="state error" role="alert">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="patients.reload()">Try again</button>
+      </div>
+    } @else if (patients.hasValue()) {
+      @let list = patients.value();
+      @if (list.length) {
+        <ul class="list">
+          @for (patient of list; track patient.id) {
+            <li><app-patient-summary [patient]="patient" /></li>
+          }
+        </ul>
+        <p class="footer">
+          {{ list.length }} {{ list.length === 1 ? 'patient' : 'patients' }}
+          @if (list.length === pageSize) {
+            (first {{ pageSize }}; refine the search to see others)
+          }
+        </p>
+      } @else {
+        <p class="state">
+          @if (query().trim()) {
+            No patients match “{{ query().trim() }}”.
+          } @else {
+            No patients yet.
+          }
+        </p>
+      }
+    } @else {
+      <p class="state">Loading patients…</p>
+    }
+  </div>
+</section>

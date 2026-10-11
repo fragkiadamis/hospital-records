@@ -24,6 +24,14 @@ describe('fhirErrorMessage', () => {
     expect(fhirErrorMessage(err)).toContain('Cannot reach the FHIR server');
   });
 
+  it('looks inside the error a signal resource wraps around an HttpErrorResponse', () => {
+    const wrapped = new Error('Resource returned an error…', {
+      cause: new HttpErrorResponse({ status: 404 }),
+    });
+
+    expect(fhirErrorMessage(wrapped)).toBe('The resource was not found (HTTP 404)');
+  });
+
   it('falls back to a message for the status code', () => {
     const err = new HttpErrorResponse({ status: 412, statusText: 'OK' }); // what HTTP/2 reports
 

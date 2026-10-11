@@ -15,6 +15,8 @@ const STATUS_MESSAGES: Record<number, string> = {
 
 /** Turns an HTTP error into display text, using the server's OperationOutcome when there is one. */
 export function fhirErrorMessage(err: unknown): string {
+  // Signal resources wrap errors that are not Error instances (like HttpErrorResponse) in .cause.
+  if (err instanceof Error && err.cause instanceof HttpErrorResponse) err = err.cause;
   if (err instanceof HttpErrorResponse) {
     const outcome = err.error as OperationOutcome | undefined;
     if (outcome?.resourceType === 'OperationOutcome' && outcome.issue?.length) {
