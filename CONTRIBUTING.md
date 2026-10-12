@@ -93,6 +93,9 @@ Each resource lives in `src/app/fhir/resources/<resource>/` and follows the same
 - Deleting must be refused while other resources still reference the record.
 - Add the resource to the seed data (`scripts/seed/`). Except ImagingStudy: those come only from the
   PACS, through the sync, so put DICOM in `scripts/seed/dicom/` instead.
+- Pages go under the patient (`/patients/:id/<resource>/…`) when the resource belongs to one, or
+  get their own section otherwise (`/endpoints/…`): add it to `SECTIONS` in the header, and to
+  `TOP_PAGES` in `resources/resource-links.ts` so references to it link to its page.
 
 ### A new kind of patient identifier
 

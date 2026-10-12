@@ -119,4 +119,21 @@ describe('ImagingStudyDetail', () => {
     expect(link?.textContent).toBe('Breast cancer');
     expect(link?.getAttribute('href')).toBe('/patients/seed-patient-1/conditions/seed-condition-1');
   });
+
+  it('says where the images are available, linking to the endpoint', async () => {
+    await render({
+      ...mri,
+      endpoint: [{ reference: 'Endpoint/pacs-dicomweb', display: 'Hospital PACS (DICOMweb)' }],
+    });
+
+    expect(facts('Study')['Available at']).toBe('Hospital PACS (DICOMweb)');
+    const link = element.querySelector('.endpoint a');
+    expect(link?.getAttribute('href')).toBe('/endpoints/pacs-dicomweb');
+  });
+
+  it('says nothing about availability for a study without an endpoint', async () => {
+    await render({ ...mri, endpoint: undefined });
+
+    expect(facts('Study')['Available at']).toBeUndefined();
+  });
 });

@@ -14,6 +14,8 @@ export const CodeSystems = {
   conditionCategory: 'http://terminology.hl7.org/CodeSystem/condition-category',
   /** HL7 v2 table 0203 identifier types, e.g. ACSN (accession number), MR (medical record). */
   identifierType: 'http://terminology.hl7.org/CodeSystem/v2-0203',
+  /** HL7 Endpoint connection types, e.g. dicom-wado-rs, hl7-fhir-rest. */
+  endpointConnectionType: 'http://terminology.hl7.org/CodeSystem/endpoint-connection-type',
 } as const;
 
 /** Short names to show next to a code. Systems not listed here are shown as "Code". */

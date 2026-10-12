@@ -24,4 +24,15 @@ describe('referenceLink', () => {
     });
     expect(referenceLink({ reference: '#contained' }, 'p1')).toEqual({ text: '#contained' });
   });
+
+  it('links an endpoint to its own page, with or without a patient', () => {
+    const pacs = { reference: 'Endpoint/pacs-dicomweb', display: 'Hospital PACS' };
+
+    expect(referenceLink(pacs)).toEqual({
+      text: 'Hospital PACS',
+      link: ['/', 'endpoints', 'pacs-dicomweb'],
+    });
+    expect(referenceLink(pacs, 'p1').link).toEqual(['/', 'endpoints', 'pacs-dicomweb']);
+    expect(referenceLink({ reference: 'Endpoint/e9' }).text).toBe('Endpoint e9');
+  });
 });

@@ -1,0 +1,43 @@
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" [routerLink]="['/endpoints', id()]">
+      <app-icon name="arrow-left" />
+      Back to endpoint
+    </a>
+  </nav>
+
+  <h1>Edit endpoint</h1>
+
+  @if (conflict()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>
+        Someone else changed this endpoint after you opened it, so your changes were not saved. Load
+        their version and make your changes again.
+      </span>
+      <button type="button" class="button" (click)="reload()">Load latest version</button>
+    </div>
+  } @else if (saveError()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>The endpoint was not saved: {{ saveError() }}</span>
+    </div>
+  }
+
+  @if (endpoint.error()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>{{ loadError() }}</span>
+      <button type="button" class="button" (click)="endpoint.reload()">Try again</button>
+    </div>
+  } @else if (endpoint.hasValue()) {
+    <app-endpoint-form
+      [endpoint]="endpoint.value()"
+      [saving]="saving()"
+      (save)="update($event)"
+      (cancelled)="cancel()"
+    />
+  } @else {
+    <div class="card"><p class="state">Loading endpoint…</p></div>
+  }
+</section>

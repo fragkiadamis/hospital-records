@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { Header } from './header';
 
 describe('Header', () => {
@@ -9,6 +10,14 @@ describe('Header', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Header],
+      providers: [
+        provideRouter([
+          { path: 'patients', children: [] },
+          { path: 'patients/:id', children: [] },
+          { path: 'endpoints', children: [] },
+          { path: 'endpoints/:id', children: [] },
+        ]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Header);
@@ -50,5 +59,31 @@ describe('Header', () => {
     await fixture.whenStable();
 
     expect(document.documentElement.dataset['theme']).not.toBe(before);
+  });
+
+  describe('sections', () => {
+    const links = () => [...element.querySelectorAll<HTMLAnchorElement>('nav.sections a')];
+    const navigate = async (url: string) => {
+      await TestBed.inject(Router).navigateByUrl(url);
+      await fixture.whenStable();
+    };
+
+    it('links to Patients and Endpoints', () => {
+      expect(links().map((a) => [a.textContent?.trim(), a.getAttribute('href')])).toEqual([
+        ['Patients', '/patients'],
+        ['Endpoints', '/endpoints'],
+      ]);
+    });
+
+    it('marks the section of the open page, including the pages under it', async () => {
+      await navigate('/endpoints/pacs-dicomweb');
+
+      expect(links().map((a) => a.classList.contains('active'))).toEqual([false, true]);
+      expect(links()[1].getAttribute('aria-current')).toBe('page');
+      expect(links()[0].hasAttribute('aria-current')).toBe(false);
+
+      await navigate('/patients/p1');
+      expect(links().map((a) => a.classList.contains('active'))).toEqual([true, false]);
+    });
   });
 });

@@ -1,0 +1,50 @@
+<section class="page">
+  <nav class="toolbar">
+    <a class="back" routerLink="/endpoints">
+      <app-icon name="arrow-left" />
+      Endpoints
+    </a>
+    @if (endpoint.hasValue()) {
+      <div class="actions">
+        <a class="button" [routerLink]="['/endpoints', id(), 'edit']">
+          <app-icon name="pencil" />
+          Edit
+        </a>
+        <button
+          type="button"
+          class="button danger"
+          [disabled]="deleting()"
+          (click)="deleting.set(true)"
+        >
+          <app-icon name="trash" />
+          Delete
+        </button>
+      </div>
+    }
+  </nav>
+
+  @if (endpoint.hasValue()) {
+    <app-delete-panel
+      resourceType="Endpoint"
+      noun="endpoint"
+      [resourceId]="id()"
+      [name]="name()"
+      [(open)]="deleting"
+      (deleted)="onDeleted()"
+    />
+  }
+
+  <div aria-live="polite" [attr.aria-busy]="endpoint.isLoading()">
+    @if (endpoint.error()) {
+      <div class="alert" role="alert">
+        <app-icon name="alert-triangle" />
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="button" (click)="endpoint.reload()">Try again</button>
+      </div>
+    } @else if (endpoint.hasValue()) {
+      <app-endpoint-detail [endpoint]="endpoint.value()" />
+    } @else {
+      <div class="card"><p class="state">Loading endpoint…</p></div>
+    }
+  </div>
+</section>

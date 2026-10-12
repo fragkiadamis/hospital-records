@@ -29,6 +29,11 @@ The frontend works on these FHIR R4 resources:
   and [DICOM import](#dicom-import) uploads files to Orthanc and creates them in one go. There is
   no ImagingStudy without a DICOM study behind it. The one thing the UI edits is a study's
   reasons, which link it to conditions; the link is saved on both sides in a single transaction.
+  The study page says where its images are available: the [PACS Endpoint](#the-pacs-endpoint).
+- **Endpoints**: their own section (header: _Patients · Endpoints_), with list, detail, create,
+  edit and delete (refused while imaging studies point to the endpoint). An endpoint is where
+  another system is reached, e.g. the PACS's DICOMweb service: name, status, connection type
+  (DICOM WADO-RS / QIDO-RS / STOW-RS, HL7 FHIR), address, payload type and MIME types.
 
 Edits use optimistic locking, so saving over a newer version of a record is refused instead of
 silently overwriting it.
@@ -45,7 +50,7 @@ silently overwriting it.
 npm ci                    # install dependencies
 cp .env.example .env      # then fill in the three passwords, which have no defaults
 podman compose up -d      # start HAPI-FHIR, Orthanc and their Postgres databases
-npm run seed              # load sample patients and conditions into HAPI
+npm run seed              # load sample patients, conditions and the PACS endpoint into HAPI
 npm run seed:orthanc      # send the sample DICOM studies to Orthanc (DICOM C-STORE)
 npm start                 # dev server at http://localhost:4200
 ```
@@ -91,6 +96,21 @@ that is unchanged is not written. Afterwards a report lists:
 - ImagingStudies that are **not in the PACS**. These are only reported, never changed or deleted.
 
 The sync runs in the browser and only when someone clicks the button.
+
+## The PACS Endpoint
+
+Imaging studies point to the Endpoint their images are retrieved from (`ImagingStudy.endpoint`),
+which a viewer or another system needs to find them. The PACS sync and the DICOM import link each
+study to **the PACS Endpoint**: the one **active** Endpoint with connection type **DICOM WADO-RS**.
+Its page shows a _PACS endpoint_ badge.
+
+- `npm run seed` creates it for the local Orthanc: `Endpoint/pacs-dicomweb`, at
+  `http://localhost:<ORTHANC_HTTP_PORT>/dicom-web`.
+- With no such Endpoint, studies are not linked, and the report notes it (nothing is wrong, so
+  it isn't a warning). With several, they aren't linked either, links already stored are kept,
+  and the report warns: turn off all but one.
+- Studies synced before the Endpoint existed get it on their next sync, reported once as
+  _updated_.
 
 ## DICOM import
 
@@ -201,18 +221,18 @@ src/app/
     client/          generic FHIR REST client and error messages
     datatypes/       pipes and components for FHIR datatypes (names, dates, codes, references)
     terminology/     terminology client and code search
-    resources/       one folder per resource (patient, condition, imaging-study):
+    resources/       one folder per resource (patient, condition, imaging-study, endpoint):
                      mapper, summary, detail and form components; imaging-study also
                      holds the DICOM → FHIR mapper
     delete-panel/    shared delete panel; refuses while other records still link here
   pacs/              DICOMweb client (QIDO-RS search, STOW-RS upload), the PACS → FHIR sync,
                      and DICOM file checks for the import
   pages/             routed screens; they fetch data and compose resource components
-  shared/            app layout: header, icons, theme, form helpers
+  shared/            app layout: header (with the section links), icons, theme, form helpers
 public/terminology/  generated ICD-10 / ICD-11 mapping tables
 scripts/
-  seed/              seed bundle and loader for HAPI (seed.mjs), and the DICOM sender for
-                     Orthanc (seed-orthanc.mjs)
+  seed/              seed bundle and loader for HAPI (seed.mjs, with the search parameters and
+                     the PACS endpoint), and the DICOM sender for Orthanc (seed-orthanc.mjs)
     dicom/           sample DICOM series, one folder each (git-ignored)
   icd-maps/          converter for WHO's mapping tables
 compose.yaml         local development stack

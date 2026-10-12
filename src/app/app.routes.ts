@@ -41,6 +41,26 @@ export const routes: Routes = [
       import('./pages/condition-edit/condition-edit').then((m) => m.ConditionEdit),
   },
   {
+    path: 'endpoints',
+    title: 'Endpoints · Hospital Records',
+    loadComponent: () => import('./pages/endpoint-list/endpoint-list').then((m) => m.EndpointList),
+  },
+  {
+    path: 'endpoints/new', // before endpoints/:id, which would otherwise take "new" as an id
+    title: 'New endpoint · Hospital Records',
+    loadComponent: () => import('./pages/endpoint-new/endpoint-new').then((m) => m.EndpointNew),
+  },
+  {
+    path: 'endpoints/:id',
+    title: 'Endpoint · Hospital Records', // replaced by the endpoint's name once loaded
+    loadComponent: () => import('./pages/endpoint-page/endpoint-page').then((m) => m.EndpointPage),
+  },
+  {
+    path: 'endpoints/:id/edit',
+    title: 'Edit endpoint · Hospital Records',
+    loadComponent: () => import('./pages/endpoint-edit/endpoint-edit').then((m) => m.EndpointEdit),
+  },
+  {
     path: 'patients/:id/studies/:studyId',
     title: 'Imaging study · Hospital Records', // replaced by the study's name once loaded
     loadComponent: () => import('./pages/study-page/study-page').then((m) => m.StudyPage),

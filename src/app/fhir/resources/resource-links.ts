@@ -7,9 +7,15 @@ const PATIENT_PAGES: Readonly<Record<string, string>> = {
   ImagingStudy: 'studies',
 };
 
+/** Top-level page for each resource type that has its own page outside any patient. */
+const TOP_PAGES: Readonly<Record<string, string>> = {
+  Endpoint: 'endpoints',
+};
+
 /** Readable type names for references without a display: "Imaging study seed-study-1". */
 const TYPE_NAMES: Readonly<Record<string, string>> = {
   Condition: 'Condition',
+  Endpoint: 'Endpoint',
   ImagingStudy: 'Imaging study',
   Patient: 'Patient',
 };
@@ -21,9 +27,10 @@ export interface ReferenceLink {
 }
 
 /**
- * Turns a reference into text and, when `patientId` is given and the target is a resource with a
- * page under that patient, a routerLink. Resource components stay display-only: they only link
- * when the page tells them which patient they are showing.
+ * Turns a reference into text and, when the target has a page, a routerLink: always for a
+ * resource with its own top-level page (an Endpoint), and for one with a page under a patient
+ * only when `patientId` is given. Resource components stay display-only: they only link to
+ * patient pages when the page tells them which patient they are showing.
  */
 export function referenceLink(reference: Reference, patientId?: string): ReferenceLink {
   const parsed = parseReference(reference);
@@ -32,6 +39,9 @@ export function referenceLink(reference: Reference, patientId?: string): Referen
     (parsed
       ? `${TYPE_NAMES[parsed.type] ?? parsed.type} ${parsed.id}`
       : formatReference(reference));
-  const page = parsed && PATIENT_PAGES[parsed.type];
+  if (!parsed) return { text };
+  const top = TOP_PAGES[parsed.type];
+  if (top) return { text, link: ['/', top, parsed.id] };
+  const page = PATIENT_PAGES[parsed.type];
   return page && patientId ? { text, link: ['/patients', patientId, page, parsed.id] } : { text };
 }

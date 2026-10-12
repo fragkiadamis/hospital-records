@@ -44,6 +44,17 @@
         <dt>Location</dt>
         <dd>{{ s.location | reference }}</dd>
       }
+      @for (endpoint of endpoints(); track $index) {
+        <dt>Available at</dt>
+        <dd class="endpoint">
+          <app-icon name="plug-connected" />
+          @if (endpoint.link) {
+            <a [routerLink]="endpoint.link">{{ endpoint.text }}</a>
+          } @else {
+            <span>{{ endpoint.text }}</span>
+          }
+        </dd>
+      }
     </dl>
   </section>
 

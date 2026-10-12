@@ -103,4 +103,37 @@ describe('PacsSyncReport', () => {
     expect(text('h2')).toBe('DICOM import');
     expect(text('.summary')).toBe('1 uploaded DICOM study: 1 created.');
   });
+
+  it('shows why imaging studies were not linked to an endpoint, linking to the endpoints', async () => {
+    await render({
+      studies: [{ studyInstanceUid: '1', outcome: 'created', imagingStudyId: 'a' }],
+      missingFromPacs: [],
+      endpointWarning: 'Imaging studies were not linked to an endpoint: 2 active …',
+    });
+
+    const link = element.querySelector('.endpoint-warning a');
+    expect(link?.textContent).toContain('2 active');
+    expect(link?.getAttribute('href')).toBe('/endpoints');
+    expect(element.querySelector('.panel.warning')).not.toBeNull();
+  });
+
+  describe('no PACS endpoint', () => {
+    const note = 'No PACS endpoint: imaging studies were not linked to where their images are.';
+    const created = { studyInstanceUid: '1', outcome: 'created' as const, imagingStudyId: 'a' };
+
+    it('notes it, linking to the endpoints, without making the report a warning', async () => {
+      await render({ studies: [created], missingFromPacs: [], endpointNote: note });
+
+      const link = element.querySelector('.endpoint-note a');
+      expect(link?.textContent).toBe(note);
+      expect(link?.getAttribute('href')).toBe('/endpoints');
+      expect(element.querySelector('.panel.warning')).toBeNull();
+    });
+
+    it('says nothing about it when there were no studies to link', async () => {
+      await render({ studies: [], missingFromPacs: [], endpointNote: note });
+
+      expect(element.querySelector('.endpoint-note')).toBeNull();
+    });
+  });
 });

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import type { Bundle, BundleEntry, ImagingStudy, Patient } from 'fhir/r4';
+import type { Bundle, BundleEntry, Endpoint, ImagingStudy, Patient } from 'fhir/r4';
 import { Observable, of, throwError } from 'rxjs';
 import { FhirClient, SearchParams } from '../fhir/client/fhir-client';
 import { imagingStudyFrom, studyUidIdentifier } from '../fhir/resources/imaging-study/dicom-mapper';
@@ -47,7 +47,14 @@ class FakeFhir {
   failTransactions = false;
   private nextId = 1;
 
+  endpoints: Endpoint[] = [];
+  failEndpointSearch = false;
+
   search(type: string, params: SearchParams): Observable<unknown[]> {
+    if (type === 'Endpoint') {
+      if (this.failEndpointSearch) return throwError(() => new HttpErrorResponse({ status: 500 }));
+      return of(this.endpoints.filter((e) => !params['status'] || e.status === params['status']));
+    }
     if (type === 'Patient') {
       const [system, value] = String(params['identifier']).split('|');
       return of(
@@ -442,6 +449,122 @@ describe('PacsSync', () => {
         [1, 2],
         [2, 2],
       ]);
+    });
+  });
+
+  describe('the PACS Endpoint', () => {
+    const endpoint = (id: string, changes: Partial<Endpoint> = {}): Endpoint => ({
+      resourceType: 'Endpoint',
+      id,
+      name: `PACS ${id}`,
+      status: 'active',
+      connectionType: {
+        system: 'http://terminology.hl7.org/CodeSystem/endpoint-connection-type',
+        code: 'dicom-wado-rs',
+      },
+      payloadType: [{ text: 'DICOM' }],
+      address: `http://${id}/dicom-web`,
+      ...changes,
+    });
+    const created = () => fhir.transactions.at(-1)!.at(-1)!.resource as ImagingStudy;
+
+    it('links new imaging studies to the one active WADO-RS endpoint', async () => {
+      fhir.endpoints = [
+        endpoint('pacs'),
+        endpoint('off', { status: 'off' }),
+        endpoint('fhir', { connectionType: { code: 'hl7-fhir-rest' } }),
+      ];
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.sync();
+
+      expect(created().endpoint).toEqual([{ reference: 'Endpoint/pacs', display: 'PACS pacs' }]);
+      expect(report.endpointWarning).toBeUndefined();
+      expect(report.endpointNote).toBeUndefined();
+    });
+
+    it('links a study synced before there was an endpoint on its next sync, once', async () => {
+      const study = dicomStudy('1.1', 'A');
+      fhir.patients = [
+        { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('A')] },
+      ];
+      fhir.studies = [storedStudy('s1', study, 'p1')];
+      fhir.endpoints = [endpoint('pacs')];
+      pacs.studies = [study];
+
+      const first = await sync.sync();
+      expect(first.studies[0].outcome).toBe('updated');
+      expect(fhir.updates[0].endpoint).toEqual([
+        { reference: 'Endpoint/pacs', display: 'PACS pacs' },
+      ]);
+
+      fhir.studies = [{ ...fhir.updates[0], meta: { versionId: '2' } }];
+      const second = await sync.sync();
+      expect(second.studies[0].outcome).toBe('unchanged');
+    });
+
+    it('links nothing when there is no PACS endpoint, and notes it without a warning', async () => {
+      fhir.endpoints = [endpoint('off', { status: 'off' })];
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.sync();
+
+      expect('endpoint' in created()).toBe(false);
+      expect(report.endpointWarning).toBeUndefined();
+      expect(report.endpointNote).toContain('No PACS endpoint');
+    });
+
+    it('links nothing, and says why, when several endpoints could be the PACS', async () => {
+      fhir.endpoints = [endpoint('a'), endpoint('b')];
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.sync();
+
+      expect('endpoint' in created()).toBe(false);
+      expect(report.endpointWarning).toContain('2 active DICOM WADO-RS endpoints');
+      expect(report.endpointNote).toBeUndefined();
+    });
+
+    it('keeps a stored link when it is not clear which endpoint is the PACS', async () => {
+      const study = dicomStudy('1.1', 'A');
+      const linked = { ...storedStudy('s1', study, 'p1'), endpoint: [{ reference: 'Endpoint/a' }] };
+      fhir.patients = [
+        { resourceType: 'Patient', id: 'p1', identifier: [dicomPatientIdentifier('A')] },
+      ];
+      fhir.studies = [linked];
+      fhir.endpoints = [endpoint('a'), endpoint('b')];
+      pacs.studies = [study];
+
+      const report = await sync.sync();
+
+      expect(report.studies[0].outcome).toBe('unchanged');
+    });
+
+    it('says when the endpoint could not be looked up, and still syncs', async () => {
+      fhir.failEndpointSearch = true;
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.sync();
+
+      expect(report.studies[0].outcome).toBe('created');
+      expect(report.endpointWarning).toContain('could not be looked up');
+    });
+
+    it('links the studies of an import too', async () => {
+      fhir.endpoints = [endpoint('pacs')];
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      await sync.syncStudies(['1.1']);
+
+      expect(created().endpoint).toEqual([{ reference: 'Endpoint/pacs', display: 'PACS pacs' }]);
+    });
+
+    it('notes a missing PACS endpoint after an import too', async () => {
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.syncStudies(['1.1']);
+
+      expect(report.endpointNote).toContain('No PACS endpoint');
     });
   });
 });

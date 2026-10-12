@@ -1,0 +1,61 @@
+@let e = endpoint();
+
+<header class="heading">
+  <span class="avatar" aria-hidden="true"><app-icon name="plug-connected" /></span>
+  <div>
+    <h2>{{ name() }}</h2>
+    <p class="sub">
+      @if (connectionType()) {
+        <span>{{ connectionType() }}</span>
+      }
+      <span>{{ status() }}</span>
+    </p>
+  </div>
+  @if (isPacs()) {
+    <span class="badge" title="Imaging studies from the PACS link to this endpoint">
+      PACS endpoint
+    </span>
+  }
+</header>
+
+<div class="sections">
+  <section>
+    <h3>Connection</h3>
+    <dl>
+      <dt>Address</dt>
+      <!-- Text, not a link: it is the base of an API for programs (e.g. DICOMweb), which
+           opened in a browser is usually not a page. -->
+      <dd class="address" title="The base address programs add their paths to">{{ e.address }}</dd>
+      <dt>Type</dt>
+      <dd>{{ connectionType() || 'Not recorded' }}</dd>
+      <dt>Status</dt>
+      <dd>{{ status() }}</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h3>Payload</h3>
+    <dl>
+      <dt>Type</dt>
+      <dd>{{ payloadTypes().join(', ') || 'Not recorded' }}</dd>
+      <dt>MIME types</dt>
+      <dd class="address">{{ e.payloadMimeType?.join(', ') || 'Any' }}</dd>
+    </dl>
+  </section>
+
+  @if (identifiers().length) {
+    <section>
+      <h3>Identifiers</h3>
+      <dl>
+        @for (identifier of identifiers(); track $index) {
+          <dt>{{ identifier.label }}</dt>
+          <dd>{{ identifier.value }}</dd>
+        }
+      </dl>
+    </section>
+  }
+</div>
+
+@if (e.meta?.lastUpdated; as updated) {
+  <p class="updated">Record last updated {{ updated | fhirDate }}</p>
+}

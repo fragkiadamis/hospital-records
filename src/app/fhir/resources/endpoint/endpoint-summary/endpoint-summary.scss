@@ -1,0 +1,61 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.icon {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.details {
+  min-width: 0;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  // "DICOM WADO-RS · http://…", with the dot only between the parts that are present.
+  > span + span::before {
+    content: '·';
+    margin: 0 6px;
+  }
+}
+
+.address {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+// Every status gets a tag: in use (active) in the accent colour, a problem (error, entered in
+// error) in the danger colour, and the rest (suspended, off, test) muted.
+.status {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+
+  &[data-status='active'] {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  &[data-status='error'],
+  &[data-status='entered-in-error'] {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+}

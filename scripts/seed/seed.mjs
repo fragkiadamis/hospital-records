@@ -6,6 +6,9 @@
 // list of patient identifier types (patient-identifiers.json): one string search on any
 // identifier's value, and one per identifier type. HAPI reindexes the patients in the background,
 // so a new search parameter takes a minute or so to find existing patients.
+//
+// And the PACS Endpoint: the local Orthanc's DICOMweb service, which the PACS sync links imaging
+// studies to. Its address is built from ORTHANC_HTTP_PORT, so it follows .env.
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
@@ -16,6 +19,7 @@ const fhirPort = setting('FHIR_HTTP_PORT', '8080');
 const bind = setting('BIND_ADDRESS', '127.0.0.1');
 const host = ['127.0.0.1', '0.0.0.0', '::', ''].includes(bind) ? 'localhost' : bind;
 const base = `http://${host}:${fhirPort}/fhir`;
+const dicomWeb = `http://${host}:${setting('ORTHANC_HTTP_PORT', '8042')}/dicom-web`;
 
 const seed = JSON.parse(readFileSync(new URL('./seed-bundle.json', import.meta.url), 'utf8'));
 const identifiers = JSON.parse(
@@ -60,7 +64,32 @@ const searchParameters = [
     ),
   ),
 ];
-const bundle = JSON.stringify({ ...seed, entry: [...searchParameters, ...seed.entry] });
+
+/** The PACS Endpoint: active and DICOMweb WADO-RS, as the app's isPacsEndpoint() looks for. */
+const pacsEndpoint = {
+  fullUrl: 'Endpoint/pacs-dicomweb',
+  resource: {
+    resourceType: 'Endpoint',
+    id: 'pacs-dicomweb',
+    meta: { tag: [{ system: 'urn:hospital-records:seed', code: 'seed' }] },
+    status: 'active',
+    connectionType: {
+      system: 'http://terminology.hl7.org/CodeSystem/endpoint-connection-type',
+      code: 'dicom-wado-rs',
+      display: 'DICOM WADO-RS',
+    },
+    name: 'Hospital PACS (DICOMweb)',
+    payloadType: [{ text: 'DICOM' }],
+    payloadMimeType: ['application/dicom'],
+    address: dicomWeb,
+  },
+  request: { method: 'PUT', url: 'Endpoint/pacs-dicomweb' },
+};
+
+const bundle = JSON.stringify({
+  ...seed,
+  entry: [...searchParameters, pacsEndpoint, ...seed.entry],
+});
 
 let response;
 try {

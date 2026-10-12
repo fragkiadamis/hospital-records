@@ -53,6 +53,9 @@ export class PacsSyncReport {
   );
 
   protected readonly hasWarnings = computed(
-    () => this.problems().length > 0 || this.report().missingFromPacs.length > 0,
+    () =>
+      this.problems().length > 0 ||
+      this.report().missingFromPacs.length > 0 ||
+      !!this.report().endpointWarning,
   );
 }
