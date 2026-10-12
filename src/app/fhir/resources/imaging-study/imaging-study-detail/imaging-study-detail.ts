@@ -41,6 +41,10 @@ export class ImagingStudyDetail {
   protected readonly seriesTotal = computed(() => seriesCount(this.study()));
   protected readonly images = computed(() => instanceCount(this.study()));
   protected readonly series = computed(() => sortedSeries(this.study()));
+  /** Where the study's images are retrieved from: the PACS Endpoint the sync links it to. */
+  protected readonly endpoints = computed(() =>
+    (this.study().endpoint ?? []).map((endpoint) => referenceLink(endpoint)),
+  );
   protected readonly reasons = computed(() =>
     (this.study().reasonReference ?? []).map((reason) => referenceLink(reason, this.patientId())),
   );
