@@ -1,3 +1,14 @@
+## [0.5.0](https://github.com/fragkiadamis/hospital-records/compare/v0.4.0...v0.5.0) (2026-10-12)
+
+### Features
+
+* Add STOW-RS upload to the DICOMweb client ([777cef4](https://github.com/fragkiadamis/hospital-records/commit/777cef474663330a0a5e3a5b986d1c487c352250))
+* Import DICOM files from the patient list ([f6a7ab1](https://github.com/fragkiadamis/hospital-records/commit/f6a7ab118ce05632b711ecbb7821f47a5550a223))
+
+### Bug Fixes
+
+* Skip unreadable files when checking a DICOM import ([7570506](https://github.com/fragkiadamis/hospital-records/commit/757050616350cf72d213a0129f1e61283f34dcf3))
+
 ## [0.4.0](https://github.com/fragkiadamis/hospital-records/compare/v0.3.0...v0.4.0) (2026-10-11)
 
 ### Features
