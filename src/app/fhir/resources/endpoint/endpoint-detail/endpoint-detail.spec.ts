@@ -45,9 +45,8 @@ describe('EndpointDetail', () => {
       'DICOM',
       'application/dicom',
     ]);
-    const link = element.querySelector('dd a');
-    expect(link?.getAttribute('href')).toBe('http://localhost:8042/dicom-web');
-    expect(link?.getAttribute('rel')).toBe('noopener');
+    // The base of an API, not a page: shown as text, not offered as a link.
+    expect(element.querySelector('dd a')).toBeNull();
   });
 
   it('does not mark an endpoint that is off, or not WADO-RS, as the PACS endpoint', async () => {
@@ -61,7 +60,7 @@ describe('EndpointDetail', () => {
     expect(element.querySelector('.badge')).toBeNull();
   });
 
-  it('shows an address that is not a web address as text, and its identifiers', async () => {
+  it('shows any kind of address, and the identifiers', async () => {
     await render({
       ...pacs,
       address: 'mllp://ris.local:2575',

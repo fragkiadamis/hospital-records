@@ -23,13 +23,9 @@
     <h3>Connection</h3>
     <dl>
       <dt>Address</dt>
-      <dd class="address">
-        @if (webAddress()) {
-          <a [href]="webAddress()" target="_blank" rel="noopener">{{ e.address }}</a>
-        } @else {
-          {{ e.address }}
-        }
-      </dd>
+      <!-- Text, not a link: it is the base of an API for programs (e.g. DICOMweb), which
+           opened in a browser is usually not a page. -->
+      <dd class="address" title="The base address programs add their paths to">{{ e.address }}</dd>
       <dt>Type</dt>
       <dd>{{ connectionType() || 'Not recorded' }}</dd>
       <dt>Status</dt>

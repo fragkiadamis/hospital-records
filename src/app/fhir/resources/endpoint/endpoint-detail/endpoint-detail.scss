@@ -52,10 +52,7 @@
   font-family: ui-monospace, monospace;
   font-size: 0.9em;
   overflow-wrap: anywhere;
-
-  a {
-    color: var(--accent);
-  }
+  user-select: all; // one click selects the whole address, to copy it
 }
 
 .updated {

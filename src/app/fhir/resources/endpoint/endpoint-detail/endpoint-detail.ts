@@ -28,11 +28,6 @@ export class EndpointDetail {
   protected readonly status = computed(() => ENDPOINT_STATUSES[this.endpoint().status]);
   protected readonly isPacs = computed(() => isPacsEndpoint(this.endpoint()));
 
-  /** The address as a link only when it is a web address; anything else is shown as text. */
-  protected readonly webAddress = computed(() =>
-    /^https?:\/\//i.test(this.endpoint().address ?? '') ? this.endpoint().address : '',
-  );
-
   protected readonly payloadTypes = computed(() =>
     (this.endpoint().payloadType ?? []).map((type) => formatCodeableConcept(type)).filter(Boolean),
   );
