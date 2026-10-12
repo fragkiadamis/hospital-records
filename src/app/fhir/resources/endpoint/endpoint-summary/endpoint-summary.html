@@ -13,6 +13,4 @@
   }
 </span>
 
-@if (status()) {
-  <span class="status">{{ status() }}</span>
-}
+<span class="status" [attr.data-status]="status()">{{ statusLabel() }}</span>

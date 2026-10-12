@@ -36,7 +36,10 @@
   font-size: 0.9em;
 }
 
+// Every status gets a tag: in use (active) in the accent colour, a problem (error, entered in
+// error) in the danger colour, and the rest (suspended, off, test) muted.
 .status {
+  flex: none;
   margin-left: auto;
   padding: 2px 8px;
   border: 1px solid var(--border);
@@ -44,4 +47,15 @@
   color: var(--text-muted);
   font-size: 0.85em;
   white-space: nowrap;
+
+  &[data-status='active'] {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  &[data-status='error'],
+  &[data-status='entered-in-error'] {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
 }

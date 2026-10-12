@@ -4,8 +4,8 @@ import { Icon } from '../../../../shared/icon/icon';
 import { connectionTypeName, endpointDisplayName, ENDPOINT_STATUSES } from '../endpoint-mapper';
 
 /**
- * One-line endpoint: name, connection type, address, and the status when it isn't active.
- * Display only; wrap it in a link where it should be clickable.
+ * One-line endpoint: name, connection type, address, and its status as a tag. Display only; wrap
+ * it in a link where it should be clickable.
  */
 @Component({
   imports: [Icon],
@@ -20,9 +20,8 @@ export class EndpointSummary {
   protected readonly connectionType = computed(() =>
     connectionTypeName(this.endpoint().connectionType),
   );
-  /** The status label, only when the endpoint isn't in use as normal. */
-  protected readonly status = computed(() => {
-    const status = this.endpoint().status;
-    return status === 'active' ? '' : ENDPOINT_STATUSES[status];
-  });
+  protected readonly status = computed(() => this.endpoint().status);
+  protected readonly statusLabel = computed(
+    () => ENDPOINT_STATUSES[this.status()] ?? this.status(),
+  );
 }

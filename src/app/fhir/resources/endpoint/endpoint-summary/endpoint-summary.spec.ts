@@ -37,13 +37,26 @@ describe('EndpointSummary', () => {
       'DICOM WADO-RS',
       'http://localhost:8042/dicom-web',
     ]);
-    expect(element.querySelector('.status')).toBeNull();
+    expect(text('.status')).toBe('Active');
   });
 
-  it('shows the status when the endpoint is not active', async () => {
-    await render({ ...pacs, status: 'off' });
+  it('tags every status, so the colour can tell them apart', async () => {
+    const statuses = ['active', 'suspended', 'error', 'off', 'test', 'entered-in-error'] as const;
+    const tags = [];
+    for (const status of statuses) {
+      await render({ ...pacs, status });
+      const tag = element.querySelector('.status');
+      tags.push([tag?.textContent?.trim(), tag?.getAttribute('data-status')]);
+    }
 
-    expect(text('.status')).toBe('Off');
+    expect(tags).toEqual([
+      ['Active', 'active'],
+      ['Suspended', 'suspended'],
+      ['Error', 'error'],
+      ['Off', 'off'],
+      ['Test', 'test'],
+      ['Entered in error', 'entered-in-error'],
+    ]);
   });
 
   it('does not repeat the address when it is the name', async () => {
