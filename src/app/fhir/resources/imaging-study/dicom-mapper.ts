@@ -71,12 +71,16 @@ export function studyUidIdentifier(uid: string): Identifier {
  * An ImagingStudy from a QIDO-RS study and its series. Pass the stored ImagingStudy to update
  * it: everything that comes from the PACS is replaced, and what the app adds is kept (id and
  * version, the subject, reasons, notes, identifiers from other systems).
+ *
+ * `endpoint` is the PACS Endpoint the study's images are retrieved from. When given, it becomes
+ * the study's endpoint; when not (no single PACS Endpoint is known), the stored one is kept.
  */
 export function imagingStudyFrom(
   study: DicomDataset,
   seriesList: DicomDataset[],
   subject: Reference,
   existing?: ImagingStudy,
+  endpoint?: Reference,
 ): ImagingStudy {
   const offset = dicomText(study, Tag.TimezoneOffsetFromUTC);
   const series = seriesList
@@ -116,6 +120,7 @@ export function imagingStudyFrom(
     ],
     status: 'available',
     subject: existing?.subject ?? subject,
+    endpoint: endpoint ? [endpoint] : existing?.endpoint,
     modality: modalityCodes.map((code): Coding => ({ system: CodeSystems.dicom, code })),
     started: fhirDateTime(dicomText(study, Tag.StudyDate), dicomText(study, Tag.StudyTime), offset),
     description: dicomText(study, Tag.StudyDescription) || undefined,

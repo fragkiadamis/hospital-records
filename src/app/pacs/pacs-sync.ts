@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import type { BundleEntry, Identifier, ImagingStudy, Patient, Reference } from 'fhir/r4';
+import type { BundleEntry, Endpoint, Identifier, ImagingStudy, Patient, Reference } from 'fhir/r4';
 import { firstValueFrom } from 'rxjs';
 import { FhirClient } from '../fhir/client/fhir-client';
 import { fhirErrorMessage } from '../fhir/client/fhir-error';
 import { formatHumanName } from '../fhir/datatypes/human-name-pipe';
+import { endpointDisplayName, isPacsEndpoint } from '../fhir/resources/endpoint/endpoint-mapper';
 import { parseReference } from '../fhir/datatypes/reference-pipe';
 import {
   imagingStudyFrom,
@@ -42,6 +43,20 @@ export interface MissingFromPacs {
 export interface PacsSyncReport {
   studies: StudySyncResult[];
   missingFromPacs: MissingFromPacs[];
+  /**
+   * Why imaging studies were not linked to the PACS Endpoint, when there should be one but it
+   * isn't clear which (several active WADO-RS Endpoints), or it couldn't be looked up. Unset when
+   * they were linked, or when there simply is no PACS Endpoint.
+   */
+  endpointWarning?: string;
+}
+
+/** What one run of the sync shares between its studies. */
+interface Run {
+  /** Patients found or created so far, by DICOM Patient ID. */
+  patients: Map<string, Reference>;
+  /** The PACS Endpoint to link imaging studies to, if there is exactly one. */
+  endpoint?: Reference;
 }
 
 /** How many ImagingStudies one FHIR search reads when loading them all. */
@@ -84,13 +99,13 @@ export class PacsSync {
       byUid.set(uid, [...(byUid.get(uid) ?? []), study]);
     }
 
-    // Patients found or created during this run, by DICOM Patient ID.
-    const patients = new Map<string, Reference>();
+    const { endpoint, endpointWarning } = await this.pacsEndpoint();
+    const run: Run = { patients: new Map(), endpoint };
     const studies: StudySyncResult[] = [];
     onProgress?.(0, dicomStudies.length);
     for (const dicomStudy of dicomStudies) {
       const uid = dicomText(dicomStudy, Tag.StudyInstanceUID);
-      studies.push(await this.syncStudy(dicomStudy, byUid.get(uid) ?? [], patients));
+      studies.push(await this.syncStudy(dicomStudy, byUid.get(uid) ?? [], run));
       onProgress?.(studies.length, dicomStudies.length);
     }
 
@@ -106,7 +121,7 @@ export class PacsSync {
         };
       });
 
-    return { studies, missingFromPacs };
+    return { studies, missingFromPacs, ...(endpointWarning ? { endpointWarning } : {}) };
   }
 
   /**
@@ -120,18 +135,19 @@ export class PacsSync {
     onProgress?: (done: number, total: number) => void,
   ): Promise<PacsSyncReport> {
     const uids = [...new Set(studyInstanceUids)];
-    const patients = new Map<string, Reference>();
+    const { endpoint, endpointWarning } = await this.pacsEndpoint();
+    const run: Run = { patients: new Map(), endpoint };
     const studies: StudySyncResult[] = [];
     onProgress?.(0, uids.length);
     for (const uid of uids) {
-      studies.push(await this.syncOne(uid, patients));
+      studies.push(await this.syncOne(uid, run));
       onProgress?.(studies.length, uids.length);
     }
-    return { studies, missingFromPacs: [] };
+    return { studies, missingFromPacs: [], ...(endpointWarning ? { endpointWarning } : {}) };
   }
 
   /** Reads one DICOM study and its stored ImagingStudies, then syncs it. */
-  private async syncOne(uid: string, patients: Map<string, Reference>): Promise<StudySyncResult> {
+  private async syncOne(uid: string, run: Run): Promise<StudySyncResult> {
     let dicomStudy: DicomDataset | undefined;
     try {
       dicomStudy = await firstValueFrom(this.dicomweb.findStudy(uid));
@@ -148,7 +164,7 @@ export class PacsSync {
           _count: 2,
         }),
       );
-      return await this.syncStudy(dicomStudy, stored, patients);
+      return await this.syncStudy(dicomStudy, stored, run);
     } catch (err) {
       return { studyInstanceUid: uid, outcome: 'failed', reason: fhirErrorMessage(err) };
     }
@@ -158,7 +174,7 @@ export class PacsSync {
   private async syncStudy(
     dicomStudy: DicomDataset,
     stored: ImagingStudy[],
-    patients: Map<string, Reference>,
+    run: Run,
   ): Promise<StudySyncResult> {
     const uid = dicomText(dicomStudy, Tag.StudyInstanceUID);
     const patientId = dicomText(dicomStudy, Tag.PatientID);
@@ -180,7 +196,7 @@ export class PacsSync {
     try {
       const [series, patient] = await Promise.all([
         firstValueFrom(this.dicomweb.searchSeries(uid)),
-        this.findPatient(patientId, patients),
+        this.findPatient(patientId, run.patients),
       ]);
 
       if (existing) {
@@ -193,7 +209,7 @@ export class PacsSync {
               `not to the patient with DICOM Patient ID ${patientId}.`,
           });
         }
-        const next = imagingStudyFrom(dicomStudy, series, patient, existing);
+        const next = imagingStudyFrom(dicomStudy, series, patient, existing, run.endpoint);
         if (sameContent(existing, next)) {
           return result('unchanged', { imagingStudyId: existing.id });
         }
@@ -201,8 +217,8 @@ export class PacsSync {
         return result('updated', { imagingStudyId: saved.id });
       }
 
-      const created = await this.create(dicomStudy, series, patient);
-      patients.set(patientId, created.subject);
+      const created = await this.create(dicomStudy, series, patient, run.endpoint);
+      run.patients.set(patientId, created.subject);
       return result('created', {
         imagingStudyId: created.imagingStudyId,
         patientCreated: created.patientCreated,
@@ -221,6 +237,7 @@ export class PacsSync {
     dicomStudy: DicomDataset,
     series: DicomDataset[],
     patient: Reference | undefined,
+    endpoint: Reference | undefined,
   ): Promise<{ subject: Reference; imagingStudyId?: string; patientCreated: boolean }> {
     const entries: BundleEntry[] = [];
     let subject = patient;
@@ -239,7 +256,7 @@ export class PacsSync {
       subject = { reference: fullUrl, display: nameOf(newPatient) };
     }
 
-    const imagingStudy = imagingStudyFrom(dicomStudy, series, subject);
+    const imagingStudy = imagingStudyFrom(dicomStudy, series, subject, undefined, endpoint);
     entries.push({
       fullUrl: `urn:uuid:${crypto.randomUUID()}`,
       resource: imagingStudy,
@@ -294,6 +311,41 @@ export class PacsSync {
     };
     patients.set(patientId, reference);
     return reference;
+  }
+
+  /**
+   * The PACS Endpoint, looked up once per run: the one active DICOMweb WADO-RS Endpoint (see
+   * isPacsEndpoint). None is fine, the studies just aren't linked; several, or a failed lookup,
+   * come back as a warning for the report, since then someone should look.
+   */
+  private async pacsEndpoint(): Promise<{ endpoint?: Reference; endpointWarning?: string }> {
+    let candidates: Endpoint[];
+    try {
+      const active = await firstValueFrom(
+        this.fhir.search('Endpoint', { status: 'active', _count: 50 }),
+      );
+      candidates = active.filter(isPacsEndpoint);
+    } catch (err) {
+      return {
+        endpointWarning: `Imaging studies were not linked to the PACS endpoint: it could not be looked up (${fhirErrorMessage(err)}).`,
+      };
+    }
+    if (candidates.length > 1) {
+      return {
+        endpointWarning:
+          `Imaging studies were not linked to an endpoint: ${candidates.length} active DICOM ` +
+          'WADO-RS endpoints, so it is not clear which is the PACS. Turn off all but one.',
+      };
+    }
+    const [endpoint] = candidates;
+    return endpoint
+      ? {
+          endpoint: {
+            reference: `Endpoint/${endpoint.id}`,
+            display: endpointDisplayName(endpoint),
+          },
+        }
+      : {};
   }
 
   /** Every ImagingStudy in FHIR, a page at a time. */

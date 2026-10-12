@@ -103,3 +103,11 @@ a.uid {
 .reason {
   color: var(--text-muted);
 }
+
+.endpoint-warning {
+  margin: 8px 0 0;
+
+  a {
+    color: var(--danger);
+  }
+}

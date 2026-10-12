@@ -36,6 +36,12 @@
     }
   </p>
 
+  @if (report().endpointWarning; as warning) {
+    <p class="endpoint-warning">
+      <a routerLink="/endpoints">{{ warning }}</a>
+    </p>
+  }
+
   @if (problems().length) {
     <h3>Not synced</h3>
     <ul class="details">

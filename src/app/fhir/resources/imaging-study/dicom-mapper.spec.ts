@@ -190,6 +190,23 @@ describe('imagingStudyFrom', () => {
     expect(result.series?.map((s) => s.uid)).toEqual(['2.25.1001.1', '2.25.1001.2']);
   });
 
+  it('links the study to the PACS Endpoint, replacing a stored one, keeping it when none is given', () => {
+    const pacs = { reference: 'Endpoint/pacs', display: 'Hospital PACS' };
+    const stored: ImagingStudy = {
+      resourceType: 'ImagingStudy',
+      status: 'available',
+      subject,
+      endpoint: [{ reference: 'Endpoint/old' }],
+    };
+
+    expect(imagingStudyFrom(study, series, subject, undefined, pacs).endpoint).toEqual([pacs]);
+    expect(imagingStudyFrom(study, series, subject, stored, pacs).endpoint).toEqual([pacs]);
+    expect(imagingStudyFrom(study, series, subject, stored).endpoint).toEqual([
+      { reference: 'Endpoint/old' },
+    ]);
+    expect('endpoint' in imagingStudyFrom(study, series, subject)).toBe(false);
+  });
+
   it('drops a field the PACS no longer has instead of keeping the stored value', () => {
     const existing: ImagingStudy = {
       resourceType: 'ImagingStudy',
