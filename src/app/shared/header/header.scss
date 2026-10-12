@@ -36,6 +36,47 @@
   min-width: 0;
 }
 
+// The app's sections: one is highlighted while any page under it is open.
+.sections {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.85;
+
+  &:hover {
+    background: rgb(255 255 255 / 10%);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background: rgb(255 255 255 / 18%);
+    font-weight: 600;
+    opacity: 1;
+  }
+
+  app-icon {
+    font-size: 20px;
+  }
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -114,5 +155,22 @@ app-icon {
 
   .bar {
     padding: 0 16px 0 8px;
+  }
+
+  // Icons and short labels only: the brand is hidden, but the sections stay reachable.
+  .section {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

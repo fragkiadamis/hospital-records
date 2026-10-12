@@ -4,6 +4,20 @@
   </a>
 
   <div class="bar">
+    <nav class="sections" aria-label="Sections">
+      @for (section of sections; track section.path) {
+        <a
+          class="section"
+          [routerLink]="section.path"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <app-icon [name]="section.icon" />
+          <span>{{ section.label }}</span>
+        </a>
+      }
+    </nav>
+
     <nav class="actions">
       @let dark = theme.mode() === 'dark';
       <button
