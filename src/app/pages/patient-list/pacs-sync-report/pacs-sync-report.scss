@@ -111,3 +111,22 @@ a.uid {
     color: var(--danger);
   }
 }
+
+// Nothing is wrong, so muted rather than red.
+.endpoint-note {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+
+  a {
+    color: inherit;
+  }
+
+  app-icon {
+    flex: none;
+    align-self: center;
+  }
+}

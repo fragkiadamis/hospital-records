@@ -480,6 +480,7 @@ describe('PacsSync', () => {
 
       expect(created().endpoint).toEqual([{ reference: 'Endpoint/pacs', display: 'PACS pacs' }]);
       expect(report.endpointWarning).toBeUndefined();
+      expect(report.endpointNote).toBeUndefined();
     });
 
     it('links a study synced before there was an endpoint on its next sync, once', async () => {
@@ -502,13 +503,15 @@ describe('PacsSync', () => {
       expect(second.studies[0].outcome).toBe('unchanged');
     });
 
-    it('links nothing, without a warning, when there is no PACS endpoint', async () => {
+    it('links nothing when there is no PACS endpoint, and notes it without a warning', async () => {
+      fhir.endpoints = [endpoint('off', { status: 'off' })];
       pacs.studies = [dicomStudy('1.1', 'A')];
 
       const report = await sync.sync();
 
       expect('endpoint' in created()).toBe(false);
       expect(report.endpointWarning).toBeUndefined();
+      expect(report.endpointNote).toContain('No PACS endpoint');
     });
 
     it('links nothing, and says why, when several endpoints could be the PACS', async () => {
@@ -519,6 +522,7 @@ describe('PacsSync', () => {
 
       expect('endpoint' in created()).toBe(false);
       expect(report.endpointWarning).toContain('2 active DICOM WADO-RS endpoints');
+      expect(report.endpointNote).toBeUndefined();
     });
 
     it('keeps a stored link when it is not clear which endpoint is the PACS', async () => {
@@ -553,6 +557,14 @@ describe('PacsSync', () => {
       await sync.syncStudies(['1.1']);
 
       expect(created().endpoint).toEqual([{ reference: 'Endpoint/pacs', display: 'PACS pacs' }]);
+    });
+
+    it('notes a missing PACS endpoint after an import too', async () => {
+      pacs.studies = [dicomStudy('1.1', 'A')];
+
+      const report = await sync.syncStudies(['1.1']);
+
+      expect(report.endpointNote).toContain('No PACS endpoint');
     });
   });
 });

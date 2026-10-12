@@ -40,6 +40,11 @@
     <p class="endpoint-warning">
       <a routerLink="/endpoints">{{ warning }}</a>
     </p>
+  } @else if (total() && report().endpointNote; as note) {
+    <p class="endpoint-note">
+      <app-icon name="plug-connected" />
+      <a routerLink="/endpoints">{{ note }}</a>
+    </p>
   }
 
   @if (problems().length) {

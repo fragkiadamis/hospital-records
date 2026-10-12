@@ -116,4 +116,24 @@ describe('PacsSyncReport', () => {
     expect(link?.getAttribute('href')).toBe('/endpoints');
     expect(element.querySelector('.panel.warning')).not.toBeNull();
   });
+
+  describe('no PACS endpoint', () => {
+    const note = 'No PACS endpoint: imaging studies were not linked to where their images are.';
+    const created = { studyInstanceUid: '1', outcome: 'created' as const, imagingStudyId: 'a' };
+
+    it('notes it, linking to the endpoints, without making the report a warning', async () => {
+      await render({ studies: [created], missingFromPacs: [], endpointNote: note });
+
+      const link = element.querySelector('.endpoint-note a');
+      expect(link?.textContent).toBe(note);
+      expect(link?.getAttribute('href')).toBe('/endpoints');
+      expect(element.querySelector('.panel.warning')).toBeNull();
+    });
+
+    it('says nothing about it when there were no studies to link', async () => {
+      await render({ studies: [], missingFromPacs: [], endpointNote: note });
+
+      expect(element.querySelector('.endpoint-note')).toBeNull();
+    });
+  });
 });

@@ -49,6 +49,11 @@ export interface PacsSyncReport {
    * they were linked, or when there simply is no PACS Endpoint.
    */
   endpointWarning?: string;
+  /**
+   * Set when there is no PACS Endpoint at all, so imaging studies were not linked to where their
+   * images are. Nothing is wrong, but it is worth knowing: a note, not a warning.
+   */
+  endpointNote?: string;
 }
 
 /** What one run of the sync shares between its studies. */
@@ -99,7 +104,7 @@ export class PacsSync {
       byUid.set(uid, [...(byUid.get(uid) ?? []), study]);
     }
 
-    const { endpoint, endpointWarning } = await this.pacsEndpoint();
+    const { endpoint, ...endpointMessages } = await this.pacsEndpoint();
     const run: Run = { patients: new Map(), endpoint };
     const studies: StudySyncResult[] = [];
     onProgress?.(0, dicomStudies.length);
@@ -121,7 +126,7 @@ export class PacsSync {
         };
       });
 
-    return { studies, missingFromPacs, ...(endpointWarning ? { endpointWarning } : {}) };
+    return { studies, missingFromPacs, ...endpointMessages };
   }
 
   /**
@@ -135,7 +140,7 @@ export class PacsSync {
     onProgress?: (done: number, total: number) => void,
   ): Promise<PacsSyncReport> {
     const uids = [...new Set(studyInstanceUids)];
-    const { endpoint, endpointWarning } = await this.pacsEndpoint();
+    const { endpoint, ...endpointMessages } = await this.pacsEndpoint();
     const run: Run = { patients: new Map(), endpoint };
     const studies: StudySyncResult[] = [];
     onProgress?.(0, uids.length);
@@ -143,7 +148,7 @@ export class PacsSync {
       studies.push(await this.syncOne(uid, run));
       onProgress?.(studies.length, uids.length);
     }
-    return { studies, missingFromPacs: [], ...(endpointWarning ? { endpointWarning } : {}) };
+    return { studies, missingFromPacs: [], ...endpointMessages };
   }
 
   /** Reads one DICOM study and its stored ImagingStudies, then syncs it. */
@@ -315,10 +320,14 @@ export class PacsSync {
 
   /**
    * The PACS Endpoint, looked up once per run: the one active DICOMweb WADO-RS Endpoint (see
-   * isPacsEndpoint). None is fine, the studies just aren't linked; several, or a failed lookup,
-   * come back as a warning for the report, since then someone should look.
+   * isPacsEndpoint). Several, or a failed lookup, come back as a warning for the report, since
+   * then someone should look; none comes back as a note, since nothing is wrong.
    */
-  private async pacsEndpoint(): Promise<{ endpoint?: Reference; endpointWarning?: string }> {
+  private async pacsEndpoint(): Promise<{
+    endpoint?: Reference;
+    endpointWarning?: string;
+    endpointNote?: string;
+  }> {
     let candidates: Endpoint[];
     try {
       const active = await firstValueFrom(
@@ -338,14 +347,16 @@ export class PacsSync {
       };
     }
     const [endpoint] = candidates;
-    return endpoint
-      ? {
-          endpoint: {
-            reference: `Endpoint/${endpoint.id}`,
-            display: endpointDisplayName(endpoint),
-          },
-        }
-      : {};
+    if (!endpoint) {
+      return {
+        endpointNote:
+          'No PACS endpoint: imaging studies were not linked to where their images are. Create ' +
+          'one in Endpoints (active, DICOM WADO-RS), or run npm run seed.',
+      };
+    }
+    return {
+      endpoint: { reference: `Endpoint/${endpoint.id}`, display: endpointDisplayName(endpoint) },
+    };
   }
 
   /** Every ImagingStudy in FHIR, a page at a time. */

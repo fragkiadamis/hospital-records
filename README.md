@@ -106,8 +106,9 @@ Its page shows a _PACS endpoint_ badge.
 
 - `npm run seed` creates it for the local Orthanc: `Endpoint/pacs-dicomweb`, at
   `http://localhost:<ORTHANC_HTTP_PORT>/dicom-web`.
-- With no such Endpoint, studies are simply not linked. With several, they aren't linked either,
-  links already stored are kept, and the sync report says so: turn off all but one.
+- With no such Endpoint, studies are not linked, and the report notes it (nothing is wrong, so
+  it isn't a warning). With several, they aren't linked either, links already stored are kept,
+  and the report warns: turn off all but one.
 - Studies synced before the Endpoint existed get it on their next sync, reported once as
   _updated_.
 
