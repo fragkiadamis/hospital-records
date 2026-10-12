@@ -1,0 +1,18 @@
+@let e = endpoint();
+
+<app-icon name="plug-connected" class="icon" />
+
+<span class="name">{{ name() }}</span>
+
+<span class="details">
+  @if (connectionType()) {
+    <span>{{ connectionType() }}</span>
+  }
+  @if (e.name && e.address) {
+    <span class="address">{{ e.address }}</span>
+  }
+</span>
+
+@if (status()) {
+  <span class="status">{{ status() }}</span>
+}

@@ -1,0 +1,65 @@
+:host {
+  display: block;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 24px;
+}
+
+.sub {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+
+  > span + span::before {
+    content: '·';
+    margin: 0 6px;
+  }
+}
+
+.badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.address {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+
+  a {
+    color: var(--accent);
+  }
+}
+
+.updated {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}

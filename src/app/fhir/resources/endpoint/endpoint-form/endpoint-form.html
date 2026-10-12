@@ -1,0 +1,86 @@
+<form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <fieldset>
+    <legend>Endpoint</legend>
+    <div class="row">
+      <label>
+        Name
+        <input formControlName="name" autocomplete="off" placeholder="e.g. Hospital PACS" />
+      </label>
+      <label>
+        Status
+        <select formControlName="status">
+          @for (status of statuses; track status.code) {
+            <option [value]="status.code">{{ status.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Connection</legend>
+    <div class="row">
+      <label>
+        Connection type
+        <select formControlName="connectionType">
+          @for (type of connectionTypes(); track type.code) {
+            <option [value]="type.code">{{ type.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Address
+        <input
+          type="url"
+          formControlName="address"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="http://localhost:8042/dicom-web"
+          [attr.aria-invalid]="showError('address', 'required') || showError('address', 'url')"
+        />
+        @if (showError('address', 'required')) {
+          <span class="error" role="alert">Enter the endpoint's address.</span>
+        } @else if (showError('address', 'url')) {
+          <span class="error" role="alert">
+            Enter a full address, starting with its scheme (e.g. http://).
+          </span>
+        }
+      </label>
+    </div>
+    <p class="hint">
+      Imaging studies from the PACS link to the one active DICOM WADO-RS endpoint: the address their
+      images are retrieved from.
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Payload</legend>
+    <div class="row">
+      <label>
+        Payload type
+        <input
+          formControlName="payloadType"
+          autocomplete="off"
+          [attr.aria-invalid]="showError('payloadType', 'required')"
+        />
+        @if (showError('payloadType', 'required')) {
+          <span class="error" role="alert">Say what the endpoint sends, e.g. DICOM.</span>
+        }
+      </label>
+      <label>
+        MIME types
+        <input formControlName="payloadMimeTypes" autocomplete="off" spellcheck="false" />
+        <span class="hint">Separated by commas, e.g. application/dicom</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="actions">
+    <button type="button" class="button" [disabled]="saving()" (click)="cancelled.emit()">
+      Cancel
+    </button>
+    <button type="submit" class="button primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save endpoint' }}
+    </button>
+  </div>
+</form>

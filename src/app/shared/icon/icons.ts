@@ -15,6 +15,7 @@ import moon from '@tabler/icons/outline/moon.svg';
 import pencil from '@tabler/icons/outline/pencil.svg';
 import phone from '@tabler/icons/outline/phone.svg';
 import photoScan from '@tabler/icons/outline/photo-scan.svg';
+import plugConnected from '@tabler/icons/outline/plug-connected.svg';
 import plus from '@tabler/icons/outline/plus.svg';
 import printer from '@tabler/icons/outline/printer.svg';
 import refresh from '@tabler/icons/outline/refresh.svg';
@@ -42,6 +43,7 @@ export const ICONS = {
   pencil,
   phone,
   'photo-scan': photoScan,
+  'plug-connected': plugConnected,
   plus,
   printer,
   refresh,
