@@ -1,0 +1,19 @@
+<section class="page narrow">
+  <nav class="toolbar">
+    <a class="back" routerLink="/endpoints">
+      <app-icon name="arrow-left" />
+      Endpoints
+    </a>
+  </nav>
+
+  <h1>New endpoint</h1>
+
+  @if (error()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>The endpoint was not saved: {{ error() }}</span>
+    </div>
+  }
+
+  <app-endpoint-form [saving]="saving()" (save)="create($event)" (cancelled)="cancel()" />
+</section>

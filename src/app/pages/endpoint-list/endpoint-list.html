@@ -1,0 +1,44 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Endpoints</h1>
+    <a class="button primary" routerLink="/endpoints/new">
+      <app-icon name="plus" />
+      New endpoint
+    </a>
+  </header>
+
+  <p class="intro">
+    Where other systems are reached: the PACS's DICOMweb service, FHIR servers. Imaging studies from
+    the PACS link to the active DICOM WADO-RS endpoint.
+  </p>
+
+  @if (endpoints.error()) {
+    <div class="alert" role="alert">
+      <app-icon name="alert-triangle" />
+      <span>{{ errorMessage() }}</span>
+      <button type="button" class="button" (click)="endpoints.reload()">Try again</button>
+    </div>
+  } @else {
+    <div class="card" aria-live="polite" [attr.aria-busy]="endpoints.isLoading()">
+      @if (endpoints.hasValue()) {
+        @let list = endpoints.value();
+        @if (list.length) {
+          <ul class="list">
+            @for (endpoint of list; track endpoint.id) {
+              <li>
+                <a [routerLink]="['/endpoints', endpoint.id]">
+                  <app-endpoint-summary [endpoint]="endpoint" />
+                  <app-icon name="chevron-right" class="chevron" />
+                </a>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="state">No endpoints yet.</p>
+        }
+      } @else {
+        <p class="state">Loading endpoints…</p>
+      }
+    </div>
+  }
+</section>
